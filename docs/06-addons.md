@@ -1,6 +1,15 @@
 # 06 — Minikube Add-ons
 
-Minikube add-ons install common Kubernetes components for local use.
+## What are add-ons?
+
+Minikube add-ons are pre-packaged extensions that install commonly-used Kubernetes components into your cluster. Think of them as "opt-in" features:
+
+- **Ingress** — Routes HTTP traffic from outside the cluster into services
+- **Metrics Server** — Collects CPU and memory metrics for pod autoscaling
+- **Dashboard** — Web UI to manage cluster resources
+- **DNS** — Service discovery by name (instead of IP addresses)
+
+Without add-ons, you'd need to install these manually using YAML files. Add-ons automate that for local development.
 
 ---
 
@@ -12,7 +21,13 @@ minikube addons list
 
 ---
 
-## Enable ingress
+## Enable Ingress
+
+**What it does:** Installs an Ingress controller that routes HTTP traffic from your local machine into services running in the cluster.
+
+**Why you need it:** NodePort services (from Lab 02) require port forwarding. Ingress lets you use DNS names and URL paths instead — much more realistic for application development.
+
+**Example:** Instead of `localhost:30000`, you can use `hello.local` in your browser.
 
 ```bash
 minikube addons enable ingress

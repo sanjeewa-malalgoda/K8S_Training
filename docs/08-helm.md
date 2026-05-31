@@ -1,6 +1,36 @@
 # 08 — Helm Basics
 
-Helm is a package manager for Kubernetes.
+## What is Helm?
+
+Helm is a **package manager** for Kubernetes (think: `npm` for Node.js, `apt` for Linux, `brew` for macOS).
+
+### The problem Helm solves
+
+With raw YAML files, deploying an app requires:
+1. Create Deployment YAML (pod config)
+2. Create Service YAML (networking)
+3. Create ConfigMap YAML (config)
+4. Create Secret YAML (credentials)
+5. Create PVC YAML (storage)
+
+That's 5+ files for one app. **Helm packages all of this** into a reusable bundle called a **Chart**.
+
+### Helm Chart = Application Bundle
+
+A Helm Chart includes:
+- Kubernetes YAML templates
+- Default configuration values
+- Metadata and version
+- Installation/uninstall logic
+
+**Example:** The `bitnami/nginx` chart is a pre-packaged Nginx installation that handles all the YAML for you.
+
+### Why use Helm?
+
+- **Reusability** — Share charts across projects
+- **Templates** — Customize values without editing YAML
+- **Versioning** — Easy upgrades and rollbacks
+- **Package management** — Similar to `npm install`
 
 ---
 

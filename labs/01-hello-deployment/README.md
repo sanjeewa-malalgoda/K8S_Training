@@ -1,6 +1,20 @@
 # Lab 01 — Hello Deployment
 
-Goal: create a simple Kubernetes Deployment.
+## What is a Deployment?
+
+A **Deployment** is the most common way to run applications in Kubernetes. It manages creating and maintaining pods.
+
+### Why use Deployments?
+
+Without Deployments, if a pod crashes, it's gone. Deployments automatically:
+- **Replace failed pods** — If a pod dies, Deployment creates a new one
+- **Scale pods** — Run multiple copies for load balancing
+- **Rolling updates** — Update app version without downtime
+- **Rollback** — Go back to previous version if something breaks
+
+### What you'll do
+
+You'll deploy a simple Nginx container using Kubernetes YAML files. This deployment will keep running as long as your cluster is alive.
 
 ---
 

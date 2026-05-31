@@ -1,6 +1,32 @@
 # Lab 05 — PersistentVolumeClaim
 
-Goal: create a PersistentVolumeClaim and mount it into a pod.
+## What is Persistent Storage?
+
+By default, pod data is **temporary**. When a pod dies, all data is lost.
+
+### The problem
+
+Your app writes logs or database files to disk. Kubernetes replaces the pod. Data is gone.
+
+### The solution: PersistentVolume
+
+A **PersistentVolume (PV)** is storage that outlives pods. It exists at the cluster level.
+
+A **PersistentVolumeClaim (PVC)** is a request for storage:
+- "I need 1GB of storage"
+- "I need read-write access"
+- Kubernetes finds a matching PV and binds them
+
+### Real-world examples
+
+- **Database pod** — needs data to survive pod restarts
+- **Log collector** — needs to persist logs to disk
+- **Cache** — stores data across pod replacements
+- **Shared data** — multiple pods access the same file
+
+### What you'll do
+
+You'll create a PVC and mount it into a pod. The pod writes a file to the volume. Even if the pod is deleted and recreated, the file persists.
 
 ---
 

@@ -1,6 +1,15 @@
 # 05 — kubectl Basics
 
-`kubectl` is the command-line tool used to interact with Kubernetes.
+## What is kubectl?
+
+`kubectl` (pronounced "kube-control") is the command-line tool for interacting with Kubernetes clusters. Think of it as `git` for Kubernetes:
+
+- **git commit** → `kubectl apply` (create/update resources)
+- **git status** → `kubectl get` (view resources)
+- **git log** → `kubectl logs` (view pod output)
+- **git show** → `kubectl describe` (detailed resource info)
+
+Everything you do in Kubernetes goes through `kubectl`. It communicates with the API server to manage your cluster.
 
 ---
 
@@ -12,17 +21,19 @@ Check nodes:
 kubectl get nodes
 ```
 
-Check pods in current namespace:
+Check pods in **current namespace** (default):
 
 ```bash
 kubectl get pods
 ```
 
-Check pods in all namespaces:
+Check pods in **all namespaces** across the cluster:
 
 ```bash
 kubectl get pods -A
 ```
+
+**Why namespaces?** Kubernetes uses namespaces to partition cluster resources. Each team or app can have its own namespace, like separate folders. This helps with isolation, permissions, and organization.
 
 Check namespaces:
 

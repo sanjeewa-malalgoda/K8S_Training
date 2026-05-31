@@ -1,6 +1,32 @@
 # Lab 03 — Ingress
 
-Goal: expose a service using Ingress.
+## What you'll learn
+
+In Lab 02, you exposed the app using a NodePort (port 30000+). That works but feels clunky:
+- Hard to remember port numbers
+- Not realistic for production
+- Can't easily run multiple apps
+
+**Ingress solves this:** It routes HTTP requests by hostname and URL path, like a real web server.
+
+### How it works
+
+1. You configure an Ingress resource with a hostname: `hello.local`
+2. The Ingress controller (nginx) listens on port 80
+3. When a request comes for `hello.local`, it routes to your Service
+4. Your Service routes to the Pod
+
+### The result
+
+Instead of:
+```
+localhost:30000
+```
+
+You get:
+```
+hello.local  (in your browser, like a real website)
+```
 
 ---
 
