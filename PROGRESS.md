@@ -48,18 +48,23 @@ Command:
 kubectl get pods -A
 ```
 
-Actual output:
+Expected output (all pods should show `Running` status):
 
 ```text
-NAMESPACE     NAME                               READY   STATUS    RESTARTS        AGE
-kube-system   coredns-7d764666f9-6z4rq           1/1     Running   0               6m42s
-kube-system   etcd-minikube                      1/1     Running   0               6m49s
-kube-system   kube-apiserver-minikube            1/1     Running   0               6m47s
-kube-system   kube-controller-manager-minikube   1/1     Running   0               6m49s
-kube-system   kube-proxy-699hl                   1/1     Running   0               6m42s
-kube-system   kube-scheduler-minikube            1/1     Running   0               6m47s
-kube-system   storage-provisioner                1/1     Running   1 (6m21s ago)   6m46s
+NAMESPACE     NAME                               READY   STATUS    RESTARTS      AGE
+kube-system   coredns-7d764666f9-6z4rq           1/1     Running   0             100m
+kube-system   etcd-minikube                      1/1     Running   0             100m
+kube-system   kube-apiserver-minikube            1/1     Running   0             100m
+kube-system   kube-controller-manager-minikube   1/1     Running   0             100m
+kube-system   kube-proxy-699hl                   1/1     Running   0             100m
+kube-system   kube-scheduler-minikube            1/1     Running   0             100m
+kube-system   storage-provisioner                1/1     Running   1 (99m ago)   100m
 ```
+
+**Validation criteria:**
+- All 7 pods must show `STATUS: Running`
+- `READY` column must show `1/1` for each pod
+- No pods should show `Pending`, `Failed`, `CrashLoopBackOff`, or `Unknown` status
 
 ---
 
