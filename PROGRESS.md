@@ -63,6 +63,14 @@ kube-system   storage-provisioner                1/1     Running   1 (6m21s ago)
 
 ---
 
+## Documentation Improvements
+
+| Date | Change | Details | Status |
+|---|---|---|---|
+| 2026-05-31 | Restructure README.md | Added learning path with hierarchical topic list, linking all docs and labs in order | Done |
+
+---
+
 ## Next tasks
 
 | Priority | Task | Status | Notes |
@@ -91,11 +99,15 @@ kube-system   storage-provisioner                1/1     Running   1 (6m21s ago)
 
 ## Improvement backlog
 
-- Add screenshots for Windows Docker Desktop settings
-- Add screenshots for macOS Docker Desktop settings
-- Add a diagram explaining minikube architecture
-- Add a Helm chart example
-- Add a WSO2 API Manager lab later
-- Add a troubleshooting decision tree
-- Add CI check for YAML syntax
+- [ ] Add validation checkpoints to each learning path section
+- [ ] Verify all links in README.md lead to correct doc sections
+- [ ] Add expected outcomes for each learning path step
+- [ ] Enhance lab READMEs with step-by-step instructions (similar to learning path format)
+- [ ] Add screenshots for Windows Docker Desktop settings
+- [ ] Add screenshots for macOS Docker Desktop settings
+- [ ] Add a diagram explaining minikube architecture
+- [ ] Add a Helm chart example
+- [ ] Add a WSO2 API Manager lab later
+- [ ] Add a troubleshooting decision tree
+- [ ] Add CI check for YAML syntax
 - Add GitHub Actions workflow for Markdown linting
