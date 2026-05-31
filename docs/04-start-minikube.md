@@ -1,4 +1,4 @@
-# 04 — Start Minikube
+# 04 - Start Minikube
 
 Use the Docker driver for both Windows and macOS.
 

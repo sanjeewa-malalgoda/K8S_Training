@@ -1,4 +1,4 @@
-# 02 — Install on Windows 11
+# 02 - Install on Windows 11
 
 This section explains how to install Docker Desktop, minikube, and kubectl on Windows.
 
@@ -32,7 +32,7 @@ If `Server` is missing, Docker Desktop is not ready.
 
 ## 2. Install minikube
 
-### Option A — winget
+### Option A - winget
 
 ```powershell
 winget install Kubernetes.minikube
@@ -48,7 +48,7 @@ minikube version
 
 ---
 
-### Option B — manual install
+### Option B - manual install
 
 ```powershell
 New-Item -Path 'C:\' -Name 'minikube' -ItemType Directory -Force

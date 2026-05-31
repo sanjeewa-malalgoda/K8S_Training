@@ -1,4 +1,4 @@
-# 01 — Prerequisites
+# 01 - Prerequisites
 
 Before installing minikube, check the machine resources and required tools.
 

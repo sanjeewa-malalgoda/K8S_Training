@@ -1,4 +1,4 @@
-# 03 — Install on macOS
+# 03 - Install on macOS
 
 This section explains how to install Docker Desktop, minikube, and kubectl on macOS.
 

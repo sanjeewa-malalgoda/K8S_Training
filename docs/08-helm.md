@@ -1,4 +1,4 @@
-# 08 — Helm Basics
+# 08 - Helm Basics
 
 ## What is Helm?
 
@@ -27,10 +27,10 @@ A Helm Chart includes:
 
 ### Why use Helm?
 
-- **Reusability** — Share charts across projects
-- **Templates** — Customize values without editing YAML
-- **Versioning** — Easy upgrades and rollbacks
-- **Package management** — Similar to `npm install`
+- **Reusability** - Share charts across projects
+- **Templates** - Customize values without editing YAML
+- **Versioning** - Easy upgrades and rollbacks
+- **Package management** - Similar to `npm install`
 
 ---
 

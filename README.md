@@ -1,4 +1,4 @@
-# Minikube Local Kubernetes Tutorial — Windows, macOS, VS Code
+# Minikube Local Kubernetes Tutorial - Windows, macOS, VS Code
 
 This project is a complete, hands-on local Kubernetes tutorial using **minikube**, **Docker Desktop**, **kubectl**, and **VS Code**.
 
@@ -22,14 +22,14 @@ This tutorial is suitable for:
 
 This is a **progressive learning path**. Start at step 1 and work through each topic in order. Each section builds on the previous one:
 
-- **Setup & Prerequisites** — Verify your system and install required tools
-- **Cluster Setup** — Install and start minikube, verify it works
-- **Learn kubectl** — Understand basic Kubernetes commands and cluster inspection
-- **Deploy Services** — Create and run your first application
-- **Advanced Networking** — Use Ingress for external access
-- **Storage & Config** — Use ConfigMaps, Secrets, and persistent volumes
-- **Package Management** — Deploy applications using Helm
-- **Cleanup** — Reset your environment
+- **Setup & Prerequisites** - Verify your system and install required tools
+- **Cluster Setup** - Install and start minikube, verify it works
+- **Learn kubectl** - Understand basic Kubernetes commands and cluster inspection
+- **Deploy Services** - Create and run your first application
+- **Advanced Networking** - Use Ingress for external access
+- **Storage & Config** - Use ConfigMaps, Secrets, and persistent volumes
+- **Package Management** - Deploy applications using Helm
+- **Cleanup** - Reset your environment
 
 Follow the links in order. Validate each step before moving to the next. Use [TROUBLESHOOTING.md](TROUBLESHOOTING.md) if you hit errors.
 
@@ -125,10 +125,10 @@ Follow the links in order. Validate each step before moving to the next. Use [TR
 
 Need a shortcut? See:
 
-- **Quick start** — [QUICKSTART.md](QUICKSTART.md)
-- **Troubleshooting** — [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
-- **kubectl cheatsheet** — [scripts/common/kubectl-cheatsheet.md](scripts/common/kubectl-cheatsheet.md)
-- **Track progress** — [PROGRESS.md](PROGRESS.md)
+- **Quick start** - [QUICKSTART.md](QUICKSTART.md)
+- **Troubleshooting** - [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- **kubectl cheatsheet** - [scripts/common/kubectl-cheatsheet.md](scripts/common/kubectl-cheatsheet.md)
+- **Track progress** - [PROGRESS.md](PROGRESS.md)
 
 ---
 

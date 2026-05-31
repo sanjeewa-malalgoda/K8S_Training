@@ -1,4 +1,4 @@
-# 09 — Cleanup
+# 09 - Cleanup
 
 Use these commands to clean up labs.
 

@@ -1,4 +1,4 @@
-# Lab 04 — ConfigMap and Secret
+# Lab 04 - ConfigMap and Secret
 
 ## What are ConfigMap and Secret?
 
@@ -26,10 +26,10 @@ A **Secret** stores sensitive data. Examples:
 
 ### Why not just hardcode values?
 
-- **Flexibility** — Change config without rebuilding container image
-- **Reusability** — Same image runs in dev/staging/production with different configs
-- **Separation** — Devs write code, ops manage secrets
-- **Security** — Secrets are treated specially (e.g., they don't appear in pod logs)
+- **Flexibility** - Change config without rebuilding container image
+- **Reusability** - Same image runs in dev/staging/production with different configs
+- **Separation** - Devs write code, ops manage secrets
+- **Security** - Secrets are treated specially (e.g., they don't appear in pod logs)
 
 ### What you'll do
 

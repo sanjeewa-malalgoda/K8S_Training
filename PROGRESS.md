@@ -9,9 +9,9 @@ Use this file as the living record of what has been completed, what failed, and 
 | Item | Status |
 |---|---|
 | Docker Desktop installed on Windows | Done |
-| Docker Desktop version recorded | Done — 4.71.0 (225177) |
+| Docker Desktop version recorded | Done - 4.71.0 (225177) |
 | minikube installed on Windows | Done |
-| minikube version recorded | Done — v1.38.1 |
+| minikube version recorded | Done - v1.38.1 |
 | PATH issue identified | Done |
 | Docker driver issue identified | Done |
 | minikube cluster started | Done |

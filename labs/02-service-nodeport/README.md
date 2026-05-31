@@ -1,4 +1,4 @@
-# Lab 02 — Service and NodePort
+# Lab 02 - Service and NodePort
 
 ## What is a Service?
 
@@ -6,7 +6,7 @@ A **Service** is a stable network endpoint that exposes a Deployment to clients.
 
 ### Problem it solves
 
-Pods are **temporary** — they get created and destroyed constantly. Each pod has a different IP. How do clients access your application reliably?
+Pods are **temporary** - they get created and destroyed constantly. Each pod has a different IP. How do clients access your application reliably?
 
 **Answer:** Use a Service. It provides a stable IP and DNS name that never changes, even as pods are replaced.
 

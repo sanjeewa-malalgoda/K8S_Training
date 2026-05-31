@@ -1,4 +1,4 @@
-# Lab 06 — Basic Helm
+# Lab 06 - Basic Helm
 
 ## What you'll do
 
@@ -22,19 +22,19 @@ That's it. Helm handles all the YAML for you.
 
 ### How Helm Charts work
 
-1. **Chart Repository** (bitnami) — Collection of packaged apps
-2. **Chart** (nginx) — Pre-built YAML templates and defaults
-3. **Values** — Customizable settings (version, port, replicas, etc.)
-4. **Release** — An installed chart (named `demo-nginx`)
+1. **Chart Repository** (bitnami) - Collection of packaged apps
+2. **Chart** (nginx) - Pre-built YAML templates and defaults
+3. **Values** - Customizable settings (version, port, replicas, etc.)
+4. **Release** - An installed chart (named `demo-nginx`)
 
 You can override any value without editing the chart.
 
 ### Why this matters
 
-- **Production use** — Real apps use Helm
-- **Consistency** — Deploy the same app the same way everywhere
-- **Upgrades** — `helm upgrade` instead of re-applying YAML
-- **Sharing** — Teams publish charts for others to use
+- **Production use** - Real apps use Helm
+- **Consistency** - Deploy the same app the same way everywhere
+- **Upgrades** - `helm upgrade` instead of re-applying YAML
+- **Sharing** - Teams publish charts for others to use
 
 ---
 

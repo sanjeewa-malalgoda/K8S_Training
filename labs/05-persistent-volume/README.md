@@ -1,4 +1,4 @@
-# Lab 05 — PersistentVolumeClaim
+# Lab 05 - PersistentVolumeClaim
 
 ## What is Persistent Storage?
 
@@ -19,10 +19,10 @@ A **PersistentVolumeClaim (PVC)** is a request for storage:
 
 ### Real-world examples
 
-- **Database pod** — needs data to survive pod restarts
-- **Log collector** — needs to persist logs to disk
-- **Cache** — stores data across pod replacements
-- **Shared data** — multiple pods access the same file
+- **Database pod** - needs data to survive pod restarts
+- **Log collector** - needs to persist logs to disk
+- **Cache** - stores data across pod replacements
+- **Shared data** - multiple pods access the same file
 
 ### What you'll do
 

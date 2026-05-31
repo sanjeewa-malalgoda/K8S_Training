@@ -1,4 +1,4 @@
-# Lab 03 — Ingress
+# Lab 03 - Ingress
 
 ## What you'll learn
 

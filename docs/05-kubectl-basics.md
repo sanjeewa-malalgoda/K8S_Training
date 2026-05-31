@@ -1,4 +1,4 @@
-# 05 — kubectl Basics
+# 05 - kubectl Basics
 
 ## What is kubectl?
 

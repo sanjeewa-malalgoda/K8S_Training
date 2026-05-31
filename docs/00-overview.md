@@ -1,4 +1,4 @@
-# 00 — Overview
+# 00 - Overview
 
 Minikube is a tool for running a local Kubernetes cluster on a laptop or workstation.
 

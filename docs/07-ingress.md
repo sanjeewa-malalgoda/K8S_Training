@@ -1,4 +1,4 @@
-# 07 — Ingress
+# 07 - Ingress
 
 ## What is Ingress?
 
