@@ -24,11 +24,15 @@ Verify:
 kubectl get pods -n ingress-nginx
 ```
 
-Expected:
+Expected output:
 
 ```text
-ingress-nginx-controller-...   1/1   Running
+NAMESPACE       NAME                        READY   STATUS      RESTARTS   AGE
+ingress-nginx   ingress-nginx-controller    1/1     Running     0          1m
+ingress-nginx   ingress-nginx-admission     0/1     Completed   0          1m
 ```
+
+✓ Success if controller shows `Running` and `READY: 1/1`
 
 ---
 

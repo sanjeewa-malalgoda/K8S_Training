@@ -70,9 +70,10 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 
 ## Documentation Improvements
 
-| Date | Change | Details | Status |
+| Date | Change | Files | Status |
 |---|---|---|---|
-| 2026-05-31 | Restructure README.md | Added learning path with hierarchical topic list, linking all docs and labs in order | Done |
+| 2026-05-31 | Restructure README.md | README.md | Done |
+| 2026-05-31 | Replace vague expected outputs with exact command output | docs/00-overview.md, docs/01-prerequisites.md, docs/04-start-minikube.md, docs/06-addons.md, QUICKSTART.md, labs/01-hello-deployment/README.md, labs/04-configmap-secret/README.md, labs/05-persistent-volume/README.md | Done |
 
 ---
 

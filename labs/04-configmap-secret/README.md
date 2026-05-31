@@ -19,7 +19,14 @@ kubectl get pods -n minikube-demo
 kubectl logs deployment/config-demo -n minikube-demo
 ```
 
-Expected logs should show environment variables printed by the container.
+Expected output (example):
+
+```text
+MY_CONFIG_VALUE=hello-from-configmap
+MY_SECRET_VALUE=hello-from-secret
+```
+
+✓ Success if both environment variables appear in the logs from the container startup.
 
 ---
 

@@ -63,12 +63,13 @@ kubectl get nodes
 kubectl get pods -A
 ```
 
-Expected:
+Expected output:
 
 ```text
-minikube node is Ready
-core Kubernetes pods are Running
+minikube          Ready    control-plane   ...   v1.35.1
 ```
+
+Plus 7 core pods in `Running` state. ✓ Success if all pods show `READY: 1/1` and `STATUS: Running`
 
 ---
 
@@ -79,11 +80,15 @@ minikube addons enable ingress
 kubectl get pods -n ingress-nginx
 ```
 
-Expected:
+Expected output:
 
 ```text
-ingress-nginx-controller is Running
+NAMESPACE       NAME                        READY   STATUS      RESTARTS   AGE
+ingress-nginx   ingress-nginx-controller    1/1     Running     0          1m
+ingress-nginx   ingress-nginx-admission     0/1     Completed   0          1m
 ```
+
+✓ Controller must show `STATUS: Running` and `READY: 1/1`
 
 ---
 

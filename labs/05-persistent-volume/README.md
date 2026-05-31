@@ -19,12 +19,21 @@ kubectl get pvc -n minikube-demo
 kubectl get pods -n minikube-demo
 ```
 
-Expected:
+Expected output (PVC):
 
 ```text
-PVC status is Bound
-pod status is Running
+NAME        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   AGE
+data-pvc    Bound    pvc-1234567890-abcdef                     1Gi        RWO            2m
 ```
+
+Expected output (Pod):
+
+```text
+NAMESPACE       NAME            READY   STATUS    RESTARTS   AGE
+minikube-demo   storage-pod     1/1     Running   0          2m
+```
+
+✓ Success if PVC shows `STATUS: Bound` and Pod shows `STATUS: Running`
 
 ---
 

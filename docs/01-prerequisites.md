@@ -45,8 +45,11 @@ minikube version
 kubectl version --client
 ```
 
-Expected:
+Expected output (example):
 
-- Docker shows both `Client` and `Server`
-- minikube prints version
-- kubectl prints client version
+```text
+Client: Docker Engine v27.0.0
+Server: Docker Engine v27.0.0
+```
+
+All three commands should print version information without errors.

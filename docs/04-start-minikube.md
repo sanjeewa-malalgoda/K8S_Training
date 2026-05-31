@@ -44,9 +44,11 @@ kubectl get nodes
 Expected:
 
 ```text
-NAME       STATUS   ROLES           AGE   VERSION
-minikube   Ready    control-plane    ...   ...
+NAME       STATUS   ROLES           AGE     VERSION
+minikube   Ready    control-plane   7m15s   v1.35.1
 ```
+
+**✓ Success if `STATUS: Ready` is shown (AGE and VERSION will vary)**
 
 ---
 
@@ -59,8 +61,20 @@ kubectl get pods -A
 Expected:
 
 ```text
-kube-system pods should be Running
+NAMESPACE     NAME                               READY   STATUS    RESTARTS      AGE
+kube-system   coredns-7d764666f9-6z4rq           1/1     Running   0             100m
+kube-system   etcd-minikube                      1/1     Running   0             100m
+kube-system   kube-apiserver-minikube            1/1     Running   0             100m
+kube-system   kube-controller-manager-minikube   1/1     Running   0             100m
+kube-system   kube-proxy-699hl                   1/1     Running   0             100m
+kube-system   kube-scheduler-minikube            1/1     Running   0             100m
+kube-system   storage-provisioner                1/1     Running   1 (99m ago)   100m
 ```
+
+**✓ Success criteria:**
+- All 7 pods must show `STATUS: Running`
+- `READY` column must show `1/1` for each pod
+- No `Pending`, `Failed`, `CrashLoopBackOff`, or `Unknown` status
 
 ---
 

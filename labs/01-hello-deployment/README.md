@@ -20,12 +20,14 @@ kubectl get deployments -n minikube-demo
 kubectl get pods -n minikube-demo
 ```
 
-Expected:
+Expected output:
 
 ```text
-hello-nginx deployment is available
-hello-nginx pod is Running
+NAMESPACE       NAME                            READY   STATUS    RESTARTS   AGE
+minikube-demo   hello-nginx-5d9d98b8b9-abcde    1/1     Running   0          2m
 ```
+
+✓ Success if pod shows `STATUS: Running` and `READY: 1/1`
 
 ---
 
