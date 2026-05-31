@@ -61,22 +61,34 @@ kubectl delete namespace minikube-demo
 kubectl describe node minikube
 ```
 
+Describe an actual running pod:
+
 ```bash
-kubectl describe pod <pod-name>
+kubectl describe pod etcd-minikube -n kube-system
+kubectl describe pod storage-provisioner -n kube-system
+kubectl describe pod coredns-7d764666f9-6z4rq -n kube-system
 ```
+
+**Important:** Use `-n <namespace>` to specify where the pod is. Always run `kubectl get pods -A` first to find the actual pod name and namespace.
 
 ---
 
 ## Logs
 
+View logs from an actual running pod:
+
 ```bash
-kubectl logs <pod-name>
+kubectl logs etcd-minikube -n kube-system
+kubectl logs storage-provisioner -n kube-system
+kubectl logs coredns-7d764666f9-6z4rq -n kube-system
 ```
 
-Follow logs:
+**Important:** Always include `-n <namespace>`. Use `kubectl get pods -A` first to find the pod name and namespace.
+
+Follow logs (live stream):
 
 ```bash
-kubectl logs -f <pod-name>
+kubectl logs -f etcd-minikube -n kube-system
 ```
 
 ---

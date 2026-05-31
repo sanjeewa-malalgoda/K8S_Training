@@ -11,26 +11,42 @@ kubectl describe node minikube
 ## Pods
 
 ```bash
-kubectl get pods
-kubectl get pods -A
-kubectl describe pod <pod-name>
-kubectl logs <pod-name>
-kubectl logs -f <pod-name>
+kubectl get pods                                           # Get pods in default namespace
+kubectl get pods -A                                        # Get all pods across all namespaces
+kubectl get pods -n kube-system                            # List pods in kube-system
+```
+
+**Then describe an actual running pod:**
+
+```bash
+kubectl describe pod etcd-minikube -n kube-system
+kubectl describe pod coredns-7d764666f9-6z4rq -n kube-system
+kubectl describe pod storage-provisioner -n kube-system
+```
+
+**View pod logs (use actual pod names from `kubectl get pods`):**
+
+```bash
+kubectl logs etcd-minikube -n kube-system
+kubectl logs coredns-7d764666f9-6z4rq -n kube-system
+kubectl logs -f storage-provisioner -n kube-system        # Follow logs live
 ```
 
 ## Deployments
 
 ```bash
-kubectl get deployments
-kubectl describe deployment <deployment-name>
-kubectl scale deployment <deployment-name> --replicas=3
+kubectl get deployments                          # List deployments
+kubectl get deployments -n minikube-demo         # List in specific namespace
+kubectl describe deployment <NAME> -n <NAMESPACE>  # Use actual deployment name
+kubectl scale deployment <NAME> -n <NAMESPACE> --replicas=3
 ```
 
 ## Services
 
 ```bash
-kubectl get svc
-kubectl describe svc <service-name>
+kubectl get svc                              # List services
+kubectl get svc -n minikube-demo             # List in specific namespace
+kubectl describe svc <NAME> -n <NAMESPACE>   # Use actual service name
 ```
 
 ## Namespaces

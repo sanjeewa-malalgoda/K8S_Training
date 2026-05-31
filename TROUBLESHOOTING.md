@@ -150,8 +150,16 @@ minikube kubectl -- get pods -A
 
 ### Check
 
+First, find which pods exist:
+
 ```bash
-kubectl describe pod <pod-name>
+kubectl get pods -A
+```
+
+Then describe the specific pod causing the issue:
+
+```bash
+kubectl describe pod storage-provisioner -n kube-system
 kubectl describe node minikube
 ```
 
@@ -168,8 +176,22 @@ kubectl describe node minikube
 
 ### Check
 
+Find the failing pod:
+
 ```bash
-kubectl describe pod <pod-name>
+kubectl get pods -A
+```
+
+Get details about why it failed:
+
+```bash
+kubectl describe pod <POD-NAME> -n <NAMESPACE>
+```
+
+Example with actual pod:
+
+```bash
+kubectl describe pod coredns-7d764666f9-6z4rq -n kube-system
 ```
 
 ### Common causes
