@@ -66,7 +66,8 @@ kubectl get pods -A
 Expected output:
 
 ```text
-minikube          Ready    control-plane   ...   v1.35.1
+NAME       STATUS   ROLES           AGE     VERSION
+minikube   Ready    control-plane   7m15s   v1.35.1
 ```
 
 Plus 7 core pods in `Running` state. ✓ Success if all pods show `READY: 1/1` and `STATUS: Running`
