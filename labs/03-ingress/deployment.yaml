@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-nginx-ingress
+  namespace: minikube-demo
+  labels:
+    app: hello-nginx-ingress
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hello-nginx-ingress
+  template:
+    metadata:
+      labels:
+        app: hello-nginx-ingress
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80

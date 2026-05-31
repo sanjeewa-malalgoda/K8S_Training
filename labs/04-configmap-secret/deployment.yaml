@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-demo
+  namespace: minikube-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: config-demo
+  template:
+    metadata:
+      labels:
+        app: config-demo
+    spec:
+      containers:
+        - name: config-demo
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "APP_MODE=$APP_MODE"
+              echo "APP_REGION=$APP_REGION"
+              echo "DEMO_PASSWORD is set"
+              sleep 3600
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secret

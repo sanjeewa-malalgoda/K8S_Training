@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "ms-kubernetes-tools.vscode-kubernetes-tools",
+    "redhat.vscode-yaml",
+    "ms-vscode.powershell",
+    "timonwong.shellcheck",
+    "yzhang.markdown-all-in-one"
+  ]
+}

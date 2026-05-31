@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "K8s: Verify Cluster",
+      "type": "shell",
+      "command": "kubectl get nodes && kubectl get pods -A",
+      "problemMatcher": []
+    },
+    {
+      "label": "K8s: Apply Lab 01",
+      "type": "shell",
+      "command": "kubectl apply -f labs/01-hello-deployment/",
+      "problemMatcher": []
+    },
+    {
+      "label": "K8s: Delete Lab 01",
+      "type": "shell",
+      "command": "kubectl delete -f labs/01-hello-deployment/",
+      "problemMatcher": []
+    },
+    {
+      "label": "K8s: Apply Ingress Lab",
+      "type": "shell",
+      "command": "kubectl apply -f labs/03-ingress/",
+      "problemMatcher": []
+    },
+    {
+      "label": "K8s: Delete Ingress Lab",
+      "type": "shell",
+      "command": "kubectl delete -f labs/03-ingress/",
+      "problemMatcher": []
+    }
+  ]
+}

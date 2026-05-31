@@ -1,0 +1,16 @@
+{
+  "files.eol": "\n",
+  "editor.formatOnSave": true,
+  "markdown.validate.enabled": true,
+  "yaml.validate": true,
+  "yaml.schemas": {
+    "kubernetes": [
+      "labs/**/*.yaml",
+      "labs/**/*.yml"
+    ]
+  },
+  "files.associations": {
+    "*.yaml": "yaml",
+    "*.yml": "yaml"
+  }
+}

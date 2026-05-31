@@ -1,0 +1,22 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+.codex/
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# kube configs or secrets should not be committed
+kubeconfig
+*.kubeconfig
+.env
