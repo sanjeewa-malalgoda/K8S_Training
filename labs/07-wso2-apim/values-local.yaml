@@ -1,0 +1,30 @@
+# values-local.yaml — WSO2 APIM 4.6.0 All-in-One for minikube
+# Override default values to use public images and embedded H2 database
+
+wso2:
+  subscription:
+    username: ""
+    password: ""
+
+  deployment:
+    image:
+      registry: "docker.io"
+      repository: "wso2/wso2am"
+      tag: "4.6.0"
+      imagePullPolicy: IfNotPresent
+
+    replicas: 1
+
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "1000m"
+      limits:
+        memory: "4Gi"
+        cpu: "2000m"
+
+    wso2ApiManager:
+      ingress:
+        host: "am.wso2.com"
+      gatewayIngress:
+        host: "gw.wso2.com"

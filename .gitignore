@@ -3,10 +3,7 @@
 Thumbs.db
 
 # Editor files
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-!.vscode/tasks.json
+.vscode/
 .codex/
 
 # Logs
@@ -15,6 +12,9 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+
+# Progress tracking (personal to each user)
+PROGRESS.md
 
 # kube configs or secrets should not be committed
 kubeconfig

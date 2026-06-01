@@ -171,6 +171,19 @@ Package and deploy applications with Helm.
 | Details | [06-helm-basic/README.md](labs/06-helm-basic/README.md) |
 | Cleanup | See lab README for cleanup commands |
 
+### 9.7 Lab: WSO2 API Manager 4.6.0
+
+Deploy an enterprise API management platform on Kubernetes using Helm. Learn real-world application deployment with complex Kubernetes resources.
+
+| Task | Command |
+|------|---------|
+| Prerequisites | Docker (40GB), minikube, Ingress addon, Helm |
+| Apply | `helm install apim . --namespace wso2 --create-namespace --dependency-update -f values-local.yaml` |
+| Clone Chart | `git clone https://github.com/wso2/helm-apim.git && cd helm-apim && git checkout tags/all-in-one-4.6.0-2 && cd all-in-one` |
+| Verify | `kubectl get pods -n wso2` and access https://am.wso2.com/publisher |
+| Details | [07-wso2-apim/README.md](labs/07-wso2-apim/README.md) |
+| Cleanup | `helm uninstall apim -n wso2 && kubectl delete namespace wso2` |
+
 ---
 
 ## Stage 3: Cleanup (Reset Your Environment)
@@ -265,7 +278,8 @@ Need a shortcut? See:
 │   ├── 03-ingress/
 │   ├── 04-configmap-secret/
 │   ├── 05-persistent-volume/
-│   └── 06-helm-basic/
+│   ├── 06-helm-basic/
+│   └── 07-wso2-apim/
 └── scripts/                     ← Automation and references
     ├── windows/
     ├── macos/
