@@ -20,31 +20,26 @@ This tutorial is suitable for:
 
 ## How to use this guide
 
-This is a **progressive learning path**. Start at step 1 and work through each topic in order. Each section builds on the previous one:
+This is a **three-stage learning path**:
 
-- **Setup & Prerequisites** - Verify your system and install required tools
-- **Cluster Setup** - Install and start minikube, verify it works
-- **Learn kubectl** - Understand basic Kubernetes commands and cluster inspection
-- **Deploy Services** - Create and run your first application
-- **Advanced Networking** - Use Ingress for external access
-- **Storage & Config** - Use ConfigMaps, Secrets, and persistent volumes
-- **Package Management** - Deploy applications using Helm
-- **Cleanup** - Reset your environment
+1. **📚 Documentation Stage** - Learn concepts, setup, and validate your cluster (Sections 1-8)
+2. **💻 Labs Session** - Apply what you learned with hands-on exercises (Sections 9.1-9.6)
+3. **🧹 Cleanup** - Remove deployments and reset your environment (Section 10)
 
-Follow the links in order. Validate each step before moving to the next. Use [TROUBLESHOOTING.md](TROUBLESHOOTING.md) if you hit errors.
+**Important:** Complete all documentation sections and validate each step **before entering the labs session**. Use [TROUBLESHOOTING.md](TROUBLESHOOTING.md) if you hit errors.
 
 ---
 
-## Learning Path
+## Stage 1: Documentation & Learning Path (Complete Before Labs)
 
-### 1. Setup & Prerequisites
+### 1. Setup & Prerequisites ✓ (Validate before labs)
 
 | Step | Topic | Guide |
 |------|-------|-------|
 | 1.1 | System requirements and overview | [00-overview.md](docs/00-overview.md) |
 | 1.2 | Check prerequisites before starting | [01-prerequisites.md](docs/01-prerequisites.md) |
 
-### 2. Install Docker Desktop
+### 2. Install Docker Desktop ✓ (Validate before labs)
 
 | Step | Topic | Guide |
 |------|-------|-------|
@@ -52,7 +47,7 @@ Follow the links in order. Validate each step before moving to the next. Use [TR
 | 2.2 | Install Docker on macOS | [03-install-macos.md](docs/03-install-macos.md) |
 | 2.3 | Verify Docker is running | [01-prerequisites.md](docs/01-prerequisites.md#verify-docker-desktop) |
 
-### 3. Install & Start minikube
+### 3. Install & Start minikube ✓ (Validate before labs)
 
 | Step | Topic | Guide |
 |------|-------|-------|
@@ -61,49 +56,163 @@ Follow the links in order. Validate each step before moving to the next. Use [TR
 | 3.3 | Verify cluster is running | [04-start-minikube.md](docs/04-start-minikube.md#verify-the-cluster) |
 | 3.4 | Troubleshoot cluster issues | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
 
-### 4. Learn kubectl Basics
+### 4. Learn kubectl Basics ✓ (Validate before labs)
 
 | Step | Topic | Guide |
 |------|-------|-------|
 | 4.1 | kubectl fundamentals | [05-kubectl-basics.md](docs/05-kubectl-basics.md) |
 | 4.2 | Inspect your cluster | [05-kubectl-basics.md](docs/05-kubectl-basics.md) |
 
-### 5. Deploy Your First Service
+### 5. Understand Services & Deployments ✓ (Validate before labs)
 
 | Step | Topic | Guide |
 |------|-------|-------|
-| 5.1 | Create hello-world deployment | [01-hello-deployment](labs/01-hello-deployment/README.md) |
-| 5.2 | Deploy and validate | [01-hello-deployment](labs/01-hello-deployment/README.md) |
-| 5.3 | Access service via NodePort | [02-service-nodeport](labs/02-service-nodeport/README.md) |
-| 5.4 | Scale deployments | [02-service-nodeport](labs/02-service-nodeport/README.md#scaling) |
+| 5.1 | Learn Deployment concepts | [02-service-nodeport](labs/02-service-nodeport/README.md) (Concepts section) |
+| 5.2 | Learn Service types | [02-service-nodeport](labs/02-service-nodeport/README.md) (Types of Services) |
 
-### 6. Advanced Service Access (Ingress)
+### 6. Advanced Networking: Ingress ✓ (Validate before labs)
 
 | Step | Topic | Guide |
 |------|-------|-------|
 | 6.1 | Install Ingress controller | [06-addons.md](docs/06-addons.md) |
-| 6.2 | Configure Ingress routing | [07-ingress.md](docs/07-ingress.md) |
-| 6.3 | Deploy and test Ingress | [03-ingress](labs/03-ingress/README.md) |
+| 6.2 | Understand Ingress routing | [07-ingress.md](docs/07-ingress.md) |
 
-### 7. Configuration & Storage
-
-| Step | Topic | Guide |
-|------|-------|-------|
-| 7.1 | ConfigMaps and Secrets | [04-configmap-secret](labs/04-configmap-secret/README.md) |
-| 7.2 | Persistent storage (PVC) | [05-persistent-volume](labs/05-persistent-volume/README.md) |
-
-### 8. Package Management with Helm
+### 7. Configuration & Storage ✓ (Validate before labs)
 
 | Step | Topic | Guide |
 |------|-------|-------|
-| 8.1 | Helm basics | [08-helm.md](docs/08-helm.md) |
-| 8.2 | Deploy with Helm | [06-helm-basic](labs/06-helm-basic/README.md) |
+| 7.1 | ConfigMaps and Secrets concepts | [04-configmap-secret](labs/04-configmap-secret/README.md) (Concepts) |
+| 7.2 | Persistent storage concepts | [05-persistent-volume](labs/05-persistent-volume/README.md) (Concepts) |
 
-### 9. Cleanup
+### 8. Package Management: Helm ✓ (Validate before labs)
 
 | Step | Topic | Guide |
 |------|-------|-------|
-| 9.1 | Remove deployments and reset cluster | [09-cleanup.md](docs/09-cleanup.md) |
+| 8.1 | Learn Helm basics | [08-helm.md](docs/08-helm.md) |
+
+> **✓ CHECKPOINT:** If you can complete all sections 1-8 without errors, you are ready for labs!
+
+---
+
+## Stage 2: Labs Session (Apply What You Learned)
+
+Now that you've learned the concepts and validated your setup, apply them with hands-on labs.
+
+Each lab includes:
+- ✅ **Apply** - Deploy resources
+- ✅ **Verify** - Validate what you created
+- ✅ **Cleanup** - Remove resources when done
+
+**Run labs in order.** Complete and cleanup each lab before moving to the next.
+
+### 9.1 Lab: Hello Deployment
+
+Deploy your first Kubernetes application.
+
+| Task | Command |
+|------|---------|
+| Apply | `kubectl apply -f labs/01-hello-deployment/` |
+| Verify | `kubectl get deployments -n minikube-demo` |
+| Details | [01-hello-deployment/README.md](labs/01-hello-deployment/README.md) |
+| Cleanup | `kubectl delete -f labs/01-hello-deployment/` |
+
+### 9.2 Lab: Service & NodePort
+
+Expose your deployment with a Service.
+
+| Task | Command |
+|------|---------|
+| Apply | `kubectl apply -f labs/02-service-nodeport/` |
+| Verify | `kubectl get svc -n minikube-demo` |
+| Access | `minikube service hello-nginx-nodeport -n minikube-demo` |
+| Details | [02-service-nodeport/README.md](labs/02-service-nodeport/README.md) |
+| Cleanup | `kubectl delete -f labs/02-service-nodeport/` |
+
+### 9.3 Lab: Ingress Routing
+
+Use Ingress for advanced HTTP routing.
+
+| Task | Command |
+|------|---------|
+| Apply | `kubectl apply -f labs/03-ingress/` |
+| Verify | `kubectl get ingress -n minikube-demo` |
+| Access | `minikube service -n minikube-demo` |
+| Details | [03-ingress/README.md](labs/03-ingress/README.md) |
+| Cleanup | `kubectl delete -f labs/03-ingress/` |
+
+### 9.4 Lab: ConfigMap & Secrets
+
+Manage application configuration and secrets.
+
+| Task | Command |
+|------|---------|
+| Apply | `kubectl apply -f labs/04-configmap-secret/` |
+| Verify | `kubectl get configmap,secret -n minikube-demo` |
+| Details | [04-configmap-secret/README.md](labs/04-configmap-secret/README.md) |
+| Cleanup | `kubectl delete -f labs/04-configmap-secret/` |
+
+### 9.5 Lab: Persistent Storage
+
+Use PersistentVolumeClaims for data persistence.
+
+| Task | Command |
+|------|---------|
+| Apply | `kubectl apply -f labs/05-persistent-volume/` |
+| Verify | `kubectl get pvc -n minikube-demo` |
+| Details | [05-persistent-volume/README.md](labs/05-persistent-volume/README.md) |
+| Cleanup | `kubectl delete -f labs/05-persistent-volume/` |
+
+### 9.6 Lab: Helm Deployment
+
+Package and deploy applications with Helm.
+
+| Task | Command |
+|------|---------|
+| Details | [06-helm-basic/README.md](labs/06-helm-basic/README.md) |
+| Cleanup | See lab README for cleanup commands |
+
+---
+
+## Stage 3: Cleanup (Reset Your Environment)
+
+After you complete all labs, clean up resources:
+
+### Remove individual lab deployments
+
+Each lab has cleanup commands shown in the lab README. Run them as you finish each lab:
+
+```bash
+kubectl delete -f labs/01-hello-deployment/
+kubectl delete -f labs/02-service-nodeport/
+kubectl delete -f labs/03-ingress/
+kubectl delete -f labs/04-configmap-secret/
+kubectl delete -f labs/05-persistent-volume/
+```
+
+### Stop minikube (keeps cluster)
+
+```bash
+minikube stop
+```
+
+Your cluster is preserved and can be restarted with `minikube start`.
+
+### Delete entire minikube cluster (⚠️ destructive)
+
+```bash
+minikube delete
+```
+
+**Warning:** This removes the cluster and all deployments permanently.
+
+### Recreate clean cluster
+
+```bash
+minikube start --driver=docker --cpus=4 --memory=8192 --disk-size=40g
+minikube addons enable ingress
+kubectl get nodes
+kubectl get pods -A
+```
 
 ---
 
@@ -136,11 +245,11 @@ Need a shortcut? See:
 
 ```text
 .
-├── README.md                    ← You are here
+├── README.md                    ← You are here (Learning path + Labs + Cleanup)
 ├── PROGRESS.md                  ← Track what you've completed
 ├── QUICKSTART.md                ← Fast path if you know what you're doing
 ├── TROUBLESHOOTING.md           ← Error solutions
-├── docs/
+├── docs/                        ← Stage 1: Learn concepts & validate setup
 │   ├── 00-overview.md
 │   ├── 01-prerequisites.md
 │   ├── 02-install-windows.md
@@ -149,9 +258,8 @@ Need a shortcut? See:
 │   ├── 05-kubectl-basics.md
 │   ├── 06-addons.md
 │   ├── 07-ingress.md
-│   ├── 08-helm.md
-│   └── 09-cleanup.md
-├── labs/                        ← Hands-on exercises
+│   └── 08-helm.md
+├── labs/                        ← Stage 2: Apply learning with hands-on exercises
 │   ├── 01-hello-deployment/
 │   ├── 02-service-nodeport/
 │   ├── 03-ingress/
