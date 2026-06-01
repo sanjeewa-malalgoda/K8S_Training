@@ -23,7 +23,38 @@ Short answer: **No, not significantly for this training.**
 - Dashboard uses ~100-150MB RAM
 - Total additional overhead: ~300-500MB RAM (6-7% of your 8GB)
 
-**For the labs in this training, you should enable:**
+### Windows: Configure Docker Desktop memory for WSL 2
+
+If you're running on Windows with Docker Desktop and WSL 2, Docker Desktop may not show a memory slider in the UI. Configure memory allocation directly:
+
+1. **Edit `.wslconfig` file** (create if it doesn't exist):
+
+   Open or create: `C:\Users\{YourUsername}\.wslconfig`
+
+   Add or update:
+
+   ```ini
+   [wsl2]
+   memory=10GB
+   processors=4
+   swap=4GB
+   ```
+
+2. **Restart WSL 2**:
+
+   ```powershell
+   wsl --shutdown
+   ```
+
+   This fully stops all WSL 2 distros. Docker Desktop will restart WSL 2 automatically.
+
+3. **Start or restart minikube** (after WSL restarts):
+
+   ```powershell
+   minikube start --driver=docker --cpus=4 --memory=8192 --disk-size=40g
+   ```
+
+For the labs in this training, you should enable:
 1. **Ingress** - Required for Lab 03 (Ingress routing)
 2. **Metrics Server** - Optional but recommended for watching `kubectl top`
 
@@ -71,6 +102,43 @@ ingress-nginx   ingress-nginx-admission     0/1     Completed   0          1m
 
 ✓ Success if controller shows `Running` and `READY: 1/1`
 
+### Troubleshooting: Ingress enablement timeout
+
+If the `minikube addons enable ingress` command times out or the controller pod gets stuck, follow these steps:
+
+**Do NOT immediately delete or reset your cluster.** The controller may still be initializing.
+
+**Step 1: Check pod status**
+
+```powershell
+kubectl get pods -n ingress-nginx
+kubectl get events -n ingress-nginx --sort-by=.lastTimestamp
+```
+
+**Step 2: If pod shows `ContainerCreating`**
+
+Wait up to 10–15 minutes for the container image to pull and start:
+
+```powershell
+kubectl wait -n ingress-nginx --for=condition=Ready pod -l app.kubernetes.io/component=controller --timeout=600s
+```
+
+This will block until the pod is ready or the timeout expires.
+
+**Step 3: Only reset if critical errors appear**
+
+Only reset the addon or cluster if the pod shows one of these:
+- `ImagePullBackOff` - Image cannot be pulled
+- `CrashLoopBackOff` - Pod crashes repeatedly
+- Repeated readiness probe failures in events
+
+If you need to reset:
+
+```powershell
+minikube addons disable ingress
+minikube addons enable ingress
+```
+
 ---
 
 ## Enable metrics server
@@ -106,3 +174,28 @@ kubectl top pods -A
 minikube addons enable dashboard
 minikube dashboard
 ```
+
+---
+
+## Disable add-ons
+
+After completing your labs or if you need to free up resources, disable add-ons you no longer need:
+
+```bash
+minikube addons disable ingress
+minikube addons disable metrics-server
+minikube addons disable dashboard
+```
+
+To see which add-ons are currently enabled:
+
+```bash
+minikube addons list
+```
+
+Expected output shows `enabled` or `disabled` status for each add-on.
+
+**When to disable:**
+- You're done with a specific lab that required an add-on
+- You need to free up RAM or CPU for other applications
+- You're switching between different training scenarios
