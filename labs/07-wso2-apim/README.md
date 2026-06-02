@@ -1,4 +1,40 @@
-# Lab 07 - WSO2 API Manager 4.6.0 (All-in-One) on Kubernetes
+# Lab 07 — Deploy WSO2 API Manager 4.6.0 All-in-One on Minikube
+
+This guide deploys **WSO2 API Manager 4.6.0 All-in-One** on local Minikube using Helm.
+
+This is the working setup from the lab:
+
+```
+Windows / macOS
+Docker Desktop
+Minikube with Docker driver
+kubectl
+Helm
+WSO2 APIM Helm chart: all-in-one-4.6.0-2
+```
+
+Important:
+
+```
+This working path does NOT use minikube ingress addon.
+This working path does NOT use minikube tunnel.
+Browser access is done using:
+  hosts file + kubectl port-forward 443:9443
+```
+
+Final browser URLs:
+
+```
+https://am.wso2.com/publisher/
+https://am.wso2.com/devportal/
+https://am.wso2.com/admin/
+```
+
+Default login:
+
+```
+admin / admin
+```
 
 ## What is WSO2 API Manager?
 
