@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gov-alerts-websocket
+  namespace: minikube-demo
+  labels:
+    app: gov-alerts-websocket
+    lab: government-services
+spec:
+  type: ClusterIP
+  selector:
+    app: gov-alerts-websocket
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

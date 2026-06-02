@@ -1,0 +1,262 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: government-api-server
+  namespace: minikube-demo
+data:
+  server.js: |
+    const http = require("http");
+    const crypto = require("crypto");
+
+    const type = process.env.SERVICE_TYPE || "rest";
+    const port = Number(process.env.PORT || 8080);
+
+    const permits = [
+      {
+        id: "PERMIT-1001",
+        citizenName: "Asha Dorji",
+        permitType: "Building",
+        status: "APPROVED",
+        district: "Thimphu"
+      },
+      {
+        id: "PERMIT-1002",
+        citizenName: "Karma Wangchuk",
+        permitType: "Market Stall",
+        status: "IN_REVIEW",
+        district: "Paro"
+      }
+    ];
+
+    const benefitPrograms = [
+      {
+        id: "BEN-001",
+        name: "Senior Citizen Support",
+        agency: "Department of Social Protection",
+        status: "OPEN",
+        description: "Monthly support program for eligible senior citizens."
+      },
+      {
+        id: "BEN-002",
+        name: "Student Transport Grant",
+        agency: "Ministry of Education",
+        status: "OPEN",
+        description: "Transport support for students in remote communities."
+      }
+    ];
+
+    const alerts = [
+      {
+        id: "ALERT-001",
+        severity: "INFO",
+        district: "Thimphu",
+        message: "Public service counters are open from 09:00 to 15:00."
+      },
+      {
+        id: "ALERT-002",
+        severity: "WATCH",
+        district: "Punakha",
+        message: "Heavy rainfall watch for low-lying areas."
+      }
+    ];
+
+    function sendJson(res, status, body) {
+      const payload = JSON.stringify(body, null, 2);
+      res.writeHead(status, {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(payload)
+      });
+      res.end(payload);
+    }
+
+    function readBody(req) {
+      return new Promise((resolve) => {
+        let body = "";
+        req.on("data", (chunk) => body += chunk);
+        req.on("end", () => resolve(body));
+      });
+    }
+
+    function restHandler(req, res) {
+      const url = new URL(req.url, "http://localhost");
+
+      if (req.method === "GET" && url.pathname === "/health") {
+        return sendJson(res, 200, { service: "gov-permits-rest", status: "UP" });
+      }
+
+      if (req.method === "GET" && url.pathname === "/permits") {
+        return sendJson(res, 200, { count: permits.length, permits });
+      }
+
+      if (req.method === "GET" && url.pathname.startsWith("/permits/")) {
+        const id = decodeURIComponent(url.pathname.split("/")[2] || "");
+        const permit = permits.find((item) => item.id === id);
+        return permit
+          ? sendJson(res, 200, permit)
+          : sendJson(res, 404, { error: "Permit not found", id });
+      }
+
+      if (req.method === "POST" && url.pathname === "/permits") {
+        return readBody(req).then((body) => {
+          let input;
+          try {
+            input = JSON.parse(body || "{}");
+          } catch (error) {
+            return sendJson(res, 400, { error: "Invalid JSON body" });
+          }
+
+          const permit = {
+            id: `PERMIT-${1001 + permits.length}`,
+            citizenName: input.citizenName || "Unknown Citizen",
+            permitType: input.permitType || "General",
+            status: "RECEIVED",
+            district: input.district || "Unknown"
+          };
+          permits.push(permit);
+          return sendJson(res, 201, permit);
+        });
+      }
+
+      return sendJson(res, 404, {
+        error: "Route not found",
+        availableRoutes: ["GET /health", "GET /permits", "GET /permits/{id}", "POST /permits"]
+      });
+    }
+
+    function graphqlResult(query) {
+      if (!query || query.includes("benefitPrograms")) {
+        return { data: { benefitPrograms } };
+      }
+
+      if (query.includes("benefitProgram")) {
+        const match = query.match(/id\s*:\s*"?([A-Za-z0-9-]+)"?/);
+        const id = match ? match[1] : benefitPrograms[0].id;
+        return { data: { benefitProgram: benefitPrograms.find((item) => item.id === id) || null } };
+      }
+
+      if (query.includes("health")) {
+        return { data: { health: { service: "gov-benefits-graphql", status: "UP" } } };
+      }
+
+      return {
+        errors: [
+          {
+            message: "Supported queries: benefitPrograms, benefitProgram(id), health"
+          }
+        ]
+      };
+    }
+
+    async function graphqlHandler(req, res) {
+      const url = new URL(req.url, "http://localhost");
+
+      if (req.method === "GET" && url.pathname === "/health") {
+        return sendJson(res, 200, { service: "gov-benefits-graphql", status: "UP" });
+      }
+
+      if (url.pathname !== "/graphql") {
+        return sendJson(res, 404, { error: "Use POST /graphql for GraphQL requests" });
+      }
+
+      if (req.method === "GET") {
+        return sendJson(res, 200, graphqlResult(url.searchParams.get("query")));
+      }
+
+      if (req.method === "POST") {
+        const body = await readBody(req);
+        let input;
+        try {
+          input = JSON.parse(body || "{}");
+        } catch (error) {
+          return sendJson(res, 400, { error: "Invalid JSON body" });
+        }
+        return sendJson(res, 200, graphqlResult(input.query || ""));
+      }
+
+      return sendJson(res, 405, { error: "Use GET or POST" });
+    }
+
+    function encodeFrame(text) {
+      const payload = Buffer.from(text);
+      const length = payload.length;
+
+      if (length < 126) {
+        return Buffer.concat([Buffer.from([0x81, length]), payload]);
+      }
+
+      const header = Buffer.alloc(4);
+      header[0] = 0x81;
+      header[1] = 126;
+      header.writeUInt16BE(length, 2);
+      return Buffer.concat([header, payload]);
+    }
+
+    function decodeFrame(buffer) {
+      const length = buffer[1] & 0x7f;
+      const maskOffset = length === 126 ? 4 : 2;
+      const payloadOffset = maskOffset + 4;
+      const mask = buffer.subarray(maskOffset, payloadOffset);
+      const payload = buffer.subarray(payloadOffset, payloadOffset + length);
+      return Buffer.from(payload.map((byte, index) => byte ^ mask[index % 4])).toString("utf8");
+    }
+
+    function websocketInfoHandler(req, res) {
+      const url = new URL(req.url, "http://localhost");
+
+      if (req.method === "GET" && url.pathname === "/health") {
+        return sendJson(res, 200, { service: "gov-alerts-websocket", status: "UP" });
+      }
+
+      if (req.method === "GET" && url.pathname === "/alerts") {
+        return sendJson(res, 200, { count: alerts.length, alerts });
+      }
+
+      return sendJson(res, 200, {
+        service: "gov-alerts-websocket",
+        websocketPath: "/ws",
+        message: "Connect with a WebSocket client and send any text message."
+      });
+    }
+
+    const server = http.createServer((req, res) => {
+      if (type === "rest") return restHandler(req, res);
+      if (type === "graphql") return graphqlHandler(req, res);
+      return websocketInfoHandler(req, res);
+    });
+
+    server.on("upgrade", (req, socket) => {
+      if (type !== "websocket" || req.url !== "/ws") {
+        socket.destroy();
+        return;
+      }
+
+      const key = req.headers["sec-websocket-key"];
+      const accept = crypto
+        .createHash("sha1")
+        .update(key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
+        .digest("base64");
+
+      socket.write([
+        "HTTP/1.1 101 Switching Protocols",
+        "Upgrade: websocket",
+        "Connection: Upgrade",
+        `Sec-WebSocket-Accept: ${accept}`,
+        "",
+        ""
+      ].join("\r\n"));
+
+      socket.on("data", (buffer) => {
+        const received = decodeFrame(buffer);
+        const response = {
+          type: "government.alert.ack",
+          received,
+          latestAlert: alerts[0],
+          timestamp: new Date().toISOString()
+        };
+        socket.write(encodeFrame(JSON.stringify(response)));
+      });
+    });
+
+    server.listen(port, "0.0.0.0", () => {
+      console.log(`${type} government API listening on port ${port}`);
+    });

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gov-alerts-websocket
+  namespace: minikube-demo
+  labels:
+    app: gov-alerts-websocket
+    lab: government-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gov-alerts-websocket
+  template:
+    metadata:
+      labels:
+        app: gov-alerts-websocket
+        lab: government-services
+    spec:
+      containers:
+        - name: api
+          image: node:20-alpine
+          imagePullPolicy: IfNotPresent
+          command: ["node", "/app/server.js"]
+          env:
+            - name: SERVICE_TYPE
+              value: websocket
+            - name: PORT
+              value: "8080"
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          volumeMounts:
+            - name: server-code
+              mountPath: /app
+      volumes:
+        - name: server-code
+          configMap:
+            name: government-api-server

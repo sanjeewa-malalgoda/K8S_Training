@@ -1,0 +1,88 @@
+openapi: 3.0.3
+info:
+  title: Government Permit Registry API
+  version: 1.0.0
+  description: Demo REST API for permit applications used in the Minikube WSO2 APIM lab.
+servers:
+  - url: https://am.wso2.com/gov/permits/1.0.0
+paths:
+  /permits:
+    get:
+      summary: List permit applications
+      operationId: listPermits
+      responses:
+        "200":
+          description: Permit list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  permits:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Permit"
+    post:
+      summary: Create a permit application
+      operationId: createPermit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                citizenName:
+                  type: string
+                permitType:
+                  type: string
+                district:
+                  type: string
+      responses:
+        "201":
+          description: Created permit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Permit"
+  /permits/{id}:
+    get:
+      summary: Get one permit application
+      operationId: getPermit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Permit details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Permit"
+        "404":
+          description: Permit not found
+components:
+  schemas:
+    Permit:
+      type: object
+      properties:
+        id:
+          type: string
+          example: PERMIT-1001
+        citizenName:
+          type: string
+          example: Asha Dorji
+        permitType:
+          type: string
+          example: Building
+        status:
+          type: string
+          example: APPROVED
+        district:
+          type: string
+          example: Thimphu

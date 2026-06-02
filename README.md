@@ -186,6 +186,30 @@ Deploy WSO2 API Manager All-in-One on Minikube using Helm. This lab uses the wor
 | Details | [07-wso2-apim/README.md](labs/07-wso2-apim/README.md) |
 | Cleanup | `helm uninstall apim -n wso2 && kubectl delete namespace wso2` |
 
+### 9.8 Lab: Government Backend Services
+
+Deploy three lightweight internal backend services for API testing: REST, GraphQL, and WebSocket.
+
+| Task | Command |
+|------|---------|
+| Apply | `kubectl apply -f labs/08-government-services/` |
+| Verify | `kubectl get pods -n minikube-demo -l lab=government-services` |
+| Access | Use Kubernetes internal service DNS names from the lab README |
+| Details | [08-government-services/README.md](labs/08-government-services/README.md) |
+| Cleanup | `kubectl delete -f labs/08-government-services/` |
+
+### 9.9 Lab: Create APIs in WSO2 API Manager
+
+Create REST, GraphQL, and WebSocket APIs in WSO2 API Manager using the services deployed in Lab 08.
+
+| Task | Command |
+|------|---------|
+| Prerequisites | Complete Labs 07 and 08 |
+| Verify backends | `kubectl get svc -n minikube-demo -l lab=government-services` |
+| Create APIs | Use APIM Publisher at `https://am.wso2.com/publisher/` |
+| Details | [09-apim-api-creation/README.md](labs/09-apim-api-creation/README.md) |
+| Cleanup | Delete APIs from APIM Publisher; delete Lab 08 services if no longer needed |
+
 ---
 
 ## Stage 3: Cleanup (Reset Your Environment)
@@ -281,7 +305,9 @@ Need a shortcut? See:
 │   ├── 04-configmap-secret/
 │   ├── 05-persistent-volume/
 │   ├── 06-helm-basic/
-│   └── 07-wso2-apim/
+│   ├── 07-wso2-apim/
+│   ├── 08-government-services/
+│   └── 09-apim-api-creation/
 └── scripts/                     ← Automation and references
     ├── windows/
     ├── macos/
@@ -335,7 +361,11 @@ chmod +x scripts/macos/*.sh
 | 10 | `labs/04-configmap-secret/README.md` |
 | 11 | `labs/05-persistent-volume/README.md` |
 | 12 | `docs/08-helm.md` |
-| 13 | `docs/09-cleanup.md` |
+| 13 | `labs/06-helm-basic/README.md` |
+| 14 | `labs/07-wso2-apim/README.md` |
+| 15 | `labs/08-government-services/README.md` |
+| 16 | `labs/09-apim-api-creation/README.md` |
+| 17 | `docs/09-cleanup.md` |
 
 ---
 

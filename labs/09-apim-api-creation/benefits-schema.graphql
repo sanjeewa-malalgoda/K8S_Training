@@ -1,0 +1,18 @@
+type Health {
+  service: String!
+  status: String!
+}
+
+type BenefitProgram {
+  id: ID!
+  name: String!
+  agency: String!
+  status: String!
+  description: String!
+}
+
+type Query {
+  health: Health!
+  benefitPrograms: [BenefitProgram!]!
+  benefitProgram(id: ID!): BenefitProgram
+}
