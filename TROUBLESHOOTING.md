@@ -98,7 +98,99 @@ minikube start --driver=docker
 
 ---
 
-## 4. Hyper-V requires Administrator privileges
+## 4. `minikube start` hangs at "Pulling base image" on slow networks
+
+### Symptoms
+
+- `minikube start` output stops at `Pulling base image v0.0.50 ...` and never advances.
+- Verbose mode (`-v=3`) shows a download progress bar that drops to single-digit bytes per second.
+- The minikube container is never created (`docker ps -a --filter "name=minikube"` returns empty or "Exited").
+- `docker images` shows `gcr.io/k8s-minikube/kicbase:v0.0.50` **is already present locally**.
+
+### Why this happens
+
+On Windows, minikube doesn't always trust the kicbase image sitting in your Docker daemon. It re-downloads its own copy into `%USERPROFILE%\.minikube\cache\kic\amd64\` and there's no automatic retry — a network blip mid-download leaves it stuck at 0–5 B/s forever instead of failing fast.
+
+This is most painful on low-bandwidth or unstable connections because the kicbase image is ~520 MB.
+
+### Fix — force minikube to use the kicbase image already in Docker
+
+Cancel the stuck command (Ctrl+C), then clean the partial cache:
+
+**Windows (PowerShell)**
+
+```powershell
+Remove-Item -Recurse -Force "$env:USERPROFILE\.minikube\cache\kic"
+```
+
+**macOS (Terminal)**
+
+```bash
+rm -rf ~/.minikube/cache/kic
+```
+
+Then restart minikube with the `--base-image` flag pointing at the image already in your Docker daemon:
+
+**Windows (PowerShell)**
+
+```powershell
+minikube start --driver=docker --cpus=4 --memory=8192 --disk-size=40g --base-image="gcr.io/k8s-minikube/kicbase:v0.0.50"
+```
+
+**macOS (Terminal)**
+
+```bash
+minikube start --driver=docker --cpus=4 --memory=8192 --disk-size=40g --base-image="gcr.io/k8s-minikube/kicbase:v0.0.50"
+```
+
+`--base-image` skips the cache-download path and uses the local Docker image directly. Cluster creation finishes in 2–5 minutes (disk activity only, no network).
+
+### Prerequisites for this fix to work
+
+You need the kicbase image **already present in Docker**. Confirm before retrying:
+
+**Windows (PowerShell)**
+
+```powershell
+docker images gcr.io/k8s-minikube/kicbase
+```
+
+**macOS (Terminal)**
+
+```bash
+docker images gcr.io/k8s-minikube/kicbase
+```
+
+You should see a line with size around 1.93 GB. If you don't, you genuinely need to download it once — see "First-time setup on low-bandwidth networks" below.
+
+### First-time setup on low-bandwidth networks
+
+If you don't have the kicbase image cached anywhere yet:
+
+1. Get on a stable connection for ~15 minutes (phone hotspot, ethernet, café WiFi).
+2. Run `minikube start --driver=docker --cpus=4 --memory=8192 --disk-size=40g` once.
+3. After that, all images are cached locally. You can run on any bandwidth.
+4. End each day with `minikube stop` (preserves everything) — not `minikube delete` (wipes everything and forces re-download).
+
+### Verify the cluster came up
+
+**Windows (PowerShell)**
+
+```powershell
+kubectl get nodes
+```
+
+**macOS (Terminal)**
+
+```bash
+kubectl get nodes
+```
+
+Should show a `Ready` node within a minute.
+
+---
+
+## 5. Hyper-V requires Administrator privileges
 
 ### Error
 
@@ -128,7 +220,7 @@ minikube start --driver=hyperv
 
 ---
 
-## 5. kubectl not found
+## 6. kubectl not found
 
 ### Check
 
@@ -146,7 +238,7 @@ minikube kubectl -- get pods -A
 
 ---
 
-## 6. Pods stuck in Pending
+## 7. Pods stuck in Pending
 
 ### Check
 
@@ -172,7 +264,7 @@ kubectl describe node minikube
 
 ---
 
-## 7. ImagePullBackOff
+## 8. ImagePullBackOff
 
 ### Check
 
