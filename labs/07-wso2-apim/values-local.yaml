@@ -14,8 +14,8 @@ wso2:
         password: ""
       registry: "docker.io"
       repository: "wso2/wso2am"
-      digest: "@sha256:cd69005240af25042e8cd6eccce8fbe9341732bc887b919395c7aaddb43f8d53"
-      imagePullPolicy: Never
+      digest: "sha256:cd69005240af25042e8cd6eccce8fbe9341732bc887b919395c7aaddb43f8d53"
+      imagePullPolicy: IfNotPresent
 
     resources:
       requests:
@@ -28,6 +28,21 @@ wso2:
         memory:
           xms: "2048m"
           xmx: "2048m"
+
+    startupProbe:
+      initialDelaySeconds: 180
+      periodSeconds: 10
+      failureThreshold: 120
+
+    readinessProbe:
+      initialDelaySeconds: 180
+      periodSeconds: 10
+      failureThreshold: 60
+
+    livenessProbe:
+      initialDelaySeconds: 300
+      periodSeconds: 10
+      failureThreshold: 12
 
 # Kubernetes ingress configuration
 kubernetes:

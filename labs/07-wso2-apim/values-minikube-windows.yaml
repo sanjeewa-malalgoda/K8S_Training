@@ -1,0 +1,49 @@
+# values-minikube-windows.yaml
+# Windows/Minikube specific overrides for WSO2 APIM 4.6.0 All-in-One
+# Use with: helm upgrade --install apim . -f values-local.yaml -f values-minikube-windows.yaml
+
+wso2:
+  apim:
+    configurations:
+      adminUsername: "admin"
+      adminPassword: "admin"
+
+      databases:
+        type: "h2"
+        jdbc:
+          driver: "org.h2.Driver"
+
+        apim_db:
+          url: "jdbc:h2:./repository/database/WSO2AM_DB;DB_CLOSE_ON_EXIT=FALSE"
+          username: "wso2carbon"
+          password: "wso2carbon"
+
+        shared_db:
+          url: "jdbc:h2:./repository/database/WSO2SHARED_DB;DB_CLOSE_ON_EXIT=FALSE"
+          username: "wso2carbon"
+          password: "wso2carbon"
+
+      security:
+        truststore:
+          name: "client-truststore.jks"
+          password: "wso2carbon"
+
+  deployment:
+    image:
+      imagePullPolicy: IfNotPresent
+      digest: "sha256:cd69005240af25042e8cd6eccce8fbe9341732bc887b919395c7aaddb43f8d53"
+
+    startupProbe:
+      initialDelaySeconds: 180
+      periodSeconds: 10
+      failureThreshold: 120
+
+    readinessProbe:
+      initialDelaySeconds: 180
+      periodSeconds: 10
+      failureThreshold: 60
+
+    livenessProbe:
+      initialDelaySeconds: 300
+      periodSeconds: 10
+      failureThreshold: 12
