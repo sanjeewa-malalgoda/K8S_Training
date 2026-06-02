@@ -78,6 +78,8 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-02 | Align Lab 07 README with working README-News flow | README.md, labs/07-wso2-apim/README.md | Done |
 | 2026-06-02 | Add Lab 08 government backend services and Lab 09 APIM API creation guide | README.md, labs/08-government-services, labs/09-apim-api-creation | Drafted |
 | 2026-06-02 | Add APIM gateway host and port-forward flow for Lab 07 and Lab 09 invoke URLs | README.md, labs/07-wso2-apim, labs/09-apim-api-creation | Done |
+| 2026-06-03 | Add WSO2 server log watch step to Lab 07 startup flow | labs/07-wso2-apim/README.md | Done |
+| 2026-06-03 | Add OAuth JWKS URL to Lab 07 base APIM values configuration | labs/07-wso2-apim/README.md, labs/07-wso2-apim/values-local.yaml, labs/07-wso2-apim/values-minikube-windows.yaml | Done |
 
 ---
 

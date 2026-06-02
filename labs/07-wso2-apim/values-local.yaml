@@ -5,6 +5,9 @@
 wso2:
   apim:
     configurations:
+      oauth_config:
+        oauth2JWKSUrl: "https://localhost:9443/oauth2/jwks"
+
       gateway:
         environments:
           - name: "Default"

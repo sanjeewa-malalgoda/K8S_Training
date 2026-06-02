@@ -8,6 +8,9 @@ wso2:
       adminUsername: "admin"
       adminPassword: "admin"
 
+      oauth_config:
+        oauth2JWKSUrl: "https://localhost:9443/oauth2/jwks"
+
       databases:
         type: "h2"
         jdbc:

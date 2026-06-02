@@ -257,6 +257,9 @@ wso2:
       adminUsername: "admin"
       adminPassword: "admin"
 
+      oauth_config:
+        oauth2JWKSUrl: "https://localhost:9443/oauth2/jwks"
+
       databases:
         type: "h2"
         jdbc:
@@ -395,6 +398,9 @@ wso2:
     configurations:
       adminUsername: "admin"
       adminPassword: "admin"
+
+      oauth_config:
+        oauth2JWKSUrl: "https://localhost:9443/oauth2/jwks"
 
       databases:
         type: "h2"
@@ -618,6 +624,43 @@ Stop watching:
 Ctrl + C
 ```
 
+## Watch WSO2 server logs
+
+After the pod reaches `1/1 Running`, watch the WSO2 server logs so you can see APIM finishing startup.
+
+## Windows / macOS
+
+```bash
+kubectl logs -n wso2 deployment/apim-wso2am-all-in-one-am-deployment-1 -f
+```
+
+Expected output includes WSO2 startup messages similar to:
+
+```text
+WSO2 Carbon started in ...
+Mgt Console URL  : https://...
+API Publisher    : https://...
+Developer Portal : https://...
+```
+
+The exact timestamps and URLs may be different.
+
+Stop watching logs after startup is complete:
+
+```text
+Ctrl + C
+```
+
+This only stops the log view. It does not stop APIM.
+
+If APIM restarted and you need the previous crash/startup logs, run:
+
+## Windows / macOS
+
+```bash
+kubectl logs -n wso2 deployment/apim-wso2am-all-in-one-am-deployment-1 --previous --tail=200
+```
+
 ---
 
 # 8. Verify generated APIM configuration
@@ -627,13 +670,13 @@ Run:
 ## Windows PowerShell
 
 ```powershell
-kubectl get cm -n wso2 apim-wso2am-all-in-one-am-conf-1 -o jsonpath="{.data.deployment\.toml}" | Select-String -Pattern "\[database.apim_db\]|\[database.shared_db\]|type =|url =|username =|driver =|\[truststore\]|password|\[\[apim.gateway.environment\]\]|https_endpoint" -Context 0,1
+kubectl get cm -n wso2 apim-wso2am-all-in-one-am-conf-1 -o jsonpath="{.data.deployment\.toml}" | Select-String -Pattern "\[database.apim_db\]|\[database.shared_db\]|type =|url =|username =|driver =|\[truststore\]|password|\[oauth.config\]|oauth2_jwks_url|\[\[apim.gateway.environment\]\]|https_endpoint" -Context 0,1
 ```
 
 ## macOS Terminal
 
 ```bash
-kubectl get cm -n wso2 apim-wso2am-all-in-one-am-conf-1 -o jsonpath='{.data.deployment\.toml}' | grep -E '\[database.apim_db\]|\[database.shared_db\]|type =|url =|username =|driver =|\[truststore\]|password|\[\[apim.gateway.environment\]\]|https_endpoint'
+kubectl get cm -n wso2 apim-wso2am-all-in-one-am-conf-1 -o jsonpath='{.data.deployment\.toml}' | grep -E '\[database.apim_db\]|\[database.shared_db\]|type =|url =|username =|driver =|\[truststore\]|password|\[oauth.config\]|oauth2_jwks_url|\[\[apim.gateway.environment\]\]|https_endpoint'
 ```
 
 Expected important values:
@@ -655,6 +698,12 @@ The URLs must not contain:
 
 ```text
 AUTO_SERVER=TRUE
+```
+
+Expected OAuth JWKS URL:
+
+```text
+oauth2_jwks_url = "https://localhost:9443/oauth2/jwks"
 ```
 
 Expected gateway URL:
