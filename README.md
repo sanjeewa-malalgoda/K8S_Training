@@ -173,14 +173,16 @@ Package and deploy applications with Helm.
 
 ### 9.7 Lab: WSO2 API Manager 4.6.0
 
-Deploy an enterprise API management platform on Kubernetes using Helm. Learn real-world application deployment with complex Kubernetes resources.
+Deploy WSO2 API Manager All-in-One on Minikube using Helm. This lab uses the working local access path from Lab 07: hosts file plus `kubectl port-forward 443:9443`.
 
 | Task | Command |
 |------|---------|
-| Prerequisites | Docker (40GB), minikube, Ingress addon, Helm |
-| Apply | `helm install apim . --namespace wso2 --create-namespace --dependency-update -f values-local.yaml` |
-| Clone Chart | `git clone https://github.com/wso2/helm-apim.git && cd helm-apim && git checkout tags/all-in-one-4.6.0-2 && cd all-in-one` |
-| Verify | `kubectl get pods -n wso2` and access https://am.wso2.com/publisher |
+| Prerequisites | Docker Desktop, minikube with Docker driver, kubectl, Helm |
+| Get chart | Download WSO2 Helm APIM release `all-in-one-4.6.0-2` |
+| Apply | `helm upgrade --install apim . --namespace wso2 --create-namespace --dependency-update -f values-apim-minikube-working.yaml` |
+| Patch | `kubectl patch svc -n wso2 apim-wso2am-all-in-one-am-service --type merge --patch-file ./svc-patch.json` |
+| Access | Map `am.wso2.com` to `127.0.0.1`, then run `kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443` |
+| Verify | `kubectl get pods -n wso2` and open `https://am.wso2.com/publisher/` |
 | Details | [07-wso2-apim/README.md](labs/07-wso2-apim/README.md) |
 | Cleanup | `helm uninstall apim -n wso2 && kubectl delete namespace wso2` |
 

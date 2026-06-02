@@ -4,7 +4,7 @@ This guide deploys **WSO2 API Manager 4.6.0 All-in-One** on local Minikube using
 
 This is the working setup from the lab:
 
-```
+```text
 Windows / macOS
 Docker Desktop
 Minikube with Docker driver
@@ -15,7 +15,7 @@ WSO2 APIM Helm chart: all-in-one-4.6.0-2
 
 Important:
 
-```
+```text
 This working path does NOT use minikube ingress addon.
 This working path does NOT use minikube tunnel.
 Browser access is done using:
@@ -24,7 +24,7 @@ Browser access is done using:
 
 Final browser URLs:
 
-```
+```text
 https://am.wso2.com/publisher/
 https://am.wso2.com/devportal/
 https://am.wso2.com/admin/
@@ -32,115 +32,26 @@ https://am.wso2.com/admin/
 
 Default login:
 
-```
+```text
 admin / admin
 ```
 
-## What is WSO2 API Manager?
-
-**WSO2 API Manager (APIM)** is an enterprise API management platform. It provides:
-
-- **API Publisher** - Developers design and publish APIs
-- **Developer Portal** - API consumers discover and use APIs
-- **API Gateway** - Routes, authenticates, and throttles API requests
-- **Key Manager** - Manages OAuth tokens and credentials
-- **Traffic Manager** - Monitors and controls API traffic
-
-### Real-world example
-
-Imagine a bank:
-- **Internal service** - Account balance microservice
-- **Problem** - Need to expose it securely to mobile apps, partners, third-party developers
-- **Solution** - Use APIM:
-  - Publisher: Bank team publishes "Get Account Balance" API
-  - DevPortal: Mobile app developers discover and subscribe to the API
-  - Gateway: Routes requests, checks OAuth tokens, enforces rate limits
-  - Traffic Manager: Monitors traffic spikes
-
 ---
 
-## What You'll Deploy
+# 1. Prerequisites
 
-This lab installs the **complete WSO2 APIM stack** using Helm:
+Install:
 
-| Resource | Name | Purpose |
-|----------|------|---------|
-| **Namespace** | `wso2` | Isolates APIM resources |
-| **Helm Release** | `apim` | WSO2 APIM All-in-One 4.6.0 |
-| **Deployment** | APIM pods | Publisher, DevPortal, Gateway, KM, TM |
-| **Service** | ClusterIP + Ingress | Exposes APIM to browser |
-| **Ingress** | `am.wso2.com` | HTTP routing for APIM services |
-| **ConfigMap** | APIM configuration | Database, cache, API settings |
-| **PersistentVolume** | H2 embedded database | Stores API definitions, user data |
-
-### Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Your Browser                                 │
-│                                                                  │
-│  Publisher:   https://am.wso2.com/publisher/                   │
-│  DevPortal:   https://am.wso2.com/devportal/                   │
-│  Admin:       https://am.wso2.com/admin/                        │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │
-                           │ HTTP/HTTPS
-                           ↓
-        ┌──────────────────────────────────────────┐
-        │      Minikube Cluster (wso2 namespace)   │
-        │                                          │
-        │  ┌─────────────────────────────────────┐ │
-        │  │ NGINX Ingress Controller            │ │
-        │  │ (am.wso2.com → APIM Service)        │ │
-        │  └────────────┬────────────────────────┘ │
-        │               │                          │
-        │               ↓                          │
-        │  ┌─────────────────────────────────────┐ │
-        │  │  WSO2 APIM All-in-One Pod (Running) │ │
-        │  │  - Publisher                        │ │
-        │  │  - DevPortal                        │ │
-        │  │  - Admin Console                    │ │
-        │  │  - Gateway                          │ │
-        │  │  - Key Manager                      │ │
-        │  │  - Traffic Manager                  │ │
-        │  │  - H2 Embedded Database             │ │
-        │  └─────────────────────────────────────┘ │
-        │                                          │
-        └──────────────────────────────────────────┘
-```
-
-### Why Helm?
-
-This lab uses **Helm** to install APIM because:
-- **Complex app** - APIM requires 10+ Kubernetes resources (deployments, services, configmaps, ingress)
-- **One command** - Instead of writing all YAML, one `helm install` does it
-- **Configuration management** - `values-local.yaml` overrides (public images, H2 database)
-- **Production standard** - Real deployments use Helm for package management
-
----
-
-## Prerequisites
-
-This lab is for:
-
-```
-Windows / macOS
+```text
 Docker Desktop
 Minikube
-PowerShell / Bash
-WSO2 APIM Helm chart all-in-one-4.6.0-2
+kubectl
+Helm
 ```
 
-Before starting, ensure:
+Check:
 
-✓ Docker Desktop is installed and running
-✓ Minikube is installed
-✓ kubectl is installed
-✓ Helm is installed
-
-Check versions:
-
-**Windows (PowerShell):**
+## Windows PowerShell
 
 ```powershell
 docker version
@@ -149,7 +60,7 @@ kubectl version --client
 helm version
 ```
 
-**macOS (Terminal):**
+## macOS Terminal
 
 ```bash
 docker version
@@ -158,87 +69,79 @@ kubectl version --client
 helm version
 ```
 
-**Resource Requirements:**
-- **Minimum 16 GB RAM** (APIM needs 4 GB + minikube overhead)
-- **Minimum 40 GB disk**
-- **4 CPU cores**
+Docker Desktop must be running.
 
 ---
 
-# 1. Start Minikube with enough resources
+# 2. Start or verify Minikube
 
-WSO2 APIM is heavy. Use enough CPU, memory, and disk.
+If Minikube is already running and working, you can skip the delete/start step.
 
-**Windows (PowerShell):**
+Check:
 
-```powershell
-minikube delete
-minikube start --cpus=4 --memory=10240 --disk-size=40g --driver=docker
-```
-
-**macOS (Terminal):**
-
-```bash
-minikube delete
-minikube start --cpus=4 --memory=10240 --disk-size=40g --driver=docker
-```
-
-Check node:
+## Windows / macOS
 
 ```bash
 kubectl get nodes
+kubectl get pods -A
 ```
 
-Expected:
+Expected node status:
 
+```text
+minikube   Ready
 ```
-NAME       STATUS   ROLES           VERSION
-minikube   Ready    control-plane   ...
-```
 
----
+For a fresh Minikube cluster:
 
-# 2. Enable ingress
-
-Enable Minikube ingress addon:
+## Windows PowerShell
 
 ```powershell
+minikube delete
+minikube start --driver=docker --cpus=4 --memory=7168 --disk-size=40g
+```
+
+## macOS Terminal
+
+```bash
+minikube delete
+minikube start --driver=docker --cpus=4 --memory=8192 --disk-size=40g
+```
+
+If Docker Desktop rejects the memory value, reduce `--memory` to a value Docker allows, or increase Docker Desktop resources.
+
+Do not run these for this lab:
+
+```bash
 minikube addons enable ingress
+minikube tunnel
 ```
 
-Wait until ingress controller is running:
-
-```powershell
-kubectl get pods -n ingress-nginx -w
-```
-
-Expected:
-
-```
-ingress-nginx-controller-xxxxx   1/1   Running
-```
-
-Stop watching:
-
-```
-Ctrl + C
-```
+They are not used in this working path.
 
 ---
 
-# 3. Download WSO2 APIM Helm chart
+# 3. Get the WSO2 APIM Helm chart
 
-**Windows (PowerShell):**
+Use the official WSO2 Helm APIM chart release:
 
-Go to Downloads:
+```text
+all-in-one-4.6.0-2
+```
+
+Download from:
+
+```text
+https://github.com/wso2/helm-apim/releases
+```
+
+You can download and extract the release manually, or use commands below.
+
+## Windows PowerShell
 
 ```powershell
 cd $env:USERPROFILE\Downloads
-```
 
-Download the WSO2 APIM Helm chart release:
-
-```powershell
 $TAG = "all-in-one-4.6.0-2"
 $ZIP = "helm-apim-$TAG.zip"
 $URL = "https://github.com/wso2/helm-apim/archive/refs/tags/$TAG.zip"
@@ -247,71 +150,99 @@ Invoke-WebRequest -Uri $URL -OutFile $ZIP
 Expand-Archive -Path $ZIP -DestinationPath . -Force
 ```
 
-Go to the chart folder:
+Now go to the final `all-in-one` chart folder.
+
+Usually:
 
 ```powershell
 cd "$env:USERPROFILE\Downloads\helm-apim-all-in-one-4.6.0-2\all-in-one"
 ```
 
-Confirm you are in the correct folder:
+If your extracted folder has an extra nested folder, use the folder that contains `Chart.yaml`.
+
+Example from the working laptop:
+
+```powershell
+cd C:\Users\sanje\Downloads\helm-apim-all-in-one-4.6.0-2\helm-apim-all-in-one-4.6.0-2\all-in-one
+```
+
+Check:
 
 ```powershell
 dir
 ```
 
-**macOS (Terminal):**
+You must see:
 
-Go to Downloads:
+```text
+Chart.yaml
+values.yaml
+values-local.yaml
+templates
+```
+
+## macOS Terminal
 
 ```bash
 cd ~/Downloads
-```
 
-Download the WSO2 APIM Helm chart release:
-
-```bash
 TAG="all-in-one-4.6.0-2"
 ZIP="helm-apim-$TAG.zip"
 URL="https://github.com/wso2/helm-apim/archive/refs/tags/$TAG.zip"
 
-curl -L -o $ZIP $URL
-unzip -q $ZIP
+curl -L "$URL" -o "$ZIP"
+unzip -o "$ZIP"
 ```
 
 Go to the chart folder:
 
 ```bash
-cd helm-apim-all-in-one-4.6.0-2/all-in-one
+cd ~/Downloads/helm-apim-all-in-one-4.6.0-2/all-in-one
 ```
 
-Confirm you are in the correct folder:
+If your extracted path is different, go to the folder that contains `Chart.yaml`.
+
+Check:
 
 ```bash
 ls
 ```
 
-You should see:
+You must see:
 
-```
+```text
 Chart.yaml
 values.yaml
+values-local.yaml
 templates
 ```
 
 ---
 
-# 4. Create the working values override file
+# 4. Create one working values file
 
-Create this file inside the `all-in-one` chart folder:
+Do not ask users to patch DB driver, truststore, digest, image pull policy, and probes step-by-step.
 
+Create one final working values file:
+
+```text
+values-apim-minikube-working.yaml
 ```
-values-apim-minikube-windows.yaml
-```
 
-**Windows (PowerShell):**
+This file combines the working local image/resource settings and the APIM fixes that were needed during the lab.
+
+## Windows PowerShell
 
 ```powershell
 @'
+# values-apim-minikube-working.yaml
+# Working local override for WSO2 APIM 4.6.0 All-In-One on Minikube.
+# Access method used by this tutorial:
+#   hosts file: am.wso2.com -> 127.0.0.1
+#   kubectl port-forward local 443 -> APIM service 9443
+#
+# This file is for local lab/demo use.
+
 wso2:
   apim:
     configurations:
@@ -339,9 +270,29 @@ wso2:
           password: "wso2carbon"
 
   deployment:
+    highAvailability: false
+
     image:
-      imagePullPolicy: IfNotPresent
+      imagePullSecrets:
+        enabled: false
+        username: ""
+        password: ""
+      registry: "docker.io"
+      repository: "wso2/wso2am"
       digest: "sha256:cd69005240af25042e8cd6eccce8fbe9341732bc887b919395c7aaddb43f8d53"
+      imagePullPolicy: IfNotPresent
+
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "1000m"
+      limits:
+        memory: "4Gi"
+        cpu: "2000m"
+      jvm:
+        memory:
+          xms: "2048m"
+          xmx: "2048m"
 
     startupProbe:
       initialDelaySeconds: 180
@@ -357,19 +308,62 @@ wso2:
       initialDelaySeconds: 300
       periodSeconds: 10
       failureThreshold: 12
-'@ | Set-Content .\values-apim-minikube-windows.yaml
+
+kubernetes:
+  openshift:
+    enabled: false
+
+  ingressClass: "nginx"
+  ingress:
+    tlsSecret: ""
+    ratelimit:
+      enabled: false
+
+    management:
+      enabled: true
+      hostname: "am.wso2.com"
+      annotations:
+        nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+        nginx.ingress.kubernetes.io/affinity: "cookie"
+        nginx.ingress.kubernetes.io/session-cookie-name: "route"
+        nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
+
+    gateway:
+      enabled: true
+      hostname: "gw.wso2.com"
+      annotations:
+        nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+        nginx.ingress.kubernetes.io/proxy-buffering: "on"
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+
+    websocket:
+      enabled: true
+      hostname: "websocket.wso2.com"
+
+    websub:
+      enabled: true
+      hostname: "websub.wso2.com"
+'@ | Set-Content .\values-apim-minikube-working.yaml
 ```
 
-Verify file:
+Verify:
 
 ```powershell
-Get-Content .\values-apim-minikube-windows.yaml
+Get-Content .\values-apim-minikube-working.yaml
 ```
 
-**macOS (Terminal):**
+## macOS Terminal
 
 ```bash
-cat > values-apim-minikube-windows.yaml << 'EOF'
+cat > values-apim-minikube-working.yaml <<'EOF'
+# values-apim-minikube-working.yaml
+# Working local override for WSO2 APIM 4.6.0 All-In-One on Minikube.
+# Access method used by this tutorial:
+#   hosts file: am.wso2.com -> 127.0.0.1
+#   kubectl port-forward local 443 -> APIM service 9443
+#
+# This file is for local lab/demo use.
+
 wso2:
   apim:
     configurations:
@@ -397,9 +391,29 @@ wso2:
           password: "wso2carbon"
 
   deployment:
+    highAvailability: false
+
     image:
-      imagePullPolicy: IfNotPresent
+      imagePullSecrets:
+        enabled: false
+        username: ""
+        password: ""
+      registry: "docker.io"
+      repository: "wso2/wso2am"
       digest: "sha256:cd69005240af25042e8cd6eccce8fbe9341732bc887b919395c7aaddb43f8d53"
+      imagePullPolicy: IfNotPresent
+
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "1000m"
+      limits:
+        memory: "4Gi"
+        cpu: "2000m"
+      jvm:
+        memory:
+          xms: "2048m"
+          xmx: "2048m"
 
     startupProbe:
       initialDelaySeconds: 180
@@ -415,89 +429,118 @@ wso2:
       initialDelaySeconds: 300
       periodSeconds: 10
       failureThreshold: 12
+
+kubernetes:
+  openshift:
+    enabled: false
+
+  ingressClass: "nginx"
+  ingress:
+    tlsSecret: ""
+    ratelimit:
+      enabled: false
+
+    management:
+      enabled: true
+      hostname: "am.wso2.com"
+      annotations:
+        nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+        nginx.ingress.kubernetes.io/affinity: "cookie"
+        nginx.ingress.kubernetes.io/session-cookie-name: "route"
+        nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
+
+    gateway:
+      enabled: true
+      hostname: "gw.wso2.com"
+      annotations:
+        nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+        nginx.ingress.kubernetes.io/proxy-buffering: "on"
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+
+    websocket:
+      enabled: true
+      hostname: "websocket.wso2.com"
+
+    websub:
+      enabled: true
+      hostname: "websub.wso2.com"
 EOF
 ```
 
-Verify file:
+Verify:
 
 ```bash
-cat values-apim-minikube-windows.yaml
+cat values-apim-minikube-working.yaml
 ```
 
 ---
 
-# 5. Install WSO2 APIM
+# 5. Install APIM with the single values file
 
-Run this from the `all-in-one` folder:
+Use only the single working values file created above.
 
-**Windows (PowerShell):**
+## Windows PowerShell
 
 ```powershell
 helm upgrade --install apim . `
   --namespace wso2 `
   --create-namespace `
   --dependency-update `
-  -f values-local.yaml `
-  -f values-apim-minikube-windows.yaml
+  -f values-apim-minikube-working.yaml
 ```
 
-**macOS (Terminal):**
+## macOS Terminal
 
 ```bash
 helm upgrade --install apim . \
   --namespace wso2 \
   --create-namespace \
   --dependency-update \
-  -f values-local.yaml \
-  -f values-apim-minikube-windows.yaml
+  -f values-apim-minikube-working.yaml
 ```
 
 ---
 
-# 6. Patch APIM service
+# 6. Apply the service patch
 
-APIM calls its own Key Manager endpoint through the Kubernetes service during startup.
-Patch the service so the service can publish pod addresses during startup.
+This is the only post-install patch required.
 
-**Windows (PowerShell):**
+Create:
 
-Create patch file:
+```text
+svc-patch.json
+```
+
+Why this is still separate:
+
+```text
+The Helm values file fixes APIM configuration, image, DB, truststore, and probes.
+The service patch fixes Kubernetes service behaviour used during APIM startup self-calls.
+```
+
+## Windows PowerShell
 
 ```powershell
 @'
 {"spec":{"publishNotReadyAddresses":true}}
 '@ | Set-Content .\svc-patch.json
-```
 
-Apply patch:
-
-```powershell
 kubectl patch svc -n wso2 apim-wso2am-all-in-one-am-service --type merge --patch-file .\svc-patch.json
 ```
 
-Restart APIM deployment:
-
-```powershell
-kubectl rollout restart deployment -n wso2 apim-wso2am-all-in-one-am-deployment-1
-```
-
-**macOS (Terminal):**
-
-Create patch file:
+## macOS Terminal
 
 ```bash
-cat > svc-patch.json << 'EOF'
+cat > svc-patch.json <<'EOF'
 {"spec":{"publishNotReadyAddresses":true}}
 EOF
+
+kubectl patch svc -n wso2 apim-wso2am-all-in-one-am-service --type merge --patch-file ./svc-patch.json
 ```
 
-Apply patch:
+Restart the deployment so APIM starts with the corrected service behaviour.
 
-```bash
-kubectl patch svc -n wso2 apim-wso2am-all-in-one-am-service --type merge --patch-file svc-patch.json
-```
-
-Restart APIM deployment:
+## Windows / macOS
 
 ```bash
 kubectl rollout restart deployment -n wso2 apim-wso2am-all-in-one-am-deployment-1
@@ -505,70 +548,70 @@ kubectl rollout restart deployment -n wso2 apim-wso2am-all-in-one-am-deployment-
 
 ---
 
-# 7. Watch APIM pod until ready
+# 7. Wait until APIM is healthy
 
 Run:
 
-```powershell
+## Windows / macOS
+
+```bash
 kubectl get pods -n wso2 -w
 ```
 
-Wait until the pod becomes:
+Expected final state:
 
-```
+```text
 apim-wso2am-all-in-one-am-deployment-1-xxxxx   1/1   Running
 ```
 
 Do not continue until it is:
 
-```
+```text
 1/1 Running
 ```
 
 Stop watching:
 
-```
+```text
 Ctrl + C
 ```
 
 ---
 
-# 8. Verify APIM generated configuration
+# 8. Verify generated APIM configuration
 
-**Windows (PowerShell):**
+Run:
 
-Check the generated `deployment.toml`:
+## Windows PowerShell
 
 ```powershell
 kubectl get cm -n wso2 apim-wso2am-all-in-one-am-conf-1 -o jsonpath="{.data.deployment\.toml}" | Select-String -Pattern "\[database.apim_db\]|\[database.shared_db\]|type =|url =|username =|driver =|\[truststore\]|password" -Context 0,1
 ```
 
-**macOS (Terminal):**
-
-Check the generated `deployment.toml`:
+## macOS Terminal
 
 ```bash
-kubectl get cm -n wso2 apim-wso2am-all-in-one-am-conf-1 -o jsonpath="{.data.deployment\.toml}" | grep -A 5 "apim_db\|shared_db\|truststore"
+kubectl get cm -n wso2 apim-wso2am-all-in-one-am-conf-1 -o jsonpath='{.data.deployment\.toml}' | grep -E '\[database.apim_db\]|\[database.shared_db\]|type =|url =|username =|driver =|\[truststore\]|password'
 ```
 
-Expected values:
+Expected important values:
 
-```
+```text
 type = "h2"
 driver = "org.h2.Driver"
 password = "wso2carbon"
 ```
 
-Expected H2 URLs:
+Expected database URLs:
 
-```
+```text
 jdbc:h2:./repository/database/WSO2AM_DB;DB_CLOSE_ON_EXIT=FALSE
 jdbc:h2:./repository/database/WSO2SHARED_DB;DB_CLOSE_ON_EXIT=FALSE
 ```
 
 The URLs must not contain:
 
-```
+```text
 AUTO_SERVER=TRUE
 ```
 
@@ -576,19 +619,31 @@ AUTO_SERVER=TRUE
 
 # 9. Configure hosts file
 
-**Windows:**
+The browser must use the APIM hostname:
 
-Open **Notepad as Administrator**.
-
-Open this file:
-
+```text
+am.wso2.com
 ```
+
+Map it to local machine:
+
+```text
+127.0.0.1 am.wso2.com
+```
+
+## Windows
+
+Open Notepad as Administrator.
+
+Open:
+
+```text
 C:\Windows\System32\drivers\etc\hosts
 ```
 
-Add this line:
+Add:
 
-```
+```text
 127.0.0.1 am.wso2.com
 ```
 
@@ -600,275 +655,176 @@ Flush DNS:
 ipconfig /flushdns
 ```
 
-**macOS:**
+## macOS
 
-Open Terminal and edit hosts file:
-
-```bash
-sudo nano /etc/hosts
-```
-
-Add this line:
-
-```
-127.0.0.1 am.wso2.com
-```
-
-Save: **Ctrl+O**, Enter, **Ctrl+X**
-
-Flush DNS:
+Run:
 
 ```bash
+echo "127.0.0.1 am.wso2.com" | sudo tee -a /etc/hosts
 sudo dscacheutil -flushcache
+sudo killall -HUP mDNSResponder
+```
+
+Check:
+
+```bash
+grep am.wso2.com /etc/hosts
 ```
 
 ---
 
-# 10. Start Minikube tunnel
+# 10. Start port-forward for browser access
 
-**Windows:**
+This is the working access path.
 
-Open a new **PowerShell window as Administrator**.
+It maps:
 
-Run:
+```text
+local machine port 443
+  -> Kubernetes service apim-wso2am-all-in-one-am-service port 9443
+```
+
+## Windows PowerShell as Administrator
 
 ```powershell
-minikube tunnel
+kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443
 ```
 
 Keep this PowerShell window open.
 
-Do not close it while using APIM in the browser.
+## macOS Terminal
 
-**macOS:**
-
-Open a new **Terminal window**.
-
-Run:
+Port `443` is privileged, so use `sudo`.
 
 ```bash
-minikube tunnel
+sudo -E kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443
 ```
 
-Keep this Terminal window open.
+Keep this terminal window open.
 
-Do not close it while using APIM in the browser.
-
----
-
-# 11. Verify ingress and services
-
-**Windows (PowerShell):**
-
-In another PowerShell window, run:
-
-```powershell
-kubectl get pods -n wso2
-kubectl get svc -n wso2
-kubectl get ingress -n wso2
-kubectl get pods -n ingress-nginx
-kubectl get svc -n ingress-nginx
-```
-
-**macOS (Terminal):**
-
-In another Terminal window, run:
+If `sudo -E` cannot find the Kubernetes context, use:
 
 ```bash
-kubectl get pods -n wso2
-kubectl get svc -n wso2
-kubectl get ingress -n wso2
-kubectl get pods -n ingress-nginx
-kubectl get svc -n ingress-nginx
+sudo KUBECONFIG=$HOME/.kube/config kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443
 ```
 
-Confirm:
+Expected output:
 
-```
-APIM pod is 1/1 Running
-ingress-nginx controller is Running
-minikube tunnel is running
-hosts file has 127.0.0.1 am.wso2.com
+```text
+Forwarding from 127.0.0.1:443 -> 9443
+Forwarding from [::1]:443 -> 9443
 ```
 
 ---
 
-# 12. Open APIM in browser
+# 11. Open APIM in browser
 
-Final working access URLs:
+Open:
 
-```
+```text
 https://am.wso2.com/publisher/
+```
+
+Other portals:
+
+```text
 https://am.wso2.com/devportal/
 https://am.wso2.com/admin/
 ```
 
 Accept the browser certificate warning.
 
-**Login:**
+Login:
 
-```
+```text
 admin / admin
 ```
 
 ---
 
-# Quick Test: Create and invoke an API
+# 12. Quick health commands
 
-### Step 1: Login to Publisher
-
-Open: https://am.wso2.com/publisher/
-
-Login: `admin` / `admin`
-
-### Step 2: Create API
-
-- Click **Create → REST API → From Scratch**
-- Fill:
-  - **Name:** `TestAPI`
-  - **Context:** `/test`
-  - **Version:** `1.0.0`
-  - **Endpoint:** `https://httpbin.org/get`
-- Click **Create & Publish**
-
-### Step 3: Subscribe in Developer Portal
-
-- Open: https://am.wso2.com/devportal/
-- Find `TestAPI`
-- Click **Subscribe**
-- Select `DefaultApplication`
-- Click **Subscribe**
-
-### Step 4: Generate Access Token
-
-- Click **Subscriptions**
-- Under `DefaultApplication`, click **Production Keys**
-- Click **Generate Keys**
-- Copy the **Access Token**
-
-### Step 5: Invoke the API
-
-**Windows (PowerShell):**
-
-```powershell
-$token = "paste-your-access-token-here"
-curl.exe -k -H "Authorization: Bearer $token" https://am.wso2.com/test/1.0.0/
-```
-
-**macOS (Terminal):**
+Check pod:
 
 ```bash
-TOKEN="paste-your-access-token-here"
-curl -k -H "Authorization: Bearer $TOKEN" https://am.wso2.com/test/1.0.0/
+kubectl get pods -n wso2
 ```
 
-Expected response: JSON from httpbin ✓
+Check service:
+
+```bash
+kubectl get svc -n wso2
+```
+
+Check all resources:
+
+```bash
+kubectl get all -n wso2
+```
+
+Check logs:
+
+## Windows PowerShell
+
+```powershell
+$POD = kubectl get pods -n wso2 -o jsonpath="{.items[0].metadata.name}"
+kubectl logs -n wso2 -f $POD
+```
+
+## macOS Terminal
+
+```bash
+POD=$(kubectl get pods -n wso2 -o jsonpath='{.items[0].metadata.name}')
+kubectl logs -n wso2 -f "$POD"
+```
+
+Check previous logs after a restart:
+
+## Windows PowerShell
+
+```powershell
+$POD = kubectl get pods -n wso2 -o jsonpath="{.items[0].metadata.name}"
+kubectl logs -n wso2 $POD --previous --tail=200
+```
+
+## macOS Terminal
+
+```bash
+POD=$(kubectl get pods -n wso2 -o jsonpath='{.items[0].metadata.name}')
+kubectl logs -n wso2 "$POD" --previous --tail=200
+```
 
 ---
 
 # Troubleshooting
 
-## Problem 1 — Helm release name already in use
-
-Error:
-
-```
-cannot reuse a name that is still in use
-```
-
-Check Helm releases:
-
-**Windows (PowerShell):**
-
-```powershell
-helm list --namespace wso2
-helm list --namespace wso2 --all
-```
-
-Check Kubernetes resources:
-
-```powershell
-kubectl get all -n wso2
-```
-
-**macOS (Terminal):**
-
-```bash
-helm list --namespace wso2
-helm list --namespace wso2 --all
-```
-
-Check Kubernetes resources:
-
-```bash
-kubectl get all -n wso2
-```
-
-Use this install command again:
-
-**Windows (PowerShell):**
-
-```powershell
-helm upgrade --install apim . `
-  --namespace wso2 `
-  --create-namespace `
-  --dependency-update `
-  -f values-local.yaml `
-  -f values-apim-minikube-windows.yaml
-```
-
-**macOS (Terminal):**
-
-```bash
-helm upgrade --install apim . \
-  --namespace wso2 \
-  --create-namespace \
-  --dependency-update \
-  -f values-local.yaml \
-  -f values-apim-minikube-windows.yaml
-```
-
----
-
-## Problem 2 — `ErrImageNeverPull`
-
-Symptom:
-
-```
-ErrImageNeverPull
-```
+## Error: `ErrImageNeverPull`
 
 Cause:
 
-```
+```yaml
 imagePullPolicy: Never
 ```
 
-Fix used in override file:
+Fixed in the working values file:
 
-```
+```yaml
 imagePullPolicy: IfNotPresent
 ```
 
 ---
 
-## Problem 3 — `InvalidImageName`
-
-Symptom:
-
-```
-InvalidImageName
-```
+## Error: `InvalidImageName`
 
 Cause:
 
-```
+```yaml
 digest: "@sha256:..."
 ```
 
-Fix:
+Fixed in the working values file:
 
-```
+```yaml
 digest: "sha256:cd69005240af25042e8cd6eccce8fbe9341732bc887b919395c7aaddb43f8d53"
 ```
 
@@ -876,19 +832,19 @@ Do not include `@` in the digest value.
 
 ---
 
-## Problem 4 — APIM keeps restarting because of startup probe
+## Error: APIM restarts because startup probe fails
 
 Symptoms:
 
-```
+```text
 CrashLoopBackOff
 Startup probe failed
 Connection refused on localhost:9443
 ```
 
-Fix used:
+Fixed in the working values file:
 
-```
+```yaml
 startupProbe:
   initialDelaySeconds: 180
   periodSeconds: 10
@@ -907,18 +863,18 @@ livenessProbe:
 
 ---
 
-## Problem 5 — Truststore password missing
+## Error: Truststore password missing
 
-Symptoms in logs:
+Symptoms:
 
-```
+```text
 java.lang.NullPointerException
 org.wso2.carbon.user.core.internal.Activator.startDeploy
 ```
 
-Fix used:
+Fixed in the working values file:
 
-```
+```yaml
 security:
   truststore:
     name: "client-truststore.jks"
@@ -927,24 +883,18 @@ security:
 
 ---
 
-## Problem 6 — Blank JDBC driver
+## Error: Blank JDBC driver
 
-Symptoms in logs:
+Symptoms:
 
-```
+```text
 Unable to load class:
 ClassNotFoundException:
 ```
 
-Cause:
+Fixed in the working values file:
 
-```
-JDBC driver value is empty.
-```
-
-Fix used:
-
-```
+```yaml
 databases:
   type: "h2"
   jdbc:
@@ -953,86 +903,75 @@ databases:
 
 ---
 
-## Problem 7 — H2 AUTO_SERVER error
+## Error: H2 URL unsupported
 
-Symptoms in logs:
+Symptoms:
 
-```
+```text
 Feature not supported: "AUTO_SERVER=TRUE && DB_CLOSE_ON_EXIT=FALSE"
 ```
 
-Wrong URL:
+Wrong:
 
-```
+```text
 jdbc:h2:./repository/database/WSO2AM_DB;AUTO_SERVER=TRUE;DB_CLOSE_ON_EXIT=FALSE
 ```
 
-Correct URL:
+Fixed in the working values file:
 
-```
+```text
 jdbc:h2:./repository/database/WSO2AM_DB;DB_CLOSE_ON_EXIT=FALSE
-```
-
-Correct config:
-
-```
-apim_db:
-  url: "jdbc:h2:./repository/database/WSO2AM_DB;DB_CLOSE_ON_EXIT=FALSE"
-
-shared_db:
-  url: "jdbc:h2:./repository/database/WSO2SHARED_DB;DB_CLOSE_ON_EXIT=FALSE"
 ```
 
 ---
 
-## Problem 8 — APIM self-call to service fails
+## Error: APIM self-call to service fails
 
-Symptoms in logs:
+Symptoms:
 
-```
+```text
 Connect to apim-wso2am-all-in-one-am-service:9443 failed: Connection refused
 Failed retrieving Key Manager Configurations from remote endpoint
 ```
 
-Fix used:
+Fixed by the service patch:
 
-**Windows (PowerShell):**
-
-```powershell
-@'
+```json
 {"spec":{"publishNotReadyAddresses":true}}
-'@ | Set-Content .\svc-patch.json
-
-kubectl patch svc -n wso2 apim-wso2am-all-in-one-am-service --type merge --patch-file .\svc-patch.json
-
-kubectl rollout restart deployment -n wso2 apim-wso2am-all-in-one-am-deployment-1
 ```
 
-**macOS (Terminal):**
+Apply:
 
 ```bash
-cat > svc-patch.json << 'EOF'
-{"spec":{"publishNotReadyAddresses":true}}
-EOF
-
-kubectl patch svc -n wso2 apim-wso2am-all-in-one-am-service --type merge --patch-file svc-patch.json
-
+kubectl patch svc -n wso2 apim-wso2am-all-in-one-am-service --type merge --patch-file ./svc-patch.json
 kubectl rollout restart deployment -n wso2 apim-wso2am-all-in-one-am-deployment-1
 ```
 
 ---
 
-## Problem 9 — Browser cannot reach APIM
+## Error: Port 443 already in use
 
-Check pod:
-
-**Windows (PowerShell):**
+## Windows
 
 ```powershell
-kubectl get pods -n wso2
+netstat -ano | findstr ":443"
 ```
 
-**macOS (Terminal):**
+Stop the process using port `443`, then run port-forward again.
+
+## macOS
+
+```bash
+sudo lsof -iTCP:443 -sTCP:LISTEN -n -P
+```
+
+Stop the process using port `443`, then run port-forward again.
+
+---
+
+## Error: Browser cannot reach APIM
+
+Check these in order:
 
 ```bash
 kubectl get pods -n wso2
@@ -1040,184 +979,110 @@ kubectl get pods -n wso2
 
 Expected:
 
-```
+```text
 1/1 Running
 ```
 
-Check ingress controller:
+Check hosts entry:
 
-**Windows (PowerShell):**
-
-```powershell
-kubectl get pods -n ingress-nginx
-```
-
-**macOS (Terminal):**
-
-```bash
-kubectl get pods -n ingress-nginx
-```
-
-Expected:
-
-```
-1/1 Running
-```
-
-Check hosts file contains:
-
-```
-127.0.0.1 am.wso2.com
-```
-
-Flush DNS:
-
-**Windows (PowerShell):**
+## Windows
 
 ```powershell
-ipconfig /flushdns
+Select-String -Path C:\Windows\System32\drivers\etc\hosts -Pattern "am.wso2.com"
 ```
 
-**macOS (Terminal):**
+## macOS
 
 ```bash
-sudo dscacheutil -flushcache
+grep am.wso2.com /etc/hosts
 ```
 
-Confirm Minikube tunnel is running:
+Check port-forward is still running:
 
-**Windows:**
-
-Open Administrator PowerShell window:
-
-```powershell
-minikube tunnel
-```
-
-**macOS:**
-
-Open Terminal window:
-
-```bash
-minikube tunnel
+```text
+local 443 -> apim-wso2am-all-in-one-am-service:9443
 ```
 
 Then open:
 
-```
+```text
 https://am.wso2.com/publisher/
 ```
 
 ---
 
-# Useful Commands
+# Final working flow
 
-Commands work on both Windows and macOS. Use PowerShell on Windows and Bash on macOS:
-
-**Equivalent commands:**
-
-```powershell
-# Windows PowerShell
-kubectl get pods -n wso2
-kubectl get all -n wso2
-kubectl get svc -n wso2
-kubectl get ingress -n wso2
-kubectl get pods -n ingress-nginx
-kubectl get svc -n ingress-nginx
-```
-
-```bash
-# macOS Terminal (same commands)
-kubectl get pods -n wso2
-kubectl get all -n wso2
-kubectl get svc -n wso2
-kubectl get ingress -n wso2
-kubectl get pods -n ingress-nginx
-kubectl get svc -n ingress-nginx
-```
-
-Check APIM logs:
-
-**Windows (PowerShell):**
-
-```powershell
-$POD = kubectl get pods -n wso2 -o jsonpath="{.items[0].metadata.name}"
-kubectl logs -n wso2 -f $POD
-```
-
-**macOS (Terminal):**
-
-```bash
-POD=$(kubectl get pods -n wso2 -o jsonpath="{.items[0].metadata.name}")
-kubectl logs -n wso2 -f $POD
-```
-
-Check previous crash logs:
-
-**Windows (PowerShell):**
-
-```powershell
-$POD = kubectl get pods -n wso2 -o jsonpath="{.items[0].metadata.name}"
-kubectl logs -n wso2 $POD --previous --tail=200
-```
-
-**macOS (Terminal):**
-
-```bash
-POD=$(kubectl get pods -n wso2 -o jsonpath="{.items[0].metadata.name}")
-kubectl logs -n wso2 $POD --previous --tail=200
-```
-
-Check generated APIM configuration:
-
-```bash
-kubectl get cm -n wso2 apim-wso2am-all-in-one-am-conf-1 -o jsonpath="{.data.deployment\.toml}"
-```
-
-Check service endpoint:
-
-```bash
-kubectl get endpoints -n wso2 apim-wso2am-all-in-one-am-service -o wide
-```
-
----
-
-# Final Working Flow
-
-```
+```text
 Start Docker Desktop
   ↓
-Start Minikube with 4 CPU, 10 GB memory, 40 GB disk
+Start or reuse Minikube
   ↓
-Enable ingress addon
+Download/extract WSO2 APIM all-in-one-4.6.0-2 Helm chart
   ↓
-Download WSO2 helm-apim all-in-one-4.6.0-2 chart
+Go to all-in-one chart folder
   ↓
-Create values-apim-minikube-windows.yaml override file
+Create one values file: values-apim-minikube-working.yaml
   ↓
-Install with values-local.yaml + values-apim-minikube-windows.yaml
+helm upgrade --install using only that values file
   ↓
-Patch APIM service with publishNotReadyAddresses=true
+Apply svc-patch.json
   ↓
 Restart APIM deployment
   ↓
-Wait for APIM pod 1/1 Running
+Wait until pod is 1/1 Running
   ↓
-Add 127.0.0.1 am.wso2.com to hosts file
+Map am.wso2.com to 127.0.0.1 in hosts file
   ↓
-Flush DNS cache
-  ↓
-Run minikube tunnel
+Run kubectl port-forward 443:9443
   ↓
 Open https://am.wso2.com/publisher/
 ```
 
 ---
 
-# Note
+# Cleanup
 
-This lab works on **Windows and macOS**.
+Stop the `kubectl port-forward` window first:
 
-Uses H2 only for local learning.
+```text
+Ctrl + C
+```
 
-For production-like deployment, use PostgreSQL or another supported external database instead of H2.
+Then remove the Helm release and namespace.
+
+Warning: this removes the APIM deployment, services, configmaps, and local H2 data stored in the `wso2` namespace.
+
+## Windows / macOS
+
+```bash
+helm uninstall apim -n wso2
+kubectl delete namespace wso2
+```
+
+Expected output:
+
+```text
+release "apim" uninstalled
+namespace "wso2" deleted
+```
+
+Validate cleanup:
+
+```bash
+kubectl get namespace wso2
+```
+
+Expected output:
+
+```text
+Error from server (NotFound): namespaces "wso2" not found
+```
+
+---
+
+# Local lab note
+
+This setup uses H2 only for local learning.
+
+For production-like deployment, use PostgreSQL or another supported external database.

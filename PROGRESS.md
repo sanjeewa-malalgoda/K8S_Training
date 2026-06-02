@@ -75,6 +75,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-05-31 | Restructure README.md | README.md | Done |
 | 2026-05-31 | Replace vague expected outputs with exact command output | docs/00-overview.md, docs/01-prerequisites.md, docs/04-start-minikube.md, docs/06-addons.md, QUICKSTART.md, labs/01-hello-deployment/README.md, labs/04-configmap-secret/README.md, labs/05-persistent-volume/README.md | Done |
 | 2026-05-31 | Add concept explanations to all guides and labs | docs/05-kubectl-basics.md, docs/06-addons.md, docs/07-ingress.md, docs/08-helm.md, labs/01-hello-deployment/README.md, labs/02-service-nodeport/README.md, labs/03-ingress/README.md, labs/04-configmap-secret/README.md, labs/05-persistent-volume/README.md, labs/06-helm-basic/README.md | Done |
+| 2026-06-02 | Align Lab 07 README with working README-News flow | README.md, labs/07-wso2-apim/README.md | Done |
 
 ---
 
