@@ -210,6 +210,32 @@ Create REST, GraphQL, and WebSocket APIs in WSO2 API Manager using the services 
 | Details | [09-apim-api-creation/README.md](labs/09-apim-api-creation/README.md) |
 | Cleanup | Delete APIs from APIM Publisher; delete Lab 08 services if no longer needed |
 
+### 9.10 Lab: MCP Tools and VS Code Copilot Agent
+
+Convert the Lab 09 REST API into an MCP server in WSO2 API Manager, test it with MCP Inspector, and use it as tools in VS Code Copilot Agent Mode.
+
+| Task | Command |
+|------|---------|
+| Prerequisites | Complete Labs 07, 08, and 09 |
+| Create MCP server | Use APIM Publisher at `https://am.wso2.com/publisher/` |
+| Test MCP server | `npx @modelcontextprotocol/inspector` |
+| Configure VS Code | Use `labs/10-mcp-agent/vscode-mcp-template.json` |
+| Details | [10-mcp-agent/README.md](labs/10-mcp-agent/README.md) |
+| Cleanup | Delete MCP servers from APIM Publisher; remove `.vscode/mcp.json` if created |
+
+### 9.11 Lab: AI Gateway Chat App
+
+Create an AI API in WSO2 API Manager, proxy an LLM provider through AI Gateway, and use a modern browser chat app to call it.
+
+| Task | Command |
+|------|---------|
+| Prerequisites | Complete Lab 07 |
+| Create AI API | Use APIM Publisher at `https://am.wso2.com/publisher/` |
+| Test AI API | `curl -k -X POST https://gw.wso2.com:8243/gov-ai-chat/1.0.0/chat/completions` |
+| Run chat app | `python -m http.server 5500` from `labs/11-ai-gateway-chat/app` |
+| Details | [11-ai-gateway-chat/README.md](labs/11-ai-gateway-chat/README.md) |
+| Cleanup | Delete the AI API from APIM Publisher; stop the local web server |
+
 ---
 
 ## Stage 3: Cleanup (Reset Your Environment)
@@ -307,7 +333,9 @@ Need a shortcut? See:
 │   ├── 06-helm-basic/
 │   ├── 07-wso2-apim/
 │   ├── 08-government-services/
-│   └── 09-apim-api-creation/
+│   ├── 09-apim-api-creation/
+│   ├── 10-mcp-agent/
+│   └── 11-ai-gateway-chat/
 └── scripts/                     ← Automation and references
     ├── windows/
     ├── macos/
@@ -365,7 +393,9 @@ chmod +x scripts/macos/*.sh
 | 14 | `labs/07-wso2-apim/README.md` |
 | 15 | `labs/08-government-services/README.md` |
 | 16 | `labs/09-apim-api-creation/README.md` |
-| 17 | `docs/09-cleanup.md` |
+| 17 | `labs/10-mcp-agent/README.md` |
+| 18 | `labs/11-ai-gateway-chat/README.md` |
+| 19 | `docs/09-cleanup.md` |
 
 ---
 
@@ -376,5 +406,9 @@ chmod +x scripts/macos/*.sh
 - Kubernetes kubectl docs: https://kubernetes.io/docs/reference/kubectl/
 - Docker Desktop docs: https://docs.docker.com/desktop/
 - Helm docs: https://helm.sh/docs/
+- WSO2 MCP Gateway docs: https://apim-docs-stg.wso2.com/en/4.6.0/ai-gateway/mcp-gateway/overview/
+- WSO2 AI Gateway docs: https://apim-docs-stg.wso2.com/en/4.6.0/ai-gateway/ai-gateway-overview/
+- MCP Inspector docs: https://modelcontextprotocol.io/docs/tools/inspector
+- VS Code MCP server docs: https://code.visualstudio.com/docs/agent-customization/mcp-servers
 - Codex CLI docs: https://developers.openai.com/codex/cli
 - Codex IDE extension docs: https://developers.openai.com/codex/ide

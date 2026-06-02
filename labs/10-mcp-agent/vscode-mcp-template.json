@@ -1,0 +1,25 @@
+{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "government-permit-mcp-url",
+      "description": "Paste the WSO2 MCP server URL from Developer Portal",
+      "password": false
+    },
+    {
+      "type": "promptString",
+      "id": "government-permit-mcp-token",
+      "description": "Paste the access token for the WSO2 MCP server subscription",
+      "password": true
+    }
+  ],
+  "servers": {
+    "government-permit-mcp": {
+      "type": "http",
+      "url": "${input:government-permit-mcp-url}",
+      "headers": {
+        "Authorization": "Bearer ${input:government-permit-mcp-token}"
+      }
+    }
+  }
+}

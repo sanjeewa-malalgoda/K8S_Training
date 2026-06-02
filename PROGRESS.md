@@ -81,6 +81,8 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-03 | Add WSO2 server log watch step to Lab 07 startup flow | labs/07-wso2-apim/README.md | Done |
 | 2026-06-03 | Add OAuth JWKS URL to Lab 07 base APIM values configuration | labs/07-wso2-apim/README.md, labs/07-wso2-apim/values-local.yaml, labs/07-wso2-apim/values-minikube-windows.yaml | Done |
 | 2026-06-03 | Fix and verify Lab 08 GraphQL test command using URL-encoded query | labs/08-government-services/README.md | Done |
+| 2026-06-03 | Add Lab 10 for APIM API-to-MCP conversion, MCP Inspector, and VS Code Copilot Agent Mode | README.md, labs/10-mcp-agent | Drafted |
+| 2026-06-03 | Add Lab 11 AI Gateway chat app with Groq-first provider guidance | README.md, labs/11-ai-gateway-chat | Drafted |
 
 ---
 
