@@ -19,7 +19,7 @@ Important:
 This working path does NOT use minikube ingress addon.
 This working path does NOT use minikube tunnel.
 Browser access is done using:
-  hosts file + kubectl port-forward 443:9443
+  hosts file + kubectl port-forward 443:9443 and 8243:8243
 ```
 
 Final browser URLs:
@@ -28,6 +28,12 @@ Final browser URLs:
 https://am.wso2.com/publisher/
 https://am.wso2.com/devportal/
 https://am.wso2.com/admin/
+```
+
+Gateway invoke base URL:
+
+```text
+https://gw.wso2.com:8243
 ```
 
 Default login:
@@ -239,7 +245,9 @@ This file combines the working local image/resource settings and the APIM fixes 
 # Working local override for WSO2 APIM 4.6.0 All-In-One on Minikube.
 # Access method used by this tutorial:
 #   hosts file: am.wso2.com -> 127.0.0.1
+#   hosts file: gw.wso2.com -> 127.0.0.1
 #   kubectl port-forward local 443 -> APIM service 9443
+#   kubectl port-forward local 8243 -> APIM gateway service 8243
 #
 # This file is for local lab/demo use.
 
@@ -268,6 +276,22 @@ wso2:
         truststore:
           name: "client-truststore.jks"
           password: "wso2carbon"
+
+      gateway:
+        environments:
+          - name: "Default"
+            type: "hybrid"
+            gatewayType: "Regular"
+            provider: "wso2"
+            visibility:
+            displayInApiConsole: true
+            description: "This is a hybrid gateway that handles both production and sandbox token traffic."
+            showAsTokenEndpointUrl: true
+            serviceName: "wso2am-gateway-service"
+            servicePort: 9443
+            wsHostname: "websocket.wso2.com"
+            httpHostname: "gw.wso2.com:8243"
+            websubHostname: "websub.wso2.com"
 
   deployment:
     highAvailability: false
@@ -360,7 +384,9 @@ cat > values-apim-minikube-working.yaml <<'EOF'
 # Working local override for WSO2 APIM 4.6.0 All-In-One on Minikube.
 # Access method used by this tutorial:
 #   hosts file: am.wso2.com -> 127.0.0.1
+#   hosts file: gw.wso2.com -> 127.0.0.1
 #   kubectl port-forward local 443 -> APIM service 9443
+#   kubectl port-forward local 8243 -> APIM gateway service 8243
 #
 # This file is for local lab/demo use.
 
@@ -389,6 +415,22 @@ wso2:
         truststore:
           name: "client-truststore.jks"
           password: "wso2carbon"
+
+      gateway:
+        environments:
+          - name: "Default"
+            type: "hybrid"
+            gatewayType: "Regular"
+            provider: "wso2"
+            visibility:
+            displayInApiConsole: true
+            description: "This is a hybrid gateway that handles both production and sandbox token traffic."
+            showAsTokenEndpointUrl: true
+            serviceName: "wso2am-gateway-service"
+            servicePort: 9443
+            wsHostname: "websocket.wso2.com"
+            httpHostname: "gw.wso2.com:8243"
+            websubHostname: "websub.wso2.com"
 
   deployment:
     highAvailability: false
@@ -585,13 +627,13 @@ Run:
 ## Windows PowerShell
 
 ```powershell
-kubectl get cm -n wso2 apim-wso2am-all-in-one-am-conf-1 -o jsonpath="{.data.deployment\.toml}" | Select-String -Pattern "\[database.apim_db\]|\[database.shared_db\]|type =|url =|username =|driver =|\[truststore\]|password" -Context 0,1
+kubectl get cm -n wso2 apim-wso2am-all-in-one-am-conf-1 -o jsonpath="{.data.deployment\.toml}" | Select-String -Pattern "\[database.apim_db\]|\[database.shared_db\]|type =|url =|username =|driver =|\[truststore\]|password|\[\[apim.gateway.environment\]\]|https_endpoint" -Context 0,1
 ```
 
 ## macOS Terminal
 
 ```bash
-kubectl get cm -n wso2 apim-wso2am-all-in-one-am-conf-1 -o jsonpath='{.data.deployment\.toml}' | grep -E '\[database.apim_db\]|\[database.shared_db\]|type =|url =|username =|driver =|\[truststore\]|password'
+kubectl get cm -n wso2 apim-wso2am-all-in-one-am-conf-1 -o jsonpath='{.data.deployment\.toml}' | grep -E '\[database.apim_db\]|\[database.shared_db\]|type =|url =|username =|driver =|\[truststore\]|password|\[\[apim.gateway.environment\]\]|https_endpoint'
 ```
 
 Expected important values:
@@ -615,6 +657,12 @@ The URLs must not contain:
 AUTO_SERVER=TRUE
 ```
 
+Expected gateway URL:
+
+```text
+https_endpoint = "https://gw.wso2.com:8243"
+```
+
 ---
 
 # 9. Configure hosts file
@@ -623,12 +671,14 @@ The browser must use the APIM hostname:
 
 ```text
 am.wso2.com
+gw.wso2.com
 ```
 
 Map it to local machine:
 
 ```text
 127.0.0.1 am.wso2.com
+127.0.0.1 gw.wso2.com
 ```
 
 ## Windows
@@ -645,6 +695,7 @@ Add:
 
 ```text
 127.0.0.1 am.wso2.com
+127.0.0.1 gw.wso2.com
 ```
 
 Save the file.
@@ -661,6 +712,7 @@ Run:
 
 ```bash
 echo "127.0.0.1 am.wso2.com" | sudo tee -a /etc/hosts
+echo "127.0.0.1 gw.wso2.com" | sudo tee -a /etc/hosts
 sudo dscacheutil -flushcache
 sudo killall -HUP mDNSResponder
 ```
@@ -668,12 +720,12 @@ sudo killall -HUP mDNSResponder
 Check:
 
 ```bash
-grep am.wso2.com /etc/hosts
+grep -E "am.wso2.com|gw.wso2.com" /etc/hosts
 ```
 
 ---
 
-# 10. Start port-forward for browser access
+# 10. Start port-forward for portal and gateway access
 
 This is the working access path.
 
@@ -681,13 +733,16 @@ It maps:
 
 ```text
 local machine port 443
-  -> Kubernetes service apim-wso2am-all-in-one-am-service port 9443
+  -> APIM management service port 9443
+
+local machine port 8243
+  -> APIM gateway service port 8243
 ```
 
 ## Windows PowerShell as Administrator
 
 ```powershell
-kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443
+kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443 8243:8243
 ```
 
 Keep this PowerShell window open.
@@ -697,7 +752,7 @@ Keep this PowerShell window open.
 Port `443` is privileged, so use `sudo`.
 
 ```bash
-sudo -E kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443
+sudo -E kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443 8243:8243
 ```
 
 Keep this terminal window open.
@@ -705,7 +760,7 @@ Keep this terminal window open.
 If `sudo -E` cannot find the Kubernetes context, use:
 
 ```bash
-sudo KUBECONFIG=$HOME/.kube/config kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443
+sudo KUBECONFIG=$HOME/.kube/config kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443 8243:8243
 ```
 
 Expected output:
@@ -713,6 +768,22 @@ Expected output:
 ```text
 Forwarding from 127.0.0.1:443 -> 9443
 Forwarding from [::1]:443 -> 9443
+Forwarding from 127.0.0.1:8243 -> 8243
+Forwarding from [::1]:8243 -> 8243
+```
+
+Verify the gateway port from another terminal:
+
+```bash
+curl -k https://gw.wso2.com:8243
+```
+
+Expected output can be a WSO2 response or a not-found response.
+The important result is that the connection reaches APIM and does not fail with:
+
+```text
+Could not resolve host
+Connection refused
 ```
 
 ---
@@ -730,6 +801,12 @@ Other portals:
 ```text
 https://am.wso2.com/devportal/
 https://am.wso2.com/admin/
+```
+
+Gateway invoke base URL:
+
+```text
+https://gw.wso2.com:8243
 ```
 
 Accept the browser certificate warning.
@@ -949,23 +1026,25 @@ kubectl rollout restart deployment -n wso2 apim-wso2am-all-in-one-am-deployment-
 
 ---
 
-## Error: Port 443 already in use
+## Error: Port 443 or 8243 already in use
 
 ## Windows
 
 ```powershell
 netstat -ano | findstr ":443"
+netstat -ano | findstr ":8243"
 ```
 
-Stop the process using port `443`, then run port-forward again.
+Stop the process using the busy port, then run port-forward again.
 
 ## macOS
 
 ```bash
 sudo lsof -iTCP:443 -sTCP:LISTEN -n -P
+sudo lsof -iTCP:8243 -sTCP:LISTEN -n -P
 ```
 
-Stop the process using port `443`, then run port-forward again.
+Stop the process using the busy port, then run port-forward again.
 
 ---
 
@@ -988,25 +1067,32 @@ Check hosts entry:
 ## Windows
 
 ```powershell
-Select-String -Path C:\Windows\System32\drivers\etc\hosts -Pattern "am.wso2.com"
+Select-String -Path C:\Windows\System32\drivers\etc\hosts -Pattern "am.wso2.com|gw.wso2.com"
 ```
 
 ## macOS
 
 ```bash
-grep am.wso2.com /etc/hosts
+grep -E "am.wso2.com|gw.wso2.com" /etc/hosts
 ```
 
 Check port-forward is still running:
 
 ```text
 local 443 -> apim-wso2am-all-in-one-am-service:9443
+local 8243 -> apim-wso2am-all-in-one-am-service:8243
 ```
 
 Then open:
 
 ```text
 https://am.wso2.com/publisher/
+```
+
+Check gateway access:
+
+```text
+https://gw.wso2.com:8243
 ```
 
 ---
@@ -1034,9 +1120,13 @@ Wait until pod is 1/1 Running
   ↓
 Map am.wso2.com to 127.0.0.1 in hosts file
   ↓
-Run kubectl port-forward 443:9443
+Map gw.wso2.com to 127.0.0.1 in hosts file
+  ↓
+Run kubectl port-forward 443:9443 8243:8243
   ↓
 Open https://am.wso2.com/publisher/
+  ↓
+Invoke APIs through https://gw.wso2.com:8243
 ```
 
 ---

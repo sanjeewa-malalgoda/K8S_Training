@@ -15,6 +15,7 @@ Important:
 ```text
 APIM must use Kubernetes internal service DNS names.
 Do not use localhost, NodePort, or minikube service URLs as APIM backend endpoints.
+Invoke published APIs through the Lab 07 gateway URL: https://gw.wso2.com:8243
 ```
 
 ---
@@ -57,13 +58,26 @@ gov-permits-rest        ClusterIP   ...   8080/TCP
 Confirm Lab 07 port-forward is running:
 
 ```text
-kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443
+kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443 8243:8243
+```
+
+Confirm the hosts file has both names:
+
+```text
+127.0.0.1 am.wso2.com
+127.0.0.1 gw.wso2.com
 ```
 
 Open Publisher:
 
 ```text
 https://am.wso2.com/publisher/
+```
+
+Gateway invoke base URL:
+
+```text
+https://gw.wso2.com:8243
 ```
 
 Login:
@@ -309,14 +323,14 @@ Version: 1.0.0
 
 ```powershell
 $TOKEN = "paste-access-token-here"
-curl.exe -k -H "Authorization: Bearer $TOKEN" https://am.wso2.com/gov/permits/1.0.0/permits
+curl.exe -k -H "Authorization: Bearer $TOKEN" https://gw.wso2.com:8243/gov/permits/1.0.0/permits
 ```
 
 ## macOS Terminal
 
 ```bash
 TOKEN="paste-access-token-here"
-curl -k -H "Authorization: Bearer $TOKEN" https://am.wso2.com/gov/permits/1.0.0/permits
+curl -k -H "Authorization: Bearer $TOKEN" https://gw.wso2.com:8243/gov/permits/1.0.0/permits
 ```
 
 Expected response:
@@ -351,7 +365,7 @@ Version: 1.0.0
 
 ```powershell
 $TOKEN = "paste-access-token-here"
-curl.exe -k -X POST https://am.wso2.com/gov/benefits/1.0.0 `
+curl.exe -k -X POST https://gw.wso2.com:8243/gov/benefits/1.0.0 `
   -H "Authorization: Bearer $TOKEN" `
   -H "Content-Type: application/json" `
   -d '{"query":"{ benefitPrograms { id name agency status } }"}'
@@ -361,7 +375,7 @@ curl.exe -k -X POST https://am.wso2.com/gov/benefits/1.0.0 `
 
 ```bash
 TOKEN="paste-access-token-here"
-curl -k -X POST https://am.wso2.com/gov/benefits/1.0.0 \
+curl -k -X POST https://gw.wso2.com:8243/gov/benefits/1.0.0 \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query":"{ benefitPrograms { id name agency status } }"}'
@@ -398,7 +412,7 @@ Version: 1.0.0
 Use a WebSocket client and connect to:
 
 ```text
-wss://am.wso2.com/gov/alerts/1.0.0/ws
+wss://gw.wso2.com:8243/gov/alerts/1.0.0/ws
 ```
 
 Send:
@@ -423,7 +437,7 @@ Expected message:
 If your WebSocket API requires token authentication in the query string, use:
 
 ```text
-wss://am.wso2.com/gov/alerts/1.0.0/ws?access_token=<paste-access-token-here>
+wss://gw.wso2.com:8243/gov/alerts/1.0.0/ws?access_token=<paste-access-token-here>
 ```
 
 ---
@@ -447,7 +461,8 @@ Use this table when checking or editing the APIM endpoint configuration.
 | APIM endpoint test fails | APIM cannot resolve or reach the backend service | Use the full Kubernetes DNS name from this lab | Run the reachability commands in section 2 |
 | API returns `404` | The API context, version, or resource path differs from the commands | Check the API context and resource paths in Publisher | Use the exact context/version shown in this lab |
 | API returns `401` or `403` | Missing, expired, or wrong access token | Generate a new token from `DefaultApplication` | Retry curl with `Authorization: Bearer <token>` |
-| Browser cannot open Publisher | Lab 07 port-forward is not running | Restart `kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443` | Open `https://am.wso2.com/publisher/` |
+| Browser cannot open Publisher | Lab 07 management port-forward is not running | Restart `kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443 8243:8243` | Open `https://am.wso2.com/publisher/` |
+| Invoke URL cannot connect | Lab 07 gateway port-forward or `gw.wso2.com` hosts entry is missing | Add `127.0.0.1 gw.wso2.com` and restart port-forward with `8243:8243` | Open `https://gw.wso2.com:8243` |
 | WebSocket does not connect | Wrong endpoint scheme or token placement | Use `wss://` for APIM browser access and `ws://` only for the internal backend endpoint | Test the backend directly from Lab 08 |
 
 ---

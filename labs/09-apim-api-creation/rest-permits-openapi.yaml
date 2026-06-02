@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: Demo REST API for permit applications used in the Minikube WSO2 APIM lab.
 servers:
-  - url: https://am.wso2.com/gov/permits/1.0.0
+  - url: https://gw.wso2.com:8243/gov/permits/1.0.0
 paths:
   /permits:
     get:
