@@ -156,17 +156,25 @@ The output may include two permit records.
 
 # 4. Verify GraphQL service inside Kubernetes
 
-## Windows PowerShell
+Use a URL-encoded GraphQL query.
+This avoids shell-specific JSON quoting problems on Windows and macOS.
 
-```powershell
-kubectl run gov-graphql-test -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- curl -s -X POST http://gov-benefits-graphql:8080/graphql -H "Content-Type: application/json" -d '{"query":"{ benefitPrograms { id name agency status } }"}'
-```
-
-## macOS Terminal
+## Windows / macOS
 
 ```bash
-kubectl run gov-graphql-test -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- curl -s -X POST http://gov-benefits-graphql:8080/graphql -H "Content-Type: application/json" -d '{"query":"{ benefitPrograms { id name agency status } }"}'
+kubectl run gov-graphql-test -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- curl -s "http://gov-benefits-graphql:8080/graphql?query=%7B%20benefitPrograms%20%7B%20id%20name%20agency%20status%20%7D%20%7D"
 ```
+
+If you see this error with a POST command:
+
+```json
+{
+  "error": "Invalid JSON body"
+}
+```
+
+it means the shell changed the JSON body before it reached the test pod.
+Use the URL-encoded command above.
 
 Expected output:
 
