@@ -1,19 +1,21 @@
-# values-local.yaml — WSO2 APIM 4.6.0 All-in-One for minikube
-# Override default values to use public images and embedded H2 database
+# values-local.yaml
+# Minikube training override for WSO2 APIM 4.6.0 All-in-One chart
+# Matches schema of all-in-one-4.6.0-2
 
 wso2:
-  subscription:
-    username: ""
-    password: ""
-
+  # APIM configuration (uses public Docker Hub OSS image)
   deployment:
+    highAvailability: false
+
     image:
+      imagePullSecrets:
+        enabled: false
+        username: ""
+        password: ""
       registry: "docker.io"
       repository: "wso2/wso2am"
-      tag: "4.6.0"
-      imagePullPolicy: IfNotPresent
-
-    replicas: 1
+      digest: "@sha256:cd69005240af25042e8cd6eccce8fbe9341732bc887b919395c7aaddb43f8d53"
+      imagePullPolicy: Never
 
     resources:
       requests:
@@ -22,9 +24,39 @@ wso2:
       limits:
         memory: "4Gi"
         cpu: "2000m"
+      jvm:
+        memory:
+          xms: "2048m"
+          xmx: "2048m"
 
-    wso2ApiManager:
-      ingress:
-        host: "am.wso2.com"
-      gatewayIngress:
-        host: "gw.wso2.com"
+# Kubernetes ingress configuration
+kubernetes:
+  openshift:
+    enabled: false
+
+  ingressClass: "nginx"
+  ingress:
+    tlsSecret: ""
+    ratelimit:
+      enabled: false
+    management:
+      enabled: true
+      hostname: "am.wso2.com"
+      annotations:
+        nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+        nginx.ingress.kubernetes.io/affinity: "cookie"
+        nginx.ingress.kubernetes.io/session-cookie-name: "route"
+        nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
+    gateway:
+      enabled: true
+      hostname: "gw.wso2.com"
+      annotations:
+        nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+        nginx.ingress.kubernetes.io/proxy-buffering: "on"
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+    websocket:
+      enabled: true
+      hostname: "websocket.wso2.com"
+    websub:
+      enabled: true
+      hostname: "websub.wso2.com"
