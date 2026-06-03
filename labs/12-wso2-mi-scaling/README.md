@@ -1,18 +1,31 @@
-# Lab 12 - Dynamic CApp Deployment and Autoscaling with WSO2 MI
+# Lab 12 - Deploy a WSO2 MI CApp, Autoscale It, and Expose It Through APIM
 
-In Lab 07 you deployed **WSO2 API Manager**. API Manager exposes and secures APIs, but the integration logic should run in **WSO2 Micro Integrator**.
+You have a WSO2 Micro Integrator CApp/CAR file and you need to run it on Kubernetes.
 
-In this lab, the real problem is:
+By the end of this lab, you will have:
+
+| Outcome | What you prove |
+|---|---|
+| MI runs from the official WSO2 Helm chart | You are not hand-writing the MI Deployment |
+| The CApp is loaded from a shared `carbonapps` volume | Every MI pod sees the same `.car` file |
+| HPA scales MI from 1 pod up to 3 pods | Scaling is based on real Kubernetes metrics |
+| A load test triggers autoscaling | You can watch HPA react to load |
+| APIM exposes the MI backend | Clients call APIM, APIM calls MI inside Kubernetes |
+
+The working path is:
 
 ```text
-A team already builds WSO2 CApp/CAR files.
-They need to deploy a CApp into WSO2 MI on Kubernetes.
-Every running MI pod must see the same CApp.
-The MI service must scale when load increases.
-API Manager must expose the MI-backed API through the existing gateway.
+Place .car file
+  -> create shared CApp volume
+  -> deploy MI using official WSO2 Helm chart
+  -> mount the shared volume into MI carbonapps directory
+  -> test the MI API
+  -> enable metrics-server and HPA
+  -> generate load and watch scale-out
+  -> expose the MI API through APIM
 ```
 
-This lab uses official resources as much as possible:
+This lab uses these resources:
 
 | Area | Resource used |
 |---|---|
@@ -24,22 +37,14 @@ This lab uses official resources as much as possible:
 | Metrics | minikube `metrics-server` add-on |
 | Load generation | Kubernetes Job |
 
-The only lab-specific extension is the PVC mount into `carbonapps`, because the official Helm documentation does not show a first-class values option for mounting a training CApp PVC into that path.
-
-The main artifact flow is **CApp-first**:
+The lab-specific piece is the PVC mount into `carbonapps`:
 
 ```text
-Export CApp/CAR -> upload to shared carbonapps volume -> MI hot-deploys it -> scale with HPA -> expose through APIM
+PVC: mi-carbonapps-pvc
+  -> mounted into /home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
 ```
 
-Important:
-
-```text
-This lab does not require building a custom MI Docker image.
-The custom image approach is still valid for immutable production deployments.
-This lab focuses on dynamic CApp loading because many WSO2 teams already deliver .car files.
-Lab 07 APIM is only required for the final API Manager exposure section.
-```
+Lab 07 APIM is needed only for the final APIM exposure sections. You can complete the MI deployment, CApp loading, and autoscaling sections without APIM.
 
 ---
 
@@ -78,7 +83,7 @@ https://gw.wso2.com:8243/mi/citizen/1.0.0
 
 ---
 
-# 2. Why CApp and shared volume
+# 2. CApp delivery design
 
 WSO2 CApps are deployed as `.car` files. The runtime deployment directory is:
 
@@ -92,18 +97,21 @@ For the WSO2 MI 4.6.0 Docker image, this lab uses:
 /home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
 ```
 
-The important Kubernetes question is:
+Before MI can serve the API, every MI pod must receive the same CApp:
 
 ```text
-How does every MI pod receive the same .car file?
+CitizenInfoCompositeExporter_1.0.0.car
+  -> visible inside every MI pod
+  -> deployed by MI
+  -> API becomes available
 ```
 
 This lab answers it with a shared Kubernetes volume.
 
 | Approach | Artifact format | Update behavior | Best for |
 |---|---|---|---|
-| Shared volume, used in this lab | `.car` | Copy a new CApp into the shared volume and MI hot-deploys it | Local training and teams that already deliver CApps |
-| Custom image | `.car` baked into image | Build and roll out a new image | Immutable production/GitOps releases |
+| Shared volume, used in this lab | `.car` | Copy a new CApp into the shared volume and MI hot-deploys it | Local CApp deployment and autoscaling practice |
+| Custom image | `.car` baked into image | Build and roll out a new image | Immutable release pipelines |
 | Init container | `.car` downloaded before MI starts | Restart pods to pick up a new CApp | Pulling artifacts from Nexus, Git, S3, or similar |
 | Sidecar syncer | `.car` continuously synced | Runtime sync | Advanced production pattern with extra operational risk |
 
@@ -117,9 +125,9 @@ Examples: NFS, Azure Files, Amazon EFS, CephFS, or another RWX-capable storage c
 
 ---
 
-# 3. Why HPA must include metrics-server
+# 3. HPA requires metrics-server
 
-HPA is not magic. It needs metrics.
+HPA needs CPU or memory metrics before it can scale pods.
 
 For CPU and memory autoscaling, Kubernetes normally reads pod metrics from the `metrics.k8s.io` API. In minikube, that API is provided by the `metrics-server` add-on.
 
@@ -139,7 +147,7 @@ If `metrics-server` is missing, HPA may show:
 <unknown>
 ```
 
-That is not a real autoscaling test.
+Do not test HPA while it shows `<unknown>`. Fix metrics-server first.
 
 ---
 
@@ -227,10 +235,10 @@ Hosts file entries from Lab 07 must exist:
 | File | Purpose |
 |---|---|
 | `values-mi-minikube-working.yaml` | Local override for the official WSO2 MI Helm chart |
-| `k8s/mi-carbonapps-shared-volume.yaml` | Namespace, PVC, and helper pod for the shared CApp volume |
+| `k8s/mi-carbonapps-shared-volume.yaml` | PVC and helper pod for the shared CApp volume |
 | `k8s/mi-load-generator.yaml` | Load generator Job used to trigger HPA |
 | `citizen-info-openapi.yaml` | OpenAPI file to import into WSO2 API Manager |
-| `artifacts/synapse-configs/default/api/citizen-info-api.xml` | Source API XML used to build/export the sample CApp |
+| `artifacts/synapse-configs/default/api/citizen-info-api.xml` | Source API XML used to build/export a matching demo CApp |
 | `capps/README.md` | Where to place the exported `.car` file |
 
 The expected CApp should expose:
@@ -245,7 +253,9 @@ The expected CApp should expose:
 
 # 6. Prepare the CApp file
 
-This lab expects a CApp file named:
+Before you continue, get the CApp/CAR file you want to deploy.
+
+For the commands below, use this file name:
 
 ```text
 CitizenInfoCompositeExporter_1.0.0.car
@@ -257,9 +267,11 @@ Place it here:
 labs/12-wso2-mi-scaling/capps/CitizenInfoCompositeExporter_1.0.0.car
 ```
 
-If your team already has a real CApp, use that file instead and update the API paths in the test commands.
+If your CApp uses a different file name, update the file name in the copy commands before you continue.
 
-If you are using the demo artifact in this repository, export it from WSO2 Integration Studio as a CApp:
+If your CApp exposes different API paths, update the MI test URLs, OpenAPI file, and APIM endpoint paths before you test.
+
+If you are building the demo API, export this source artifact from WSO2 Integration Studio as a CApp:
 
 ```text
 artifacts/synapse-configs/default/api/citizen-info-api.xml
@@ -279,6 +291,8 @@ Expected output:
 True
 ```
 
+If the output is `False`, stop here and export or copy the CApp before continuing.
+
 ## macOS Terminal
 
 ```bash
@@ -290,6 +304,8 @@ Expected output:
 ```text
 CApp found
 ```
+
+If this command prints nothing, stop here and export or copy the CApp before continuing.
 
 ---
 
@@ -850,13 +866,21 @@ cloud-citizen-info-mi-xxxxxxxxxx-xxxxx   ...          ...
 Run from the repository root:
 
 ```bash
+kubectl delete job mi-load-generator -n minikube-demo --ignore-not-found
 kubectl apply -f labs/12-wso2-mi-scaling/k8s/mi-load-generator.yaml
 ```
 
 Expected output:
 
 ```text
+job.batch "mi-load-generator" deleted
 job.batch/mi-load-generator created
+```
+
+If the Job did not exist before, the delete command may print:
+
+```text
+job.batch "mi-load-generator" not found
 ```
 
 Watch HPA:
