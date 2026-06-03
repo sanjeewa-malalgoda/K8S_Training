@@ -1,0 +1,13 @@
+spec:
+  template:
+    spec:
+      containers:
+        - name: wso2mi
+          volumeMounts:
+            - name: citizen-info-api
+              mountPath: /home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/synapse-configs/default/api
+              readOnly: true
+      volumes:
+        - name: citizen-info-api
+          configMap:
+            name: citizen-info-api-synapse

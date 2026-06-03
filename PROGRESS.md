@@ -94,6 +94,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-04 | Clarify that Lab 12 expected MI JSON responses come from the demo CApp payload factory and that pod names vary | labs/12-wso2-mi-scaling/README.md | Drafted |
 | 2026-06-04 | Add the Lab 12 demo `CitizenInfoCompositeExporter_1.0.0.car` to the expected `capps` folder | labs/12-wso2-mi-scaling/capps | Drafted |
 | 2026-06-04 | Fix Lab 12 Windows paths to avoid hardcoded repo folders and `kubectl cp` drive-letter parsing errors | labs/12-wso2-mi-scaling/README.md | Drafted |
+| 2026-06-04 | Add direct Synapse API ConfigMap mount fallback for Lab 12 after CApp dependency resolution failed in MI | labs/12-wso2-mi-scaling/README.md, labs/12-wso2-mi-scaling/k8s | Verified on Windows |
 
 ---
 

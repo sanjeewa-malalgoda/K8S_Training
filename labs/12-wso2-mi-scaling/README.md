@@ -344,6 +344,32 @@ kubectl logs -n minikube-demo deployment/cloud-citizen-info-mi --tail=300 | Sele
 ```
 
 The `.car` file must be visible in `carbonapps`, and the logs must show that MI deployed the CApp or its API resources. If the `.car` is visible but the API is still 404, the CApp probably does not contain an API with context `/citizen`.
+
+If the logs show `Some dependencies were not satisfied in cApp`, use the direct
+Synapse API ConfigMap fallback:
+
+```powershell
+$REPO = (Get-Location).Path
+$API_XML = "$REPO\labs\12-wso2-mi-scaling\artifacts\synapse-configs\default\api\citizen-info-api.xml"
+
+kubectl create configmap citizen-info-api-synapse `
+  -n minikube-demo `
+  --from-file=citizen-info-api.xml=$API_XML `
+  --dry-run=client `
+  -o yaml | kubectl apply -f -
+
+kubectl exec -n minikube-demo mi-capp-loader -- rm -f /carbonapps/CitizenInfoCompositeExporter_1.0.0.car
+kubectl patch deployment cloud-citizen-info-mi -n minikube-demo --type strategic --patch-file "$REPO\labs\12-wso2-mi-scaling\k8s\mi-citizen-api-configmap-mount-patch.yaml"
+kubectl rollout status deployment/cloud-citizen-info-mi -n minikube-demo --timeout=5m
+kubectl logs -n minikube-demo deployment/cloud-citizen-info-mi --tail=120 | Select-String "Initializing API|CitizenInfoAPI|ERROR"
+```
+
+Expected output includes:
+
+```text
+deployment.apps/cloud-citizen-info-mi patched
+deployment "cloud-citizen-info-mi" successfully rolled out
+Initializing API: CitizenInfoAPI
 ```
 
 Profile:
@@ -623,6 +649,7 @@ Do not delete the `wso2` namespace unless you also want to remove Lab 07 APIM.
 | `TARGETS <unknown>` in HPA | metrics-server is missing or not ready | Run `minikube addons enable metrics-server`, wait for rollout, then run `kubectl top nodes` | HPA shows a real percentage like `2%/10%` |
 | HPA does not scale | Load is too small, CPU request is too high, or metrics have not refreshed | Re-run the load generator and wait 1-3 minutes | `kubectl describe hpa cloud-citizen-info-mi -n minikube-demo` shows metrics and scale events |
 | CApp is not visible inside MI pods | Shared volume was not mounted after Helm install or upgrade | Re-run `patch-mi-carbonapps-volume.ps1` or `patch-mi-carbonapps-volume.sh` from sections 6 or 8 | MI pod shows the `.car` under `carbonapps` |
+| `Some dependencies were not satisfied in cApp` | The CApp metadata does not match what MI can resolve at deployment time | Use the direct Synapse API ConfigMap fallback in section 7 | Logs show `Initializing API: CitizenInfoAPI` |
 | API returns 404 | MI is reachable, but no API is deployed at that path | Verify the `.car` is visible under `carbonapps`, check MI logs for CApp deployment errors, and confirm the CApp has context `/citizen` | `/citizen/health` or your actual API path returns `HTTP 200` |
 | Pod stays `Pending` | minikube does not have enough CPU or memory | Lower max replicas or restart minikube with more resources | Pods become `Running` |
 | Gateway returns `401` or `403` | Missing or expired APIM token | Generate a new token in Developer Portal | Curl includes `Authorization: Bearer <token>` |
