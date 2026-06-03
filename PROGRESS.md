@@ -83,6 +83,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-03 | Fix and verify Lab 08 GraphQL test command using URL-encoded query | labs/08-government-services/README.md | Done |
 | 2026-06-03 | Add Lab 10 for APIM API-to-MCP conversion, MCP Inspector, and VS Code Copilot Agent Mode | README.md, labs/10-mcp-agent | Drafted |
 | 2026-06-03 | Add Lab 11 AI Gateway chat app with Groq-first provider guidance | README.md, labs/11-ai-gateway-chat | Drafted |
+| 2026-06-04 | Add Lab 12 WSO2 MI Helm deployment, scaling, and APIM exposure guide | README.md, labs/12-wso2-mi-scaling | Drafted |
 
 ---
 
@@ -97,7 +98,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 5 | Run ingress lab | Not started | `labs/03-ingress` |
 | 6 | Test macOS instructions | Not started | Need real Mac output |
 | 7 | Add screenshots | Not started | Optional |
-| 8 | Add WSO2-specific local lab | Not started | Later extension |
+| 8 | Add WSO2-specific local lab | Drafted | Lab 12 adds WSO2 MI Helm deployment, scaling, and APIM exposure |
 
 ---
 

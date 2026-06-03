@@ -1,0 +1,99 @@
+openapi: 3.0.3
+info:
+  title: Citizen Information Integration
+  version: 1.0.0
+  description: Demo API backed by WSO2 Micro Integrator running on Kubernetes.
+servers:
+  - url: https://cloud-citizen-info-mi.minikube-demo.svc.cluster.local:8253/citizen
+paths:
+  /health:
+    get:
+      summary: Check MI worker health
+      operationId: getCitizenIntegrationHealth
+      responses:
+        "200":
+          description: MI worker is reachable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: citizen-info-mi
+                  status:
+                    type: string
+                    example: UP
+                  pod:
+                    type: string
+                    example: citizen-info-mi-7fdb8d96dd-abc12
+  /profile/{id}:
+    get:
+      summary: Get a demo citizen profile
+      operationId: getCitizenProfile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: CIT-1001
+      responses:
+        "200":
+          description: Demo citizen profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  citizenId:
+                    type: string
+                    example: CIT-1001
+                  fullName:
+                    type: string
+                    example: Karma Dorji
+                  district:
+                    type: string
+                    example: Thimphu
+                  verificationStatus:
+                    type: string
+                    example: VERIFIED
+                  handledByPod:
+                    type: string
+                    example: citizen-info-mi-7fdb8d96dd-abc12
+  /verify:
+    post:
+      summary: Submit a demo verification request
+      operationId: verifyCitizenReference
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reference
+              properties:
+                reference:
+                  type: string
+                  example: CIT-1001
+      responses:
+        "202":
+          description: Verification request accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reference:
+                    type: string
+                    example: CIT-1001
+                  verificationStatus:
+                    type: string
+                    example: ACCEPTED
+                  nextStep:
+                    type: string
+                    example: Manual officer review is not required for this demo request.
+                  handledByPod:
+                    type: string
+                    example: citizen-info-mi-7fdb8d96dd-abc12

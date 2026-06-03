@@ -236,6 +236,21 @@ Create an AI API in WSO2 API Manager, proxy an LLM provider through AI Gateway, 
 | Details | [11-ai-gateway-chat/README.md](labs/11-ai-gateway-chat/README.md) |
 | Cleanup | Delete the AI API from APIM Publisher; stop the local web server |
 
+### 9.12 Lab: WSO2 Micro Integrator Scaling with Helm
+
+Deploy WSO2 Micro Integrator with the official WSO2 MI Helm chart, scale MI workers horizontally, and expose the MI API through the Lab 07 API Manager gateway.
+
+| Task | Command |
+|------|---------|
+| Prerequisites | Docker Desktop, minikube, kubectl, Helm; complete Lab 07 for the APIM exposure section |
+| Build image | `minikube image build -t wso2mi-citizen:1.0.0 labs/12-wso2-mi-scaling` |
+| Get chart | Download the official WSO2 `helm-mi` `4.6.x` chart |
+| Deploy | `helm upgrade --install citizen-info-mi . --namespace minikube-demo --create-namespace -f values_local.yaml -f values-mi-minikube-working.yaml` |
+| Scale | `helm upgrade citizen-info-mi . --namespace minikube-demo -f values_local.yaml -f values-mi-minikube-working.yaml --set wso2.deployment.replicas=3` |
+| Expose | Create an APIM REST API with backend `https://cloud-citizen-info-mi.minikube-demo.svc.cluster.local:8253/citizen` |
+| Details | [12-wso2-mi-scaling/README.md](labs/12-wso2-mi-scaling/README.md) |
+| Cleanup | `helm uninstall citizen-info-mi -n minikube-demo` |
+
 ---
 
 ## Stage 3: Cleanup (Reset Your Environment)
@@ -335,7 +350,8 @@ Need a shortcut? See:
 │   ├── 08-government-services/
 │   ├── 09-apim-api-creation/
 │   ├── 10-mcp-agent/
-│   └── 11-ai-gateway-chat/
+│   ├── 11-ai-gateway-chat/
+│   └── 12-wso2-mi-scaling/
 └── scripts/                     ← Automation and references
     ├── windows/
     ├── macos/
@@ -395,7 +411,8 @@ chmod +x scripts/macos/*.sh
 | 16 | `labs/09-apim-api-creation/README.md` |
 | 17 | `labs/10-mcp-agent/README.md` |
 | 18 | `labs/11-ai-gateway-chat/README.md` |
-| 19 | `docs/09-cleanup.md` |
+| 19 | `labs/12-wso2-mi-scaling/README.md` |
+| 20 | `docs/09-cleanup.md` |
 
 ---
 
@@ -408,6 +425,8 @@ chmod +x scripts/macos/*.sh
 - Helm docs: https://helm.sh/docs/
 - WSO2 MCP Gateway docs: https://apim-docs-stg.wso2.com/en/4.6.0/ai-gateway/mcp-gateway/overview/
 - WSO2 AI Gateway docs: https://apim-docs-stg.wso2.com/en/4.6.0/ai-gateway/ai-gateway-overview/
+- WSO2 MI Helm chart docs: https://mi.docs.wso2.com/en/latest/install-and-setup/setup/deployment/configuring-helm-charts/
+- WSO2 MI Helm chart repository: https://github.com/wso2/helm-mi
 - MCP Inspector docs: https://modelcontextprotocol.io/docs/tools/inspector
 - VS Code MCP server docs: https://code.visualstudio.com/docs/agent-customization/mcp-servers
 - Codex CLI docs: https://developers.openai.com/codex/cli

@@ -1,0 +1,84 @@
+# values-mi-minikube-working.yaml
+# Local minikube override for the official WSO2 MI Helm chart.
+# Chart source:
+#   https://github.com/wso2/helm-mi
+#
+# This file assumes the custom image was built inside minikube:
+#   wso2mi-citizen:1.0.0
+
+containerRegistry: ""
+
+wso2:
+  ingress:
+    enabled: false
+    metrics: null
+
+  # Keep Gateway API disabled for this lab.
+  # Lab 12 exposes MI through the WSO2 API Manager deployed in Lab 07 instead.
+  gatewayAPI:
+    enabled: false
+
+  config:
+    portOffset: 10
+    admin:
+      username: "admin"
+      password: "admin"
+      createAdminAccount: false
+
+    keyStore:
+      primary:
+        fileName: "wso2carbon.jks"
+        alias: "wso2carbon"
+        password: "wso2carbon"
+        keyPassword: "wso2carbon"
+      internal:
+        fileName: "wso2carbon.jks"
+        alias: "wso2carbon"
+        password: "wso2carbon"
+        keyPassword: "wso2carbon"
+
+    trustStore:
+      primary:
+        fileName: "client-truststore.jks"
+        password: "wso2carbon"
+
+  deployment:
+    hostname: "citizen-info-mi.local"
+    BuildVersion: "4.6.0"
+    replicas: 1
+
+    image:
+      repository: "wso2mi-citizen"
+      tag: "1.0.0"
+      digest: ""
+      pullPolicy: Never
+
+    probes:
+      startup:
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 90
+      readiness:
+        initialDelaySeconds: 60
+        periodSeconds: 5
+      liveness:
+        periodSeconds: 10
+
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "1536Mi"
+        cpu: "1500m"
+      jvm:
+        memory:
+          xms: "512m"
+          xmx: "1024m"
+
+    hpa:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      cpuUtilizationPercentage: 75
+      memoryUtilizationPercentage: 75
