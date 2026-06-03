@@ -248,8 +248,8 @@ Deploy a WSO2 CApp/CAR into WSO2 Micro Integrator using the official MI Helm cha
 | Metrics | `minikube addons enable metrics-server` |
 | Shared CApp volume | `kubectl apply -f labs/12-wso2-mi-scaling/k8s/mi-carbonapps-shared-volume.yaml` |
 | Get chart | Download the official WSO2 `helm-mi` `4.6.x` chart |
-| Chart folder | Run Helm commands from `~/Downloads/helm-mi-4.6.x/mi` or `%USERPROFILE%\Downloads\helm-mi-4.6.x\mi`, not from the lab folder |
-| Deploy | From the official chart folder: `helm upgrade --install citizen-info-mi . --namespace minikube-demo --create-namespace -f values_local.yaml -f values-mi-minikube-working.yaml` |
+| Command location | Run commands from the repository root; set `CHART` to the downloaded official chart path |
+| Deploy | `helm upgrade --install citizen-info-mi $CHART --namespace minikube-demo --create-namespace -f "$CHART/values_local.yaml" -f labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml` |
 | Autoscale | Enable HPA in Helm, run `kubectl apply -f labs/12-wso2-mi-scaling/k8s/mi-load-generator.yaml`, and watch `kubectl get hpa -n minikube-demo --watch` |
 | Expose | Create an APIM REST API with backend `https://cloud-citizen-info-mi.minikube-demo.svc.cluster.local:8253/citizen` |
 | Details | [12-wso2-mi-scaling/README.md](labs/12-wso2-mi-scaling/README.md) |
