@@ -2,13 +2,14 @@
 
 You have a WSO2 Micro Integrator `.car` file. This lab deploys it to Kubernetes with the official WSO2 MI Helm chart, loads it into every MI pod through a shared `carbonapps` volume, proves HPA scale-out under load, and exposes it through the APIM gateway from Lab 07.
 
-Run all commands from the repository root:
+The commands use a `REPO` variable for the tutorial folder:
 
 ```text
-C:\Users\sanje\Downloads\Training-Bhuthan\K8S_Training
+Windows: C:\Users\sanje\Downloads\Training-Bhuthan\K8S_Training
+macOS:   ~/Downloads/Training-Bhuthan/K8S_Training
 ```
 
-Do not `cd` into the lab folder or the Helm chart folder.
+You do not need to switch into the lab folder or the Helm chart folder.
 
 ---
 
@@ -134,16 +135,15 @@ If your CApp has a different file name or API path, update the copy command, MI 
 
 # 4. Download the Official WSO2 MI Helm Chart
 
-Run from the repository root.
-
 ## Windows PowerShell
 
 ```powershell
+$REPO = "$env:USERPROFILE\Downloads\Training-Bhuthan\K8S_Training"
 $BRANCH = "4.6.x"
 $ZIP = "$env:USERPROFILE\Downloads\helm-mi-$BRANCH.zip"
 $URL = "https://github.com/wso2/helm-mi/archive/refs/heads/$BRANCH.zip"
 $CHART = "$env:USERPROFILE\Downloads\helm-mi-4.6.x\mi"
-$VALUES = ".\labs\12-wso2-mi-scaling\values-mi-minikube-working.yaml"
+$VALUES = "$REPO\labs\12-wso2-mi-scaling\values-mi-minikube-working.yaml"
 
 Invoke-WebRequest -Uri $URL -OutFile $ZIP
 Expand-Archive -Path $ZIP -DestinationPath "$env:USERPROFILE\Downloads" -Force
@@ -164,11 +164,12 @@ True
 ## macOS Terminal
 
 ```bash
+REPO="$HOME/Downloads/Training-Bhuthan/K8S_Training"
 BRANCH="4.6.x"
 ZIP="$HOME/Downloads/helm-mi-$BRANCH.zip"
 URL="https://github.com/wso2/helm-mi/archive/refs/heads/$BRANCH.zip"
 CHART="$HOME/Downloads/helm-mi-4.6.x/mi"
-VALUES="labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"
+VALUES="$REPO/labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"
 
 curl -L "$URL" -o "$ZIP"
 unzip -o "$ZIP" -d "$HOME/Downloads"
@@ -195,12 +196,13 @@ This step enables metrics, creates the shared CApp PVC, starts the helper pod, a
 ## Windows PowerShell
 
 ```powershell
-$CAPP = ".\labs\12-wso2-mi-scaling\capps\CitizenInfoCompositeExporter_1.0.0.car"
+$REPO = "$env:USERPROFILE\Downloads\Training-Bhuthan\K8S_Training"
+$CAPP = "$REPO\labs\12-wso2-mi-scaling\capps\CitizenInfoCompositeExporter_1.0.0.car"
 
 kubectl create namespace minikube-demo --dry-run=client -o yaml | kubectl apply -f -
 minikube addons enable metrics-server
 kubectl rollout status deployment/metrics-server -n kube-system --timeout=5m
-kubectl apply -f .\labs\12-wso2-mi-scaling\k8s\mi-carbonapps-shared-volume.yaml
+kubectl apply -f "$REPO\labs\12-wso2-mi-scaling\k8s\mi-carbonapps-shared-volume.yaml"
 kubectl wait --for=condition=Ready pod/mi-capp-loader -n minikube-demo --timeout=2m
 kubectl cp $CAPP minikube-demo/mi-capp-loader:/carbonapps/CitizenInfoCompositeExporter_1.0.0.car
 kubectl exec -n minikube-demo mi-capp-loader -- ls -l /carbonapps
@@ -209,12 +211,13 @@ kubectl exec -n minikube-demo mi-capp-loader -- ls -l /carbonapps
 ## macOS Terminal
 
 ```bash
-CAPP="labs/12-wso2-mi-scaling/capps/CitizenInfoCompositeExporter_1.0.0.car"
+REPO="$HOME/Downloads/Training-Bhuthan/K8S_Training"
+CAPP="$REPO/labs/12-wso2-mi-scaling/capps/CitizenInfoCompositeExporter_1.0.0.car"
 
 kubectl create namespace minikube-demo --dry-run=client -o yaml | kubectl apply -f -
 minikube addons enable metrics-server
 kubectl rollout status deployment/metrics-server -n kube-system --timeout=5m
-kubectl apply -f labs/12-wso2-mi-scaling/k8s/mi-carbonapps-shared-volume.yaml
+kubectl apply -f "$REPO/labs/12-wso2-mi-scaling/k8s/mi-carbonapps-shared-volume.yaml"
 kubectl wait --for=condition=Ready pod/mi-capp-loader -n minikube-demo --timeout=2m
 kubectl cp "$CAPP" minikube-demo/mi-capp-loader:/carbonapps/CitizenInfoCompositeExporter_1.0.0.car
 kubectl exec -n minikube-demo mi-capp-loader -- ls -l /carbonapps
@@ -249,32 +252,28 @@ Do not continue to HPA testing until `kubectl top nodes` works.
 
 # 6. Deploy MI with the Official Helm Chart
 
-Run from the repository root.
-
 ## Windows PowerShell
 
 ```powershell
+$REPO = "$env:USERPROFILE\Downloads\Training-Bhuthan\K8S_Training"
 $CHART = "$env:USERPROFILE\Downloads\helm-mi-4.6.x\mi"
-$VALUES = ".\labs\12-wso2-mi-scaling\values-mi-minikube-working.yaml"
+$VALUES = "$REPO\labs\12-wso2-mi-scaling\values-mi-minikube-working.yaml"
 
 helm lint $CHART -f "$CHART\values_local.yaml" -f $VALUES
 helm upgrade --install citizen-info-mi $CHART --namespace minikube-demo --create-namespace -f "$CHART\values_local.yaml" -f $VALUES
-kubectl set volume deployment/cloud-citizen-info-mi -n minikube-demo --add --overwrite --name=mi-carbonapps --type=persistentVolumeClaim --claim-name=mi-carbonapps-pvc --mount-path=/home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
-kubectl rollout status deployment/cloud-citizen-info-mi -n minikube-demo --timeout=10m
-kubectl exec -n minikube-demo deployment/cloud-citizen-info-mi -- ls -l /home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
+& "$REPO\labs\12-wso2-mi-scaling\scripts\patch-mi-carbonapps-volume.ps1"
 ```
 
 ## macOS Terminal
 
 ```bash
+REPO="$HOME/Downloads/Training-Bhuthan/K8S_Training"
 CHART="$HOME/Downloads/helm-mi-4.6.x/mi"
-VALUES="labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"
+VALUES="$REPO/labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"
 
 helm lint "$CHART" -f "$CHART/values_local.yaml" -f "$VALUES"
 helm upgrade --install citizen-info-mi "$CHART" --namespace minikube-demo --create-namespace -f "$CHART/values_local.yaml" -f "$VALUES"
-kubectl set volume deployment/cloud-citizen-info-mi -n minikube-demo --add --overwrite --name=mi-carbonapps --type=persistentVolumeClaim --claim-name=mi-carbonapps-pvc --mount-path=/home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
-kubectl rollout status deployment/cloud-citizen-info-mi -n minikube-demo --timeout=10m
-kubectl exec -n minikube-demo deployment/cloud-citizen-info-mi -- ls -l /home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
+bash "$REPO/labs/12-wso2-mi-scaling/scripts/patch-mi-carbonapps-volume.sh"
 ```
 
 Expected output includes:
@@ -282,7 +281,7 @@ Expected output includes:
 ```text
 1 chart(s) linted, 0 chart(s) failed
 STATUS: deployed
-deployment.apps/cloud-citizen-info-mi volume updated
+deployment.apps/cloud-citizen-info-mi patched
 deployment "cloud-citizen-info-mi" successfully rolled out
 CitizenInfoCompositeExporter_1.0.0.car
 ```
@@ -370,41 +369,39 @@ Expected response:
 
 # 8. Enable HPA and Generate Load
 
-Run from the repository root.
-
 ## Windows PowerShell
 
 ```powershell
+$REPO = "$env:USERPROFILE\Downloads\Training-Bhuthan\K8S_Training"
 $CHART = "$env:USERPROFILE\Downloads\helm-mi-4.6.x\mi"
-$VALUES = ".\labs\12-wso2-mi-scaling\values-mi-minikube-working.yaml"
+$VALUES = "$REPO\labs\12-wso2-mi-scaling\values-mi-minikube-working.yaml"
 
 helm upgrade citizen-info-mi $CHART --namespace minikube-demo -f "$CHART\values_local.yaml" -f $VALUES --set wso2.deployment.hpa.enabled=true --set wso2.deployment.hpa.minReplicas=1 --set wso2.deployment.hpa.maxReplicas=3 --set wso2.deployment.hpa.cpuUtilizationPercentage=10 --set wso2.deployment.resources.requests.cpu=100m --set wso2.deployment.resources.limits.cpu=1000m
-kubectl set volume deployment/cloud-citizen-info-mi -n minikube-demo --add --overwrite --name=mi-carbonapps --type=persistentVolumeClaim --claim-name=mi-carbonapps-pvc --mount-path=/home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
-kubectl rollout status deployment/cloud-citizen-info-mi -n minikube-demo --timeout=10m
+& "$REPO\labs\12-wso2-mi-scaling\scripts\patch-mi-carbonapps-volume.ps1"
 kubectl get hpa -n minikube-demo
 kubectl delete job mi-load-generator -n minikube-demo --ignore-not-found
-kubectl apply -f .\labs\12-wso2-mi-scaling\k8s\mi-load-generator.yaml
+kubectl apply -f "$REPO\labs\12-wso2-mi-scaling\k8s\mi-load-generator.yaml"
 ```
 
 ## macOS Terminal
 
 ```bash
+REPO="$HOME/Downloads/Training-Bhuthan/K8S_Training"
 CHART="$HOME/Downloads/helm-mi-4.6.x/mi"
-VALUES="labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"
+VALUES="$REPO/labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"
 
 helm upgrade citizen-info-mi "$CHART" --namespace minikube-demo -f "$CHART/values_local.yaml" -f "$VALUES" --set wso2.deployment.hpa.enabled=true --set wso2.deployment.hpa.minReplicas=1 --set wso2.deployment.hpa.maxReplicas=3 --set wso2.deployment.hpa.cpuUtilizationPercentage=10 --set wso2.deployment.resources.requests.cpu=100m --set wso2.deployment.resources.limits.cpu=1000m
-kubectl set volume deployment/cloud-citizen-info-mi -n minikube-demo --add --overwrite --name=mi-carbonapps --type=persistentVolumeClaim --claim-name=mi-carbonapps-pvc --mount-path=/home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
-kubectl rollout status deployment/cloud-citizen-info-mi -n minikube-demo --timeout=10m
+bash "$REPO/labs/12-wso2-mi-scaling/scripts/patch-mi-carbonapps-volume.sh"
 kubectl get hpa -n minikube-demo
 kubectl delete job mi-load-generator -n minikube-demo --ignore-not-found
-kubectl apply -f labs/12-wso2-mi-scaling/k8s/mi-load-generator.yaml
+kubectl apply -f "$REPO/labs/12-wso2-mi-scaling/k8s/mi-load-generator.yaml"
 ```
 
 Expected output includes:
 
 ```text
 STATUS: deployed
-deployment.apps/cloud-citizen-info-mi volume updated
+deployment.apps/cloud-citizen-info-mi patched
 deployment "cloud-citizen-info-mi" successfully rolled out
 job.batch/mi-load-generator created
 ```
@@ -555,30 +552,30 @@ curl -k -X POST https://gw.wso2.com:8243/mi/citizen/1.0.0/verify \
 
 # 10. Cleanup
 
-Run from the repository root.
-
 ## Windows PowerShell
 
 ```powershell
+$REPO = "$env:USERPROFILE\Downloads\Training-Bhuthan\K8S_Training"
 $CHART = "$env:USERPROFILE\Downloads\helm-mi-4.6.x\mi"
-$VALUES = ".\labs\12-wso2-mi-scaling\values-mi-minikube-working.yaml"
+$VALUES = "$REPO\labs\12-wso2-mi-scaling\values-mi-minikube-working.yaml"
 
 kubectl delete job mi-load-generator -n minikube-demo --ignore-not-found
 helm upgrade citizen-info-mi $CHART --namespace minikube-demo -f "$CHART\values_local.yaml" -f $VALUES --set wso2.deployment.replicas=1 --set wso2.deployment.hpa.enabled=false
 helm uninstall citizen-info-mi -n minikube-demo
-kubectl delete -f .\labs\12-wso2-mi-scaling\k8s\mi-carbonapps-shared-volume.yaml
+kubectl delete -f "$REPO\labs\12-wso2-mi-scaling\k8s\mi-carbonapps-shared-volume.yaml"
 ```
 
 ## macOS Terminal
 
 ```bash
+REPO="$HOME/Downloads/Training-Bhuthan/K8S_Training"
 CHART="$HOME/Downloads/helm-mi-4.6.x/mi"
-VALUES="labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"
+VALUES="$REPO/labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"
 
 kubectl delete job mi-load-generator -n minikube-demo --ignore-not-found
 helm upgrade citizen-info-mi "$CHART" --namespace minikube-demo -f "$CHART/values_local.yaml" -f "$VALUES" --set wso2.deployment.replicas=1 --set wso2.deployment.hpa.enabled=false
 helm uninstall citizen-info-mi -n minikube-demo
-kubectl delete -f labs/12-wso2-mi-scaling/k8s/mi-carbonapps-shared-volume.yaml
+kubectl delete -f "$REPO/labs/12-wso2-mi-scaling/k8s/mi-carbonapps-shared-volume.yaml"
 ```
 
 Expected output includes:
@@ -600,7 +597,7 @@ Do not delete the `wso2` namespace unless you also want to remove Lab 07 APIM.
 | `values_local.yaml` not found | The official WSO2 chart was not downloaded or `CHART` points to the wrong folder | Re-run section 4 from the repo root | `Test-Path "$CHART\values_local.yaml"` returns `True` |
 | `TARGETS <unknown>` in HPA | metrics-server is missing or not ready | Run `minikube addons enable metrics-server`, wait for rollout, then run `kubectl top nodes` | HPA shows a real percentage like `2%/10%` |
 | HPA does not scale | Load is too small, CPU request is too high, or metrics have not refreshed | Re-run the load generator and wait 1-3 minutes | `kubectl describe hpa cloud-citizen-info-mi -n minikube-demo` shows metrics and scale events |
-| CApp is not visible inside MI pods | Shared volume was not mounted after Helm install or upgrade | Re-run the `kubectl set volume` command from sections 6 or 8 | MI pod shows the `.car` under `carbonapps` |
+| CApp is not visible inside MI pods | Shared volume was not mounted after Helm install or upgrade | Re-run `patch-mi-carbonapps-volume.ps1` or `patch-mi-carbonapps-volume.sh` from sections 6 or 8 | MI pod shows the `.car` under `carbonapps` |
 | API returns 404 | CApp did not deploy or your CApp uses different paths | Check MI logs and update test URLs/OpenAPI paths | `/citizen/health` or your actual API path returns JSON |
 | Pod stays `Pending` | minikube does not have enough CPU or memory | Lower max replicas or restart minikube with more resources | Pods become `Running` |
 | Gateway returns `401` or `403` | Missing or expired APIM token | Generate a new token in Developer Portal | Curl includes `Authorization: Bearer <token>` |

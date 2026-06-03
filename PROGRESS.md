@@ -88,6 +88,8 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-04 | Convert Lab 12 main path to official Helm plus dynamic CApp PVC loading and metrics-server-backed HPA load test | README.md, labs/12-wso2-mi-scaling | Drafted |
 | 2026-06-04 | Add Lab 12 chart-folder checks for `values_local.yaml` Helm install error | README.md, labs/12-wso2-mi-scaling/README.md | Drafted |
 | 2026-06-04 | Simplify Lab 12 to run from repository root with `CHART` and `VALUES` variables instead of switching folders | README.md, labs/12-wso2-mi-scaling/README.md | Drafted |
+| 2026-06-04 | Update Lab 12 commands to use absolute `REPO`, `CHART`, and `VALUES` paths so they work from any current folder | README.md, labs/12-wso2-mi-scaling/README.md | Drafted |
+| 2026-06-04 | Replace unsupported Lab 12 `kubectl set volume --add` with cross-platform patch scripts | labs/12-wso2-mi-scaling/README.md, labs/12-wso2-mi-scaling/scripts | Drafted |
 
 ---
 
