@@ -440,6 +440,19 @@ templates
 
 Copy the lab override file into the official chart folder.
 
+The Helm commands in later sections must run from the official WSO2 chart folder:
+
+```text
+Windows: C:\Users\<you>\Downloads\helm-mi-4.6.x\mi
+macOS:   ~/Downloads/helm-mi-4.6.x/mi
+```
+
+Do **not** run the Helm install from this lab folder:
+
+```text
+labs/12-wso2-mi-scaling
+```
+
 ## Windows PowerShell
 
 Run from the repository root:
@@ -454,6 +467,22 @@ Then go back to the official chart folder:
 cd "$env:USERPROFILE\Downloads\helm-mi-4.6.x\mi"
 ```
 
+Verify you are in the correct folder:
+
+```powershell
+Test-Path .\Chart.yaml
+Test-Path .\values_local.yaml
+Test-Path .\values-mi-minikube-working.yaml
+```
+
+Expected output:
+
+```text
+True
+True
+True
+```
+
 ## macOS Terminal
 
 Run from the repository root:
@@ -466,6 +495,22 @@ Then go back to the official chart folder:
 
 ```bash
 cd ~/Downloads/helm-mi-4.6.x/mi
+```
+
+Verify you are in the correct folder:
+
+```bash
+test -f Chart.yaml && echo "Chart.yaml found"
+test -f values_local.yaml && echo "values_local.yaml found"
+test -f values-mi-minikube-working.yaml && echo "values-mi-minikube-working.yaml found"
+```
+
+Expected output:
+
+```text
+Chart.yaml found
+values_local.yaml found
+values-mi-minikube-working.yaml found
 ```
 
 Important values:
@@ -610,6 +655,13 @@ CitizenInfoCompositeExporter_1.0.0.car
 
 Run from the official `mi` chart folder:
 
+```text
+Windows: C:\Users\<you>\Downloads\helm-mi-4.6.x\mi
+macOS:   ~/Downloads/helm-mi-4.6.x/mi
+```
+
+If you are currently in `labs/12-wso2-mi-scaling`, change to the official chart folder first.
+
 ## Windows / macOS
 
 ```bash
@@ -643,6 +695,43 @@ name: cloud-citizen-info-mi
 # 13. Install MI with Helm
 
 Run from the official `mi` chart folder:
+
+```text
+Windows: C:\Users\<you>\Downloads\helm-mi-4.6.x\mi
+macOS:   ~/Downloads/helm-mi-4.6.x/mi
+```
+
+Check before you install:
+
+## Windows PowerShell
+
+```powershell
+Test-Path .\Chart.yaml
+Test-Path .\values_local.yaml
+Test-Path .\values-mi-minikube-working.yaml
+```
+
+Expected output:
+
+```text
+True
+True
+True
+```
+
+If any line returns `False`, you are in the wrong folder or the lab values file was not copied.
+
+## macOS Terminal
+
+```bash
+test -f Chart.yaml && test -f values_local.yaml && test -f values-mi-minikube-working.yaml && echo "Chart folder is ready"
+```
+
+Expected output:
+
+```text
+Chart folder is ready
+```
 
 ## Windows / macOS
 
@@ -1277,6 +1366,7 @@ kubectl set volume deployment/cloud-citizen-info-mi -n minikube-demo --add --ove
 
 | Error | Meaning | Fix | Validation |
 |---|---|---|---|
+| `Error: open values_local.yaml: The system cannot find the file specified.` | Helm was run from the lab folder instead of the official WSO2 chart folder, or the chart was not downloaded | Change to `C:\Users\<you>\Downloads\helm-mi-4.6.x\mi` on Windows or `~/Downloads/helm-mi-4.6.x/mi` on macOS, then copy `values-mi-minikube-working.yaml` there | `Chart.yaml`, `values_local.yaml`, and `values-mi-minikube-working.yaml` all exist in the current folder |
 | `TARGETS <unknown>` in HPA | metrics-server is missing or not ready | Enable metrics-server and wait until `kubectl top nodes` works | `kubectl get hpa` shows `2%/10%` or similar |
 | HPA does not scale | Load is too small, CPU request is too high, or metrics have not refreshed | Run the load generator again, lower the demo CPU target, or wait 1-3 minutes | `kubectl describe hpa` shows recent metrics and scaling events |
 | Pod stays `Pending` after HPA scale-out | Not enough CPU or memory in minikube | Use fewer max replicas or restart minikube with more resources | New pods become `Running` |

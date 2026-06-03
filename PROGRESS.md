@@ -86,6 +86,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-04 | Add Lab 12 WSO2 MI Helm deployment, scaling, and APIM exposure guide | README.md, labs/12-wso2-mi-scaling | Drafted |
 | 2026-06-04 | Rework Lab 12 into a problem-solving flow with artifact packaging and dynamic loading guidance | README.md, labs/12-wso2-mi-scaling/README.md | Drafted |
 | 2026-06-04 | Convert Lab 12 main path to official Helm plus dynamic CApp PVC loading and metrics-server-backed HPA load test | README.md, labs/12-wso2-mi-scaling | Drafted |
+| 2026-06-04 | Add Lab 12 chart-folder checks for `values_local.yaml` Helm install error | README.md, labs/12-wso2-mi-scaling/README.md | Drafted |
 
 ---
 
