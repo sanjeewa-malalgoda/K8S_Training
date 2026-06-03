@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mi-load-generator
+  namespace: minikube-demo
+  labels:
+    app: mi-load-generator
+    lab: wso2-mi-hpa
+spec:
+  parallelism: 6
+  completions: 6
+  activeDeadlineSeconds: 420
+  template:
+    metadata:
+      labels:
+        app: mi-load-generator
+        lab: wso2-mi-hpa
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: curl
+          image: curlimages/curl:8.10.1
+          command:
+            - sh
+            - -c
+          args:
+            - |
+              end=$(( $(date +%s) + 300 ))
+              while [ "$(date +%s)" -lt "$end" ]; do
+                curl -k -s -o /dev/null https://cloud-citizen-info-mi:8253/citizen/profile/CIT-1001
+              done

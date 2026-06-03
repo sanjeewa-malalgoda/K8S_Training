@@ -236,17 +236,20 @@ Create an AI API in WSO2 API Manager, proxy an LLM provider through AI Gateway, 
 | Details | [11-ai-gateway-chat/README.md](labs/11-ai-gateway-chat/README.md) |
 | Cleanup | Delete the AI API from APIM Publisher; stop the local web server |
 
-### 9.12 Lab: WSO2 Micro Integrator Scaling with Helm
+### 9.12 Lab: WSO2 MI Dynamic CApp Deployment and Autoscaling
 
-Deploy WSO2 Micro Integrator with the official WSO2 MI Helm chart, scale MI workers horizontally, and expose the MI API through the Lab 07 API Manager gateway.
+Deploy a WSO2 CApp/CAR into WSO2 Micro Integrator using the official MI Helm chart, mount a shared CApp volume for all MI pods, enable metrics-server, test HPA under load, and expose the MI API through the Lab 07 API Manager gateway.
 
 | Task | Command |
 |------|---------|
 | Prerequisites | Docker Desktop, minikube, kubectl, Helm; complete Lab 07 for the APIM exposure section |
-| Build image | `minikube image build -t wso2mi-citizen:1.0.0 labs/12-wso2-mi-scaling` |
+| Goal | Run a real CApp-backed MI integration behind APIM |
+| Packaging decision | Use a `.car` CApp loaded from a shared `carbonapps` volume |
+| Metrics | `minikube addons enable metrics-server` |
+| Shared CApp volume | `kubectl apply -f labs/12-wso2-mi-scaling/k8s/mi-carbonapps-shared-volume.yaml` |
 | Get chart | Download the official WSO2 `helm-mi` `4.6.x` chart |
 | Deploy | `helm upgrade --install citizen-info-mi . --namespace minikube-demo --create-namespace -f values_local.yaml -f values-mi-minikube-working.yaml` |
-| Scale | `helm upgrade citizen-info-mi . --namespace minikube-demo -f values_local.yaml -f values-mi-minikube-working.yaml --set wso2.deployment.replicas=3` |
+| Autoscale | Enable HPA in Helm, run `kubectl apply -f labs/12-wso2-mi-scaling/k8s/mi-load-generator.yaml`, and watch `kubectl get hpa -n minikube-demo --watch` |
 | Expose | Create an APIM REST API with backend `https://cloud-citizen-info-mi.minikube-demo.svc.cluster.local:8253/citizen` |
 | Details | [12-wso2-mi-scaling/README.md](labs/12-wso2-mi-scaling/README.md) |
 | Cleanup | `helm uninstall citizen-info-mi -n minikube-demo` |

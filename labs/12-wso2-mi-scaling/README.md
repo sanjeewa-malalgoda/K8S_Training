@@ -1,50 +1,183 @@
-# Lab 12 - Deploy and Scale WSO2 Micro Integrator with Helm
+# Lab 12 - Dynamic CApp Deployment and Autoscaling with WSO2 MI
 
-This lab deploys **WSO2 Micro Integrator 4.6.0** on minikube using the official WSO2 MI Helm chart.
+In Lab 07 you deployed **WSO2 API Manager**. API Manager exposes and secures APIs, but the integration logic should run in **WSO2 Micro Integrator**.
 
-You will:
+In this lab, the real problem is:
 
-| Step | What you will do |
+```text
+A team already builds WSO2 CApp/CAR files.
+They need to deploy a CApp into WSO2 MI on Kubernetes.
+Every running MI pod must see the same CApp.
+The MI service must scale when load increases.
+API Manager must expose the MI-backed API through the existing gateway.
+```
+
+This lab uses official resources as much as possible:
+
+| Area | Resource used |
 |---|---|
-| 1 | Build a custom MI image with a working integration artifact |
-| 2 | Download the official WSO2 MI Helm chart |
-| 3 | Deploy MI with Helm and a local values override |
-| 4 | Scale MI workers horizontally |
-| 5 | Expose the MI API through the WSO2 API Manager from Lab 07 |
+| MI runtime deployment | Official WSO2 MI Helm chart |
+| MI runtime image | Official `wso2/wso2mi:4.6.0` image |
+| CApp format | WSO2 `.car` CApp artifact |
+| CApp hot deployment path | WSO2 MI `carbonapps` directory |
+| Autoscaling | Kubernetes HPA |
+| Metrics | minikube `metrics-server` add-on |
+| Load generation | Kubernetes Job |
+
+The only lab-specific extension is the PVC mount into `carbonapps`, because the official Helm documentation does not show a first-class values option for mounting a training CApp PVC into that path.
+
+The main artifact flow is **CApp-first**:
+
+```text
+Export CApp/CAR -> upload to shared carbonapps volume -> MI hot-deploys it -> scale with HPA -> expose through APIM
+```
 
 Important:
 
 ```text
-This lab does not copy the official WSO2 MI Helm chart into this repository.
-Users download the official chart from WSO2, then apply the lab override values file.
+This lab does not require building a custom MI Docker image.
+The custom image approach is still valid for immutable production deployments.
+This lab focuses on dynamic CApp loading because many WSO2 teams already deliver .car files.
 Lab 07 APIM is only required for the final API Manager exposure section.
 ```
 
 ---
 
-# 1. Prerequisites
+# 1. Target architecture
 
-Required for MI:
+By the end of the lab, requests follow this path:
+
+```text
+External client
+  -> WSO2 API Manager Gateway from Lab 07
+  -> Kubernetes Service: cloud-citizen-info-mi
+  -> One of the WSO2 MI pods
+  -> CApp deployed from the shared carbonapps volume
+```
+
+The artifact flow is:
+
+```text
+CitizenInfoCompositeExporter_1.0.0.car
+  -> PersistentVolumeClaim: mi-carbonapps-pvc
+  -> Mounted into every MI pod at the MI carbonapps hot-deployment directory
+  -> MI deploys the CApp
+```
+
+Inside Kubernetes, MI exposes this backend endpoint:
+
+```text
+https://cloud-citizen-info-mi.minikube-demo.svc.cluster.local:8253/citizen
+```
+
+API Manager exposes it outside the cluster as:
+
+```text
+https://gw.wso2.com:8243/mi/citizen/1.0.0
+```
+
+---
+
+# 2. Why CApp and shared volume
+
+WSO2 CApps are deployed as `.car` files. The runtime deployment directory is:
+
+```text
+<MI_HOME>/repository/deployment/server/carbonapps
+```
+
+For the WSO2 MI 4.6.0 Docker image, this lab uses:
+
+```text
+/home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
+```
+
+The important Kubernetes question is:
+
+```text
+How does every MI pod receive the same .car file?
+```
+
+This lab answers it with a shared Kubernetes volume.
+
+| Approach | Artifact format | Update behavior | Best for |
+|---|---|---|---|
+| Shared volume, used in this lab | `.car` | Copy a new CApp into the shared volume and MI hot-deploys it | Local training and teams that already deliver CApps |
+| Custom image | `.car` baked into image | Build and roll out a new image | Immutable production/GitOps releases |
+| Init container | `.car` downloaded before MI starts | Restart pods to pick up a new CApp | Pulling artifacts from Nexus, Git, S3, or similar |
+| Sidecar syncer | `.car` continuously synced | Runtime sync | Advanced production pattern with extra operational risk |
+
+Do not treat this as a production storage recommendation without checking your cluster.
+
+```text
+minikube is a single-node cluster, so a ReadWriteOnce PVC can be mounted by all local MI pods on that node.
+Real multi-node clusters normally need ReadWriteMany storage for this shared-volume pattern.
+Examples: NFS, Azure Files, Amazon EFS, CephFS, or another RWX-capable storage class.
+```
+
+---
+
+# 3. Why HPA must include metrics-server
+
+HPA is not magic. It needs metrics.
+
+For CPU and memory autoscaling, Kubernetes normally reads pod metrics from the `metrics.k8s.io` API. In minikube, that API is provided by the `metrics-server` add-on.
+
+The correct flow is:
+
+```text
+Enable metrics-server
+Verify kubectl top works
+Enable HPA
+Generate load
+Watch HPA scale the MI deployment
+```
+
+If `metrics-server` is missing, HPA may show:
+
+```text
+<unknown>
+```
+
+That is not a real autoscaling test.
+
+---
+
+# 4. Prerequisites
+
+Required:
 
 ```text
 Docker Desktop is running
 minikube is running with the Docker driver
 kubectl works
 Helm works
+You have a WSO2 MI CApp/CAR file
 ```
 
-Check:
+Recommended minikube resources when APIM, MI, metrics-server, and load testing run together:
 
-## Windows PowerShell
-
-```powershell
-docker version
-minikube status
-kubectl get nodes
-helm version
+```text
+CPUs: 6 or more
+Memory: 12288 MB or more
+Disk: 50 GB or more
 ```
 
-## macOS Terminal
+If you are starting a new minikube cluster for the full APIM + MI + HPA path:
+
+## Windows PowerShell / macOS Terminal
+
+```bash
+minikube start --driver=docker --cpus=6 --memory=12288 --disk-size=50g
+```
+
+Expected output includes:
+
+```text
+Done! kubectl is now configured to use "minikube" cluster
+```
+
+Check tools:
 
 ```bash
 docker version
@@ -58,14 +191,6 @@ Expected node output:
 ```text
 NAME       STATUS   ROLES           AGE   VERSION
 minikube   Ready    control-plane   ...   ...
-```
-
-Recommended minikube resources when Lab 07 APIM is also running:
-
-```text
-CPUs: 4 or more
-Memory: 8192 MB or more
-Disk: 40 GB or more
 ```
 
 For the APIM section, complete Lab 07 first.
@@ -97,16 +222,18 @@ Hosts file entries from Lab 07 must exist:
 
 ---
 
-# 2. What this lab provides
+# 5. Lab files
 
 | File | Purpose |
 |---|---|
-| `Dockerfile` | Builds a custom image from `wso2/wso2mi:4.6.0` |
-| `artifacts/synapse-configs/default/api/citizen-info-api.xml` | Working MI REST API artifact |
 | `values-mi-minikube-working.yaml` | Local override for the official WSO2 MI Helm chart |
+| `k8s/mi-carbonapps-shared-volume.yaml` | Namespace, PVC, and helper pod for the shared CApp volume |
+| `k8s/mi-load-generator.yaml` | Load generator Job used to trigger HPA |
 | `citizen-info-openapi.yaml` | OpenAPI file to import into WSO2 API Manager |
+| `artifacts/synapse-configs/default/api/citizen-info-api.xml` | Source API XML used to build/export the sample CApp |
+| `capps/README.md` | Where to place the exported `.car` file |
 
-The MI artifact exposes:
+The expected CApp should expose:
 
 | Method | MI path | Purpose |
 |---|---|---|
@@ -116,45 +243,102 @@ The MI artifact exposes:
 
 ---
 
-# 3. Build the MI image inside minikube
+# 6. Prepare the CApp file
 
-Run from the repository root:
-
-## Windows / macOS
-
-```bash
-minikube image build -t wso2mi-citizen:1.0.0 labs/12-wso2-mi-scaling
-```
-
-Expected output includes:
+This lab expects a CApp file named:
 
 ```text
-Successfully tagged wso2mi-citizen:1.0.0
+CitizenInfoCompositeExporter_1.0.0.car
 ```
 
-Validate:
+Place it here:
+
+```text
+labs/12-wso2-mi-scaling/capps/CitizenInfoCompositeExporter_1.0.0.car
+```
+
+If your team already has a real CApp, use that file instead and update the API paths in the test commands.
+
+If you are using the demo artifact in this repository, export it from WSO2 Integration Studio as a CApp:
+
+```text
+artifacts/synapse-configs/default/api/citizen-info-api.xml
+```
+
+Expected local file:
 
 ## Windows PowerShell
 
 ```powershell
-minikube image ls | Select-String "wso2mi-citizen"
-```
-
-## macOS Terminal
-
-```bash
-minikube image ls | grep wso2mi-citizen
+Test-Path .\labs\12-wso2-mi-scaling\capps\CitizenInfoCompositeExporter_1.0.0.car
 ```
 
 Expected output:
 
 ```text
-docker.io/library/wso2mi-citizen:1.0.0
+True
+```
+
+## macOS Terminal
+
+```bash
+test -f labs/12-wso2-mi-scaling/capps/CitizenInfoCompositeExporter_1.0.0.car && echo "CApp found"
+```
+
+Expected output:
+
+```text
+CApp found
 ```
 
 ---
 
-# 4. Download the official WSO2 MI Helm chart
+# 7. Enable metrics-server before HPA
+
+Run this before testing autoscaling.
+
+## Windows / macOS
+
+```bash
+minikube addons enable metrics-server
+```
+
+Expected output:
+
+```text
+The 'metrics-server' addon is enabled
+```
+
+Wait for metrics-server:
+
+```bash
+kubectl rollout status deployment/metrics-server -n kube-system --timeout=5m
+```
+
+Expected output:
+
+```text
+deployment "metrics-server" successfully rolled out
+```
+
+Wait one or two minutes, then check metrics:
+
+```bash
+kubectl top nodes
+```
+
+Expected output:
+
+```text
+NAME       CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%
+minikube   ...          ...    ...             ...
+```
+
+If `kubectl top nodes` fails, do not continue to the HPA section yet.
+
+---
+
+# 8. Download the official WSO2 MI Helm chart
 
 Use the official WSO2 Helm chart repository:
 
@@ -182,8 +366,6 @@ Go to the chart folder:
 ```powershell
 cd "$env:USERPROFILE\Downloads\helm-mi-4.6.x\mi"
 ```
-
-If your extracted folder is different, go to the folder that contains `Chart.yaml`.
 
 Check:
 
@@ -220,8 +402,6 @@ Go to the chart folder:
 cd ~/Downloads/helm-mi-4.6.x/mi
 ```
 
-If your extracted folder is different, go to the folder that contains `Chart.yaml`.
-
 Check:
 
 ```bash
@@ -240,7 +420,7 @@ templates
 
 ---
 
-# 5. Copy the lab values file next to the official chart
+# 9. Copy the lab values file next to the official chart
 
 Copy the lab override file into the official chart folder.
 
@@ -258,12 +438,6 @@ Then go back to the official chart folder:
 cd "$env:USERPROFILE\Downloads\helm-mi-4.6.x\mi"
 ```
 
-Verify:
-
-```powershell
-Get-Content .\values-mi-minikube-working.yaml
-```
-
 ## macOS Terminal
 
 Run from the repository root:
@@ -278,43 +452,145 @@ Then go back to the official chart folder:
 cd ~/Downloads/helm-mi-4.6.x/mi
 ```
 
-Verify:
-
-```bash
-cat values-mi-minikube-working.yaml
-```
-
 Important values:
 
 ```yaml
 containerRegistry: ""
 
 wso2:
-  ingress:
-    enabled: false
-  gatewayAPI:
-    enabled: false
   deployment:
     replicas: 1
     image:
-      repository: "wso2mi-citizen"
-      tag: "1.0.0"
-      pullPolicy: Never
+      repository: "wso2/wso2mi"
+      tag: "4.6.0"
+      pullPolicy: IfNotPresent
+    hpa:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      cpuUtilizationPercentage: 10
 ```
 
 Why:
 
 | Value | Reason |
 |---|---|
-| `containerRegistry: ""` | Use the local image built inside minikube |
-| `pullPolicy: Never` | Do not pull the lab image from Docker Hub |
-| `gatewayAPI.enabled: false` | Do not require Gateway API CRDs for this lab |
+| `repository: "wso2/wso2mi"` | Use the official MI runtime image |
+| `pullPolicy: IfNotPresent` | Pull the official image if minikube does not already have it |
+| `hpa.enabled: false` | Install MI first, then explicitly enable HPA after metrics-server works |
+| `cpuUtilizationPercentage: 10` | Low demo target so learners can observe scale-out under local load |
 | `ingress.enabled: false` | External access is through Lab 07 APIM |
-| `ingress.metrics: null` | Do not create a metrics Ingress in this local lab |
+| `gatewayAPI.enabled: false` | Do not require Gateway API CRDs for this lab |
 
 ---
 
-# 6. Check the official chart before installing
+# 10. Create the shared CApp volume
+
+Create the namespace if it does not already exist:
+
+## Windows / macOS
+
+```bash
+kubectl create namespace minikube-demo --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Expected output:
+
+```text
+namespace/minikube-demo created
+```
+
+If the namespace already exists, the output may be:
+
+```text
+namespace/minikube-demo configured
+```
+
+Run from the repository root:
+
+## Windows / macOS
+
+```bash
+kubectl apply -f labs/12-wso2-mi-scaling/k8s/mi-carbonapps-shared-volume.yaml
+```
+
+Expected output:
+
+```text
+persistentvolumeclaim/mi-carbonapps-pvc created
+pod/mi-capp-loader created
+```
+
+Wait for the helper pod:
+
+```bash
+kubectl wait --for=condition=Ready pod/mi-capp-loader -n minikube-demo --timeout=2m
+```
+
+Expected output:
+
+```text
+pod/mi-capp-loader condition met
+```
+
+Validate the PVC:
+
+```bash
+kubectl get pvc mi-carbonapps-pvc -n minikube-demo
+```
+
+Expected output:
+
+```text
+NAME                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES
+mi-carbonapps-pvc    Bound    pvc-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx   1Gi        RWO
+```
+
+---
+
+# 11. Upload the CApp into the shared volume
+
+The helper pod mounts the shared volume at:
+
+```text
+/carbonapps
+```
+
+Copy the CApp into that folder.
+
+## Windows PowerShell
+
+Run from the repository root:
+
+```powershell
+$CAPP = ".\labs\12-wso2-mi-scaling\capps\CitizenInfoCompositeExporter_1.0.0.car"
+kubectl cp $CAPP minikube-demo/mi-capp-loader:/carbonapps/CitizenInfoCompositeExporter_1.0.0.car
+```
+
+## macOS Terminal
+
+Run from the repository root:
+
+```bash
+CAPP="labs/12-wso2-mi-scaling/capps/CitizenInfoCompositeExporter_1.0.0.car"
+kubectl cp "$CAPP" minikube-demo/mi-capp-loader:/carbonapps/CitizenInfoCompositeExporter_1.0.0.car
+```
+
+Validate:
+
+```bash
+kubectl exec -n minikube-demo mi-capp-loader -- ls -l /carbonapps
+```
+
+Expected output:
+
+```text
+CitizenInfoCompositeExporter_1.0.0.car
+```
+
+---
+
+# 12. Check the official chart before installing
 
 Run from the official `mi` chart folder:
 
@@ -341,14 +617,14 @@ Expected output includes:
 ```text
 kind: Deployment
 name: cloud-citizen-info-mi
-image: "wso2mi-citizen:1.0.0"
+image: "wso2/wso2mi:4.6.0"
 kind: Service
 name: cloud-citizen-info-mi
 ```
 
 ---
 
-# 7. Install MI with Helm
+# 13. Install MI with Helm
 
 Run from the official `mi` chart folder:
 
@@ -365,6 +641,18 @@ Release "citizen-info-mi" does not exist. Installing it now.
 NAME: citizen-info-mi
 NAMESPACE: minikube-demo
 STATUS: deployed
+```
+
+Patch the MI deployment so every MI pod mounts the shared CApp volume:
+
+```bash
+kubectl set volume deployment/cloud-citizen-info-mi -n minikube-demo --add --overwrite --name=mi-carbonapps --type=persistentVolumeClaim --claim-name=mi-carbonapps-pvc --mount-path=/home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
+```
+
+Expected output:
+
+```text
+deployment.apps/cloud-citizen-info-mi volume updated
 ```
 
 Wait until MI is ready:
@@ -392,22 +680,37 @@ NAME                                     READY   STATUS    RESTARTS   AGE
 cloud-citizen-info-mi-xxxxxxxxxx-xxxxx   1/1     Running   0          ...
 ```
 
-Check service:
+Check that the CApp is visible inside MI:
 
 ```bash
-kubectl get svc cloud-citizen-info-mi -n minikube-demo
+kubectl exec -n minikube-demo deployment/cloud-citizen-info-mi -- ls -l /home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
 ```
 
 Expected output:
 
 ```text
-NAME                    TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                    AGE
-cloud-citizen-info-mi   ClusterIP   ...          <none>        8253/TCP,9201/TCP,9164/TCP ...
+CitizenInfoCompositeExporter_1.0.0.car
 ```
+
+Check MI logs:
+
+## Windows PowerShell
+
+```powershell
+kubectl logs -n minikube-demo deployment/cloud-citizen-info-mi --tail=200 | Select-String "CApp|Carbon Application|Citizen|Deployed"
+```
+
+## macOS Terminal
+
+```bash
+kubectl logs -n minikube-demo deployment/cloud-citizen-info-mi --tail=200 | grep -E "CApp|Carbon Application|Citizen|Deployed"
+```
+
+Expected output includes a message showing that the CApp or its artifacts were deployed.
 
 ---
 
-# 8. Test MI inside the Kubernetes cluster
+# 14. Test MI inside the Kubernetes cluster
 
 The official chart service exposes MI on the HTTPS passthrough port:
 
@@ -416,8 +719,6 @@ https://cloud-citizen-info-mi:8253
 ```
 
 Health check:
-
-## Windows / macOS
 
 ```bash
 kubectl run mi-health-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- curl -k -s https://cloud-citizen-info-mi:8253/citizen/health
@@ -478,14 +779,14 @@ Expected response:
 
 ---
 
-# 9. Scale MI workers horizontally with Helm
+# 15. Enable HPA for MI
 
-Scale from 1 replica to 3 replicas:
+Run from the official `mi` chart folder.
 
-## Windows / macOS
+This enables HPA and keeps the demo target low so autoscaling is visible in minikube.
 
 ```bash
-helm upgrade citizen-info-mi . --namespace minikube-demo -f values_local.yaml -f values-mi-minikube-working.yaml --set wso2.deployment.replicas=3
+helm upgrade citizen-info-mi . --namespace minikube-demo -f values_local.yaml -f values-mi-minikube-working.yaml --set wso2.deployment.hpa.enabled=true --set wso2.deployment.hpa.minReplicas=1 --set wso2.deployment.hpa.maxReplicas=3 --set wso2.deployment.hpa.cpuUtilizationPercentage=10 --set wso2.deployment.resources.requests.cpu=100m --set wso2.deployment.resources.limits.cpu=1000m
 ```
 
 Expected output:
@@ -495,25 +796,90 @@ Release "citizen-info-mi" has been upgraded. Happy Helming!
 STATUS: deployed
 ```
 
-Wait for the rollout:
+Important:
+
+```text
+Helm upgrades render the Deployment again.
+Run the volume patch again after Helm upgrades so the shared CApp volume remains mounted.
+```
+
+Patch the shared volume again:
+
+```bash
+kubectl set volume deployment/cloud-citizen-info-mi -n minikube-demo --add --overwrite --name=mi-carbonapps --type=persistentVolumeClaim --claim-name=mi-carbonapps-pvc --mount-path=/home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
+```
+
+Wait for rollout:
 
 ```bash
 kubectl rollout status deployment/cloud-citizen-info-mi -n minikube-demo --timeout=10m
 ```
 
+Check HPA:
+
+```bash
+kubectl get hpa -n minikube-demo
+```
+
 Expected output:
 
 ```text
-deployment "cloud-citizen-info-mi" successfully rolled out
+NAME                    REFERENCE                          TARGETS       MINPODS   MAXPODS   REPLICAS
+cloud-citizen-info-mi   Deployment/cloud-citizen-info-mi   2%/10%        1         3         1
 ```
 
-Check replicas:
+If `TARGETS` shows `<unknown>`, stop and fix metrics-server before continuing.
+
+Check pod metrics:
+
+```bash
+kubectl top pods -n minikube-demo
+```
+
+Expected output:
+
+```text
+NAME                                     CPU(cores)   MEMORY(bytes)
+cloud-citizen-info-mi-xxxxxxxxxx-xxxxx   ...          ...
+```
+
+---
+
+# 16. Generate load and watch HPA scale
+
+Run from the repository root:
+
+```bash
+kubectl apply -f labs/12-wso2-mi-scaling/k8s/mi-load-generator.yaml
+```
+
+Expected output:
+
+```text
+job.batch/mi-load-generator created
+```
+
+Watch HPA:
+
+```bash
+kubectl get hpa cloud-citizen-info-mi -n minikube-demo --watch
+```
+
+Expected behavior after one or more HPA sync periods:
+
+```text
+NAME                    REFERENCE                          TARGETS    MINPODS   MAXPODS   REPLICAS
+cloud-citizen-info-mi   Deployment/cloud-citizen-info-mi   35%/10%    1         3         2
+cloud-citizen-info-mi   Deployment/cloud-citizen-info-mi   42%/10%    1         3         3
+```
+
+Open a second terminal and check pods:
 
 ```bash
 kubectl get pods -n minikube-demo -l deployment=cloud-citizen-info-mi
 ```
 
-Expected output:
+Expected output after scale-out:
 
 ```text
 NAME                                     READY   STATUS    RESTARTS   AGE
@@ -535,16 +901,63 @@ NAME                    ENDPOINTS                                      AGE
 cloud-citizen-info-mi   10.244.0.10:8253,10.244.0.11:8253,10.244.0.12:8253 ...
 ```
 
+Check that every replica still sees the CApp:
+
+## Windows PowerShell
+
+```powershell
+kubectl get pods -n minikube-demo -l deployment=cloud-citizen-info-mi -o name | ForEach-Object {
+  kubectl exec -n minikube-demo $_ -- ls /home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
+}
+```
+
+## macOS Terminal
+
+```bash
+for pod in $(kubectl get pods -n minikube-demo -l deployment=cloud-citizen-info-mi -o name); do
+  kubectl exec -n minikube-demo "$pod" -- ls /home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
+done
+```
+
+Expected output:
+
+```text
+CitizenInfoCompositeExporter_1.0.0.car
+CitizenInfoCompositeExporter_1.0.0.car
+CitizenInfoCompositeExporter_1.0.0.car
+```
+
+Stop watching with `Ctrl+C` after you observe scale-out.
+
+Clean up the load generator:
+
+```bash
+kubectl delete job mi-load-generator -n minikube-demo
+```
+
+Expected output:
+
+```text
+job.batch "mi-load-generator" deleted
+```
+
+HPA scale-down can take several minutes. That delay is normal.
+
+---
+
+# 17. Prove service routing across scaled MI workers
+
 Send repeated requests:
 
 ```bash
-kubectl run mi-load-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- sh -c "for i in 1 2 3 4 5 6 7 8; do curl -k -s https://cloud-citizen-info-mi:8253/citizen/health; echo; done"
+kubectl run mi-routing-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- sh -c "for i in 1 2 3 4 5 6 7 8; do curl -k -s https://cloud-citizen-info-mi:8253/citizen/health; echo; done"
 ```
 
 Expected result:
 
 ```text
-Responses should show the same service name and different pod names over repeated calls.
+Responses should show the same service name.
+The pod value may change between requests.
 ```
 
 Example:
@@ -559,56 +972,11 @@ If all responses show one pod, run the command again. Service load balancing can
 
 ---
 
-# 10. Optional: enable HPA with the official chart
-
-This section shows the official chart's HPA option.
-
-For a predictable beginner lab, manual Helm scaling in section 9 is easier to observe.
-
-To enable HPA:
-
-## Windows / macOS
-
-```bash
-helm upgrade citizen-info-mi . --namespace minikube-demo -f values_local.yaml -f values-mi-minikube-working.yaml --set wso2.deployment.hpa.enabled=true --set wso2.deployment.hpa.minReplicas=1 --set wso2.deployment.hpa.maxReplicas=3
-```
-
-Check:
-
-```bash
-kubectl get hpa -n minikube-demo
-```
-
-Expected output:
-
-```text
-NAME                    REFERENCE                          MINPODS   MAXPODS
-cloud-citizen-info-mi   Deployment/cloud-citizen-info-mi   1         3
-```
-
-If metrics are unavailable in minikube, HPA may show:
-
-```text
-<unknown>
-```
-
-That means the metrics server is not available or has not reported CPU/memory yet. Manual Helm scaling from section 9 still works.
-
-Disable HPA before continuing:
-
-```bash
-helm upgrade citizen-info-mi . --namespace minikube-demo -f values_local.yaml -f values-mi-minikube-working.yaml --set wso2.deployment.replicas=3 --set wso2.deployment.hpa.enabled=false
-```
-
----
-
-# 11. Verify APIM can reach MI
+# 18. Verify APIM can reach MI
 
 Only do this section after completing Lab 07.
 
 Check APIM:
-
-## Windows / macOS
 
 ```bash
 kubectl get pods -n wso2
@@ -644,7 +1012,7 @@ https://cloud-citizen-info-mi.minikube-demo.svc.cluster.local:8253/citizen
 
 ---
 
-# 12. Create the MI-backed API in API Manager
+# 19. Create the MI-backed API in API Manager
 
 Open Publisher:
 
@@ -704,7 +1072,7 @@ Citizen Information Integration is published.
 
 ---
 
-# 13. Subscribe and generate a token
+# 20. Subscribe and generate a token
 
 Open Developer Portal:
 
@@ -741,7 +1109,7 @@ An access token is generated for DefaultApplication.
 
 ---
 
-# 14. Invoke MI through API Manager
+# 21. Invoke MI through API Manager
 
 These commands use the Lab 07 gateway:
 
@@ -834,44 +1202,7 @@ Expected response:
 
 ---
 
-# 15. Prove APIM routes to scaled MI workers
-
-Run several gateway requests.
-
-## Windows PowerShell
-
-```powershell
-1..8 | ForEach-Object {
-  curl.exe -k -s -H "Authorization: Bearer $TOKEN" https://gw.wso2.com:8243/mi/citizen/1.0.0/health
-  ""
-}
-```
-
-## macOS Terminal
-
-```bash
-for i in 1 2 3 4 5 6 7 8; do
-  curl -k -s -H "Authorization: Bearer $TOKEN" https://gw.wso2.com:8243/mi/citizen/1.0.0/health
-  echo
-done
-```
-
-Expected result:
-
-```text
-The responses continue to succeed while MI has multiple Running pods.
-The pod value may change between requests.
-```
-
-This proves:
-
-```text
-Outside client -> APIM Gateway from Lab 07 -> Kubernetes Service -> scaled MI workers
-```
-
----
-
-# 16. Useful operations
+# 22. Useful operations
 
 Show Helm release:
 
@@ -885,6 +1216,18 @@ Show current values:
 helm get values citizen-info-mi -n minikube-demo
 ```
 
+Show HPA:
+
+```bash
+kubectl describe hpa cloud-citizen-info-mi -n minikube-demo
+```
+
+Show pod metrics:
+
+```bash
+kubectl top pods -n minikube-demo
+```
+
 Show MI logs:
 
 ```bash
@@ -894,13 +1237,14 @@ kubectl logs -n minikube-demo deployment/cloud-citizen-info-mi -f
 Show MI resources:
 
 ```bash
-kubectl get deployment,svc,endpoints,pods -n minikube-demo -l app.kubernetes.io/instance=citizen-info-mi
+kubectl get deployment,svc,endpoints,pods,hpa -n minikube-demo -l app.kubernetes.io/instance=citizen-info-mi
 ```
 
-Scale back to 1 replica:
+Disable HPA and keep one replica:
 
 ```bash
-helm upgrade citizen-info-mi . --namespace minikube-demo -f values_local.yaml -f values-mi-minikube-working.yaml --set wso2.deployment.replicas=1
+helm upgrade citizen-info-mi . --namespace minikube-demo -f values_local.yaml -f values-mi-minikube-working.yaml --set wso2.deployment.replicas=1 --set wso2.deployment.hpa.enabled=false
+kubectl set volume deployment/cloud-citizen-info-mi -n minikube-demo --add --overwrite --name=mi-carbonapps --type=persistentVolumeClaim --claim-name=mi-carbonapps-pvc --mount-path=/home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
 ```
 
 ---
@@ -909,15 +1253,17 @@ helm upgrade citizen-info-mi . --namespace minikube-demo -f values_local.yaml -f
 
 | Error | Meaning | Fix | Validation |
 |---|---|---|---|
-| `ErrImageNeverPull` | The custom MI image was not built inside minikube | Run `minikube image build -t wso2mi-citizen:1.0.0 labs/12-wso2-mi-scaling` | `minikube image ls` shows `wso2mi-citizen` |
+| `TARGETS <unknown>` in HPA | metrics-server is missing or not ready | Enable metrics-server and wait until `kubectl top nodes` works | `kubectl get hpa` shows `2%/10%` or similar |
+| HPA does not scale | Load is too small, CPU request is too high, or metrics have not refreshed | Run the load generator again, lower the demo CPU target, or wait 1-3 minutes | `kubectl describe hpa` shows recent metrics and scaling events |
+| Pod stays `Pending` after HPA scale-out | Not enough CPU or memory in minikube | Use fewer max replicas or restart minikube with more resources | New pods become `Running` |
+| CApp is not visible inside MI pods | Shared volume was not patched into the Deployment after Helm install or upgrade | Re-run the `kubectl set volume` command | `kubectl exec deployment/cloud-citizen-info-mi -- ls .../carbonapps` shows the `.car` |
+| API returns 404 | CApp did not deploy, wrong CApp, or wrong API path | Check MI logs and verify the CApp contains `/citizen` resources | `/citizen/health` returns JSON |
+| `kubectl cp` fails | Helper pod is not ready or local CApp path is wrong | Check `mi-capp-loader` and confirm the `.car` exists locally | `kubectl exec mi-capp-loader -- ls -l /carbonapps` shows the `.car` |
 | Chart creates Gateway API or Ingress resources | Gateway API or metrics Ingress was left enabled | Use `values_local.yaml` first, then `values-mi-minikube-working.yaml` | `kubectl get svc -n minikube-demo` shows `cloud-citizen-info-mi` |
-| Pod stays `Pending` | Not enough CPU or memory | Use 1 or 2 replicas, or restart minikube with more memory | Pods become `Running` |
-| Rollout times out | MI is still starting or image/artifact failed | Check `kubectl logs -n minikube-demo deployment/cloud-citizen-info-mi --tail=200` | Health check returns JSON |
 | `curl` fails with certificate warning | MI backend uses HTTPS with a local certificate | Use `curl -k` for local testing | Health check returns JSON |
 | APIM endpoint test fails | APIM cannot reach MI or endpoint URL is wrong | Use the full Kubernetes DNS HTTPS endpoint from this lab | `apim-mi-check` returns MI health JSON |
 | Gateway returns `401` or `403` | Missing, expired, or wrong access token | Generate a new token in Developer Portal | Curl includes `Authorization: Bearer <token>` |
 | Gateway cannot connect | Lab 07 gateway port-forward or hosts entry is missing | Restart Lab 07 port-forward and verify `gw.wso2.com` hosts entry | `curl -k https://gw.wso2.com:8243` reaches APIM |
-| HPA shows `<unknown>` | Metrics server is missing or not ready | Use manual Helm scaling for this lab, or enable metrics server separately | Manual replica scaling still works |
 
 ---
 
@@ -925,9 +1271,13 @@ helm upgrade citizen-info-mi . --namespace minikube-demo -f values_local.yaml -f
 
 Run from the official `mi` chart folder.
 
-Remove MI:
+Delete the load generator if it is still running:
 
-## Windows / macOS
+```bash
+kubectl delete job mi-load-generator -n minikube-demo --ignore-not-found
+```
+
+Remove MI:
 
 ```bash
 helm uninstall citizen-info-mi -n minikube-demo
@@ -939,28 +1289,29 @@ Expected output:
 release "citizen-info-mi" uninstalled
 ```
 
+Remove the shared volume helper and PVC:
+
+```bash
+kubectl delete -f labs/12-wso2-mi-scaling/k8s/mi-carbonapps-shared-volume.yaml
+```
+
+Expected output:
+
+```text
+persistentvolumeclaim "mi-carbonapps-pvc" deleted
+pod "mi-capp-loader" deleted
+```
+
 Validate:
 
 ```bash
-kubectl get deployment,svc,pods -n minikube-demo -l app.kubernetes.io/instance=citizen-info-mi
+kubectl get deployment,svc,pods,hpa -n minikube-demo -l app.kubernetes.io/instance=citizen-info-mi
 ```
 
 Expected output:
 
 ```text
 No resources found in minikube-demo namespace.
-```
-
-Optional image cleanup:
-
-```bash
-minikube image rm wso2mi-citizen:1.0.0
-```
-
-Expected output:
-
-```text
-Image removed
 ```
 
 If you created the API in APIM, delete it from Publisher:
@@ -979,3 +1330,9 @@ Do not delete the `wso2` namespace unless you also want to remove Lab 07 APIM.
 - WSO2 MI Helm chart configuration: `https://mi.docs.wso2.com/en/latest/install-and-setup/setup/deployment/configuring-helm-charts/`
 - WSO2 MI Helm chart repository: `https://github.com/wso2/helm-mi`
 - WSO2 MI Docker image: `https://hub.docker.com/r/wso2/wso2mi`
+- WSO2 MI exporting artifacts as CApp/CAR: `https://mi.docs.wso2.com/en/4.2.0/develop/exporting-artifacts/`
+- WSO2 CApp deployment process and hot deployment directory: `https://wso2docs.atlassian.net/wiki/spaces/Carbon420/pages/15269895/C-App+Deployment+Process`
+- WSO2 MI Kubernetes exporter: `https://mi.docs.wso2.com/en/4.2.0/develop/create-kubernetes-project/`
+- Kubernetes HPA: `https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/`
+- Kubernetes `kubectl top`: `https://kubernetes.io/docs/reference/kubectl/generated/kubectl_top/`
+- Minikube metrics-server add-on: `https://minikube.sigs.k8s.io/docs/handbook/addons/yakd-kubernetes-dashboard/`

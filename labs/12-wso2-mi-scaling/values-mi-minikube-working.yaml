@@ -3,8 +3,8 @@
 # Chart source:
 #   https://github.com/wso2/helm-mi
 #
-# This file assumes the custom image was built inside minikube:
-#   wso2mi-citizen:1.0.0
+# This lab uses the official MI runtime image and loads the CApp from
+# a Kubernetes PVC mounted into the carbonapps hot-deployment directory.
 
 containerRegistry: ""
 
@@ -48,10 +48,10 @@ wso2:
     replicas: 1
 
     image:
-      repository: "wso2mi-citizen"
-      tag: "1.0.0"
+      repository: "wso2/wso2mi"
+      tag: "4.6.0"
       digest: ""
-      pullPolicy: Never
+      pullPolicy: IfNotPresent
 
     probes:
       startup:
@@ -67,10 +67,10 @@ wso2:
     resources:
       requests:
         memory: "1Gi"
-        cpu: "500m"
+        cpu: "100m"
       limits:
         memory: "1536Mi"
-        cpu: "1500m"
+        cpu: "1000m"
       jvm:
         memory:
           xms: "512m"
@@ -80,5 +80,6 @@ wso2:
       enabled: false
       minReplicas: 1
       maxReplicas: 3
-      cpuUtilizationPercentage: 75
-      memoryUtilizationPercentage: 75
+      # Low demo target so HPA scale-out is visible during a local load test.
+      cpuUtilizationPercentage: 10
+      memoryUtilizationPercentage: 80

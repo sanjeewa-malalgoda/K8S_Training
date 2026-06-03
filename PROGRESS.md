@@ -84,6 +84,8 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-03 | Add Lab 10 for APIM API-to-MCP conversion, MCP Inspector, and VS Code Copilot Agent Mode | README.md, labs/10-mcp-agent | Drafted |
 | 2026-06-03 | Add Lab 11 AI Gateway chat app with Groq-first provider guidance | README.md, labs/11-ai-gateway-chat | Drafted |
 | 2026-06-04 | Add Lab 12 WSO2 MI Helm deployment, scaling, and APIM exposure guide | README.md, labs/12-wso2-mi-scaling | Drafted |
+| 2026-06-04 | Rework Lab 12 into a problem-solving flow with artifact packaging and dynamic loading guidance | README.md, labs/12-wso2-mi-scaling/README.md | Drafted |
+| 2026-06-04 | Convert Lab 12 main path to official Helm plus dynamic CApp PVC loading and metrics-server-backed HPA load test | README.md, labs/12-wso2-mi-scaling | Drafted |
 
 ---
 
