@@ -91,6 +91,8 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-04 | Update Lab 12 commands to use absolute `REPO`, `CHART`, and `VALUES` paths so they work from any current folder | README.md, labs/12-wso2-mi-scaling/README.md | Drafted |
 | 2026-06-04 | Replace unsupported Lab 12 `kubectl set volume --add` with cross-platform patch scripts | labs/12-wso2-mi-scaling/README.md, labs/12-wso2-mi-scaling/scripts | Drafted |
 | 2026-06-04 | Remove laptop-specific parent folder from Lab 12 `REPO` examples and use `Downloads/K8S_Training` default | labs/12-wso2-mi-scaling/README.md | Drafted |
+| 2026-06-04 | Clarify that Lab 12 expected MI JSON responses come from the demo CApp payload factory and that pod names vary | labs/12-wso2-mi-scaling/README.md | Drafted |
+| 2026-06-04 | Add the Lab 12 demo `CitizenInfoCompositeExporter_1.0.0.car` to the expected `capps` folder | labs/12-wso2-mi-scaling/capps | Drafted |
 
 ---
 

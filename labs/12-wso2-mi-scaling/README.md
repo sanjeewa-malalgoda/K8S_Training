@@ -91,7 +91,10 @@ minikube   Ready    control-plane   ...   ...
 
 ---
 
-# 3. Put the CApp in the Lab Folder
+# 3. Verify the Included CApp
+
+This lab includes a demo CApp that exposes `/citizen`, `/citizen/health`,
+`/citizen/profile/{id}`, and `/citizen/verify`.
 
 Use this file name for the commands below:
 
@@ -99,7 +102,7 @@ Use this file name for the commands below:
 CitizenInfoCompositeExporter_1.0.0.car
 ```
 
-Place it here:
+Expected path:
 
 ```text
 labs/12-wso2-mi-scaling/capps/CitizenInfoCompositeExporter_1.0.0.car
@@ -133,7 +136,7 @@ Expected output:
 CApp found
 ```
 
-If your CApp has a different file name or API path, update the copy command, MI test URLs, OpenAPI file, and APIM endpoint values before continuing.
+If you replace this CApp with your own file, update the copy command, MI test URLs, OpenAPI file, and APIM endpoint values before continuing.
 
 ---
 
@@ -326,6 +329,12 @@ Expected response:
 }
 HTTP 200
 ```
+
+The response body comes from the demo CApp in
+`labs/12-wso2-mi-scaling/artifacts/synapse-configs/default/api/citizen-info-api.xml`.
+The profile and verify values are static demo payloads in that file. The `pod`
+and `handledByPod` values come from the running container `HOSTNAME`, so your
+actual pod suffix will be different.
 
 If the response is `HTTP 404`, MI is reachable but the CApp did not deploy the `/citizen/health` API. Check the mounted CApp and MI deployment logs:
 
