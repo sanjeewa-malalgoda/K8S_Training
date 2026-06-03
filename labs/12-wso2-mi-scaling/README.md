@@ -5,9 +5,11 @@ You have a WSO2 Micro Integrator `.car` file. This lab deploys it to Kubernetes 
 The commands use a `REPO` variable for the tutorial folder:
 
 ```text
-Windows: C:\Users\sanje\Downloads\Training-Bhuthan\K8S_Training
-macOS:   ~/Downloads/Training-Bhuthan/K8S_Training
+Windows default: %USERPROFILE%\Downloads\K8S_Training
+macOS default:   ~/Downloads/K8S_Training
 ```
+
+If your folder is somewhere else, set `REPO` to your actual `K8S_Training` path.
 
 You do not need to switch into the lab folder or the Helm chart folder.
 
@@ -108,7 +110,8 @@ Validate:
 ## Windows PowerShell
 
 ```powershell
-Test-Path .\labs\12-wso2-mi-scaling\capps\CitizenInfoCompositeExporter_1.0.0.car
+$REPO = "$env:USERPROFILE\Downloads\K8S_Training"
+Test-Path "$REPO\labs\12-wso2-mi-scaling\capps\CitizenInfoCompositeExporter_1.0.0.car"
 ```
 
 Expected output:
@@ -120,7 +123,8 @@ True
 ## macOS Terminal
 
 ```bash
-test -f labs/12-wso2-mi-scaling/capps/CitizenInfoCompositeExporter_1.0.0.car && echo "CApp found"
+REPO="$HOME/Downloads/K8S_Training"
+test -f "$REPO/labs/12-wso2-mi-scaling/capps/CitizenInfoCompositeExporter_1.0.0.car" && echo "CApp found"
 ```
 
 Expected output:
@@ -138,7 +142,7 @@ If your CApp has a different file name or API path, update the copy command, MI 
 ## Windows PowerShell
 
 ```powershell
-$REPO = "$env:USERPROFILE\Downloads\Training-Bhuthan\K8S_Training"
+$REPO = "$env:USERPROFILE\Downloads\K8S_Training"
 $BRANCH = "4.6.x"
 $ZIP = "$env:USERPROFILE\Downloads\helm-mi-$BRANCH.zip"
 $URL = "https://github.com/wso2/helm-mi/archive/refs/heads/$BRANCH.zip"
@@ -164,7 +168,7 @@ True
 ## macOS Terminal
 
 ```bash
-REPO="$HOME/Downloads/Training-Bhuthan/K8S_Training"
+REPO="$HOME/Downloads/K8S_Training"
 BRANCH="4.6.x"
 ZIP="$HOME/Downloads/helm-mi-$BRANCH.zip"
 URL="https://github.com/wso2/helm-mi/archive/refs/heads/$BRANCH.zip"
@@ -196,7 +200,7 @@ This step enables metrics, creates the shared CApp PVC, starts the helper pod, a
 ## Windows PowerShell
 
 ```powershell
-$REPO = "$env:USERPROFILE\Downloads\Training-Bhuthan\K8S_Training"
+$REPO = "$env:USERPROFILE\Downloads\K8S_Training"
 $CAPP = "$REPO\labs\12-wso2-mi-scaling\capps\CitizenInfoCompositeExporter_1.0.0.car"
 
 kubectl create namespace minikube-demo --dry-run=client -o yaml | kubectl apply -f -
@@ -211,7 +215,7 @@ kubectl exec -n minikube-demo mi-capp-loader -- ls -l /carbonapps
 ## macOS Terminal
 
 ```bash
-REPO="$HOME/Downloads/Training-Bhuthan/K8S_Training"
+REPO="$HOME/Downloads/K8S_Training"
 CAPP="$REPO/labs/12-wso2-mi-scaling/capps/CitizenInfoCompositeExporter_1.0.0.car"
 
 kubectl create namespace minikube-demo --dry-run=client -o yaml | kubectl apply -f -
@@ -255,7 +259,7 @@ Do not continue to HPA testing until `kubectl top nodes` works.
 ## Windows PowerShell
 
 ```powershell
-$REPO = "$env:USERPROFILE\Downloads\Training-Bhuthan\K8S_Training"
+$REPO = "$env:USERPROFILE\Downloads\K8S_Training"
 $CHART = "$env:USERPROFILE\Downloads\helm-mi-4.6.x\mi"
 $VALUES = "$REPO\labs\12-wso2-mi-scaling\values-mi-minikube-working.yaml"
 
@@ -267,7 +271,7 @@ helm upgrade --install citizen-info-mi $CHART --namespace minikube-demo --create
 ## macOS Terminal
 
 ```bash
-REPO="$HOME/Downloads/Training-Bhuthan/K8S_Training"
+REPO="$HOME/Downloads/K8S_Training"
 CHART="$HOME/Downloads/helm-mi-4.6.x/mi"
 VALUES="$REPO/labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"
 
@@ -309,7 +313,7 @@ These commands assume the CApp exposes `/citizen`.
 Health:
 
 ```powershell
-kubectl run mi-health-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- curl -k -s https://cloud-citizen-info-mi:8253/citizen/health
+kubectl run mi-health-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -k -sS -w "`nHTTP %{http_code}`n" https://cloud-citizen-info-mi:8253/citizen/health
 ```
 
 Expected response:
@@ -320,12 +324,23 @@ Expected response:
   "status": "UP",
   "pod": "cloud-citizen-info-mi-xxxxxxxxxx-xxxxx"
 }
+HTTP 200
+```
+
+If the response is `HTTP 404`, MI is reachable but the CApp did not deploy the `/citizen/health` API. Check the mounted CApp and MI deployment logs:
+
+```powershell
+kubectl exec -n minikube-demo deployment/cloud-citizen-info-mi -- ls -l /home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/carbonapps
+kubectl logs -n minikube-demo deployment/cloud-citizen-info-mi --tail=300 | Select-String "CApp|Carbon Application|Deployed|ERROR|WARN|Exception|Citizen"
+```
+
+The `.car` file must be visible in `carbonapps`, and the logs must show that MI deployed the CApp or its API resources. If the `.car` is visible but the API is still 404, the CApp probably does not contain an API with context `/citizen`.
 ```
 
 Profile:
 
 ```powershell
-kubectl run mi-profile-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- curl -k -s https://cloud-citizen-info-mi:8253/citizen/profile/CIT-1001
+kubectl run mi-profile-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -k -sS https://cloud-citizen-info-mi:8253/citizen/profile/CIT-1001
 ```
 
 Expected response:
@@ -345,13 +360,13 @@ POST verify:
 ## Windows PowerShell
 
 ```powershell
-kubectl run mi-verify-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- curl -k -s -X POST https://cloud-citizen-info-mi:8253/citizen/verify -H "Content-Type: application/json" -d "{\"reference\":\"CIT-1001\"}"
+kubectl run mi-verify-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -k -sS -X POST https://cloud-citizen-info-mi:8253/citizen/verify -H "Content-Type: application/json" -d "{\"reference\":\"CIT-1001\"}"
 ```
 
 ## macOS Terminal
 
 ```bash
-kubectl run mi-verify-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- curl -k -s -X POST https://cloud-citizen-info-mi:8253/citizen/verify -H "Content-Type: application/json" -d '{"reference":"CIT-1001"}'
+kubectl run mi-verify-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -k -sS -X POST https://cloud-citizen-info-mi:8253/citizen/verify -H "Content-Type: application/json" -d '{"reference":"CIT-1001"}'
 ```
 
 Expected response:
@@ -372,7 +387,7 @@ Expected response:
 ## Windows PowerShell
 
 ```powershell
-$REPO = "$env:USERPROFILE\Downloads\Training-Bhuthan\K8S_Training"
+$REPO = "$env:USERPROFILE\Downloads\K8S_Training"
 $CHART = "$env:USERPROFILE\Downloads\helm-mi-4.6.x\mi"
 $VALUES = "$REPO\labs\12-wso2-mi-scaling\values-mi-minikube-working.yaml"
 
@@ -386,7 +401,7 @@ kubectl apply -f "$REPO\labs\12-wso2-mi-scaling\k8s\mi-load-generator.yaml"
 ## macOS Terminal
 
 ```bash
-REPO="$HOME/Downloads/Training-Bhuthan/K8S_Training"
+REPO="$HOME/Downloads/K8S_Training"
 CHART="$HOME/Downloads/helm-mi-4.6.x/mi"
 VALUES="$REPO/labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"
 
@@ -478,7 +493,7 @@ Hosts file entries from Lab 07 must exist:
 Check APIM can reach MI:
 
 ```powershell
-kubectl run apim-mi-check -n wso2 --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- curl -k -s https://cloud-citizen-info-mi.minikube-demo.svc.cluster.local:8253/citizen/health
+kubectl run apim-mi-check -n wso2 --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -k -sS https://cloud-citizen-info-mi.minikube-demo.svc.cluster.local:8253/citizen/health
 ```
 
 Expected response:
@@ -555,7 +570,7 @@ curl -k -X POST https://gw.wso2.com:8243/mi/citizen/1.0.0/verify \
 ## Windows PowerShell
 
 ```powershell
-$REPO = "$env:USERPROFILE\Downloads\Training-Bhuthan\K8S_Training"
+$REPO = "$env:USERPROFILE\Downloads\K8S_Training"
 $CHART = "$env:USERPROFILE\Downloads\helm-mi-4.6.x\mi"
 $VALUES = "$REPO\labs\12-wso2-mi-scaling\values-mi-minikube-working.yaml"
 
@@ -568,7 +583,7 @@ kubectl delete -f "$REPO\labs\12-wso2-mi-scaling\k8s\mi-carbonapps-shared-volume
 ## macOS Terminal
 
 ```bash
-REPO="$HOME/Downloads/Training-Bhuthan/K8S_Training"
+REPO="$HOME/Downloads/K8S_Training"
 CHART="$HOME/Downloads/helm-mi-4.6.x/mi"
 VALUES="$REPO/labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"
 
@@ -598,7 +613,7 @@ Do not delete the `wso2` namespace unless you also want to remove Lab 07 APIM.
 | `TARGETS <unknown>` in HPA | metrics-server is missing or not ready | Run `minikube addons enable metrics-server`, wait for rollout, then run `kubectl top nodes` | HPA shows a real percentage like `2%/10%` |
 | HPA does not scale | Load is too small, CPU request is too high, or metrics have not refreshed | Re-run the load generator and wait 1-3 minutes | `kubectl describe hpa cloud-citizen-info-mi -n minikube-demo` shows metrics and scale events |
 | CApp is not visible inside MI pods | Shared volume was not mounted after Helm install or upgrade | Re-run `patch-mi-carbonapps-volume.ps1` or `patch-mi-carbonapps-volume.sh` from sections 6 or 8 | MI pod shows the `.car` under `carbonapps` |
-| API returns 404 | CApp did not deploy or your CApp uses different paths | Check MI logs and update test URLs/OpenAPI paths | `/citizen/health` or your actual API path returns JSON |
+| API returns 404 | MI is reachable, but no API is deployed at that path | Verify the `.car` is visible under `carbonapps`, check MI logs for CApp deployment errors, and confirm the CApp has context `/citizen` | `/citizen/health` or your actual API path returns `HTTP 200` |
 | Pod stays `Pending` | minikube does not have enough CPU or memory | Lower max replicas or restart minikube with more resources | Pods become `Running` |
 | Gateway returns `401` or `403` | Missing or expired APIM token | Generate a new token in Developer Portal | Curl includes `Authorization: Bearer <token>` |
 

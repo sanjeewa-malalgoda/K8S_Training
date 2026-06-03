@@ -90,6 +90,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-04 | Simplify Lab 12 to run from repository root with `CHART` and `VALUES` variables instead of switching folders | README.md, labs/12-wso2-mi-scaling/README.md | Drafted |
 | 2026-06-04 | Update Lab 12 commands to use absolute `REPO`, `CHART`, and `VALUES` paths so they work from any current folder | README.md, labs/12-wso2-mi-scaling/README.md | Drafted |
 | 2026-06-04 | Replace unsupported Lab 12 `kubectl set volume --add` with cross-platform patch scripts | labs/12-wso2-mi-scaling/README.md, labs/12-wso2-mi-scaling/scripts | Drafted |
+| 2026-06-04 | Remove laptop-specific parent folder from Lab 12 `REPO` examples and use `Downloads/K8S_Training` default | labs/12-wso2-mi-scaling/README.md | Drafted |
 
 ---
 
