@@ -2,16 +2,16 @@
 
 You have a WSO2 Micro Integrator `.car` file. This lab deploys it to Kubernetes with the official WSO2 MI Helm chart, loads it into every MI pod through a shared `carbonapps` volume, proves HPA scale-out under load, and exposes it through the APIM gateway from Lab 07.
 
-The commands use a `REPO` variable for the tutorial folder:
+Run the commands from the repository root. The examples set a `REPO` variable
+from the current folder:
 
 ```text
-Windows default: %USERPROFILE%\Downloads\K8S_Training
-macOS default:   ~/Downloads/K8S_Training
+Windows example: C:\Users\sanje\Downloads\Training-Bhuthan\K8S_Training
+macOS example:   ~/Downloads/K8S_Training
 ```
 
-If your folder is somewhere else, set `REPO` to your actual `K8S_Training` path.
-
-You do not need to switch into the lab folder or the Helm chart folder.
+If your folder is somewhere else, open a terminal in your actual `K8S_Training`
+folder before running the commands.
 
 ---
 
@@ -113,7 +113,7 @@ Validate:
 ## Windows PowerShell
 
 ```powershell
-$REPO = "$env:USERPROFILE\Downloads\K8S_Training"
+$REPO = (Get-Location).Path
 Test-Path "$REPO\labs\12-wso2-mi-scaling\capps\CitizenInfoCompositeExporter_1.0.0.car"
 ```
 
@@ -126,7 +126,7 @@ True
 ## macOS Terminal
 
 ```bash
-REPO="$HOME/Downloads/K8S_Training"
+REPO="$(pwd)"
 test -f "$REPO/labs/12-wso2-mi-scaling/capps/CitizenInfoCompositeExporter_1.0.0.car" && echo "CApp found"
 ```
 
@@ -145,7 +145,7 @@ If you replace this CApp with your own file, update the copy command, MI test UR
 ## Windows PowerShell
 
 ```powershell
-$REPO = "$env:USERPROFILE\Downloads\K8S_Training"
+$REPO = (Get-Location).Path
 $BRANCH = "4.6.x"
 $ZIP = "$env:USERPROFILE\Downloads\helm-mi-$BRANCH.zip"
 $URL = "https://github.com/wso2/helm-mi/archive/refs/heads/$BRANCH.zip"
@@ -171,7 +171,7 @@ True
 ## macOS Terminal
 
 ```bash
-REPO="$HOME/Downloads/K8S_Training"
+REPO="$(pwd)"
 BRANCH="4.6.x"
 ZIP="$HOME/Downloads/helm-mi-$BRANCH.zip"
 URL="https://github.com/wso2/helm-mi/archive/refs/heads/$BRANCH.zip"
@@ -203,8 +203,8 @@ This step enables metrics, creates the shared CApp PVC, starts the helper pod, a
 ## Windows PowerShell
 
 ```powershell
-$REPO = "$env:USERPROFILE\Downloads\K8S_Training"
-$CAPP = "$REPO\labs\12-wso2-mi-scaling\capps\CitizenInfoCompositeExporter_1.0.0.car"
+$REPO = (Get-Location).Path
+$CAPP = ".\labs\12-wso2-mi-scaling\capps\CitizenInfoCompositeExporter_1.0.0.car"
 
 kubectl create namespace minikube-demo --dry-run=client -o yaml | kubectl apply -f -
 minikube addons enable metrics-server
@@ -218,7 +218,7 @@ kubectl exec -n minikube-demo mi-capp-loader -- ls -l /carbonapps
 ## macOS Terminal
 
 ```bash
-REPO="$HOME/Downloads/K8S_Training"
+REPO="$(pwd)"
 CAPP="$REPO/labs/12-wso2-mi-scaling/capps/CitizenInfoCompositeExporter_1.0.0.car"
 
 kubectl create namespace minikube-demo --dry-run=client -o yaml | kubectl apply -f -
@@ -262,7 +262,7 @@ Do not continue to HPA testing until `kubectl top nodes` works.
 ## Windows PowerShell
 
 ```powershell
-$REPO = "$env:USERPROFILE\Downloads\K8S_Training"
+$REPO = (Get-Location).Path
 $CHART = "$env:USERPROFILE\Downloads\helm-mi-4.6.x\mi"
 $VALUES = "$REPO\labs\12-wso2-mi-scaling\values-mi-minikube-working.yaml"
 
@@ -274,7 +274,7 @@ helm upgrade --install citizen-info-mi $CHART --namespace minikube-demo --create
 ## macOS Terminal
 
 ```bash
-REPO="$HOME/Downloads/K8S_Training"
+REPO="$(pwd)"
 CHART="$HOME/Downloads/helm-mi-4.6.x/mi"
 VALUES="$REPO/labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"
 
@@ -396,7 +396,7 @@ Expected response:
 ## Windows PowerShell
 
 ```powershell
-$REPO = "$env:USERPROFILE\Downloads\K8S_Training"
+$REPO = (Get-Location).Path
 $CHART = "$env:USERPROFILE\Downloads\helm-mi-4.6.x\mi"
 $VALUES = "$REPO\labs\12-wso2-mi-scaling\values-mi-minikube-working.yaml"
 
@@ -410,7 +410,7 @@ kubectl apply -f "$REPO\labs\12-wso2-mi-scaling\k8s\mi-load-generator.yaml"
 ## macOS Terminal
 
 ```bash
-REPO="$HOME/Downloads/K8S_Training"
+REPO="$(pwd)"
 CHART="$HOME/Downloads/helm-mi-4.6.x/mi"
 VALUES="$REPO/labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"
 
@@ -579,7 +579,7 @@ curl -k -X POST https://gw.wso2.com:8243/mi/citizen/1.0.0/verify \
 ## Windows PowerShell
 
 ```powershell
-$REPO = "$env:USERPROFILE\Downloads\K8S_Training"
+$REPO = (Get-Location).Path
 $CHART = "$env:USERPROFILE\Downloads\helm-mi-4.6.x\mi"
 $VALUES = "$REPO\labs\12-wso2-mi-scaling\values-mi-minikube-working.yaml"
 
@@ -592,7 +592,7 @@ kubectl delete -f "$REPO\labs\12-wso2-mi-scaling\k8s\mi-carbonapps-shared-volume
 ## macOS Terminal
 
 ```bash
-REPO="$HOME/Downloads/K8S_Training"
+REPO="$(pwd)"
 CHART="$HOME/Downloads/helm-mi-4.6.x/mi"
 VALUES="$REPO/labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"
 
@@ -619,6 +619,7 @@ Do not delete the `wso2` namespace unless you also want to remove Lab 07 APIM.
 | Error | Meaning | Fix | Validation |
 |---|---|---|---|
 | `values_local.yaml` not found | The official WSO2 chart was not downloaded or `CHART` points to the wrong folder | Re-run section 4 from the repo root | `Test-Path "$CHART\values_local.yaml"` returns `True` |
+| `kubectl cp` says `one of src or dest must be a local file specification` | Windows absolute paths such as `C:\...` contain `:`, and `kubectl cp` can mistake them for `pod:path` syntax | Run the command from the repo root and copy with a relative path such as `.\labs\12-wso2-mi-scaling\capps\CitizenInfoCompositeExporter_1.0.0.car` | `kubectl exec -n minikube-demo mi-capp-loader -- ls -l /carbonapps` shows the `.car` file |
 | `TARGETS <unknown>` in HPA | metrics-server is missing or not ready | Run `minikube addons enable metrics-server`, wait for rollout, then run `kubectl top nodes` | HPA shows a real percentage like `2%/10%` |
 | HPA does not scale | Load is too small, CPU request is too high, or metrics have not refreshed | Re-run the load generator and wait 1-3 minutes | `kubectl describe hpa cloud-citizen-info-mi -n minikube-demo` shows metrics and scale events |
 | CApp is not visible inside MI pods | Shared volume was not mounted after Helm install or upgrade | Re-run `patch-mi-carbonapps-volume.ps1` or `patch-mi-carbonapps-volume.sh` from sections 6 or 8 | MI pod shows the `.car` under `carbonapps` |

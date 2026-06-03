@@ -93,6 +93,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-04 | Remove laptop-specific parent folder from Lab 12 `REPO` examples and use `Downloads/K8S_Training` default | labs/12-wso2-mi-scaling/README.md | Drafted |
 | 2026-06-04 | Clarify that Lab 12 expected MI JSON responses come from the demo CApp payload factory and that pod names vary | labs/12-wso2-mi-scaling/README.md | Drafted |
 | 2026-06-04 | Add the Lab 12 demo `CitizenInfoCompositeExporter_1.0.0.car` to the expected `capps` folder | labs/12-wso2-mi-scaling/capps | Drafted |
+| 2026-06-04 | Fix Lab 12 Windows paths to avoid hardcoded repo folders and `kubectl cp` drive-letter parsing errors | labs/12-wso2-mi-scaling/README.md | Drafted |
 
 ---
 
