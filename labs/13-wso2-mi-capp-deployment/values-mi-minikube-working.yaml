@@ -3,8 +3,8 @@
 # Chart source:
 #   https://github.com/wso2/helm-mi
 #
-# Lab 12 uses the official MI runtime image and mounts the demo
-# Synapse API XML through a ConfigMap patch.
+# Lab 13 uses the official MI runtime image and mounts a CApp/CAR
+# through a PVC attached to the MI carbonapps hot-deployment directory.
 
 containerRegistry: ""
 
@@ -80,6 +80,6 @@ wso2:
       enabled: false
       minReplicas: 1
       maxReplicas: 3
-      # Kept disabled in this basic lab.
+      # Kept disabled in Lab 13. Lab 14 enables HPA in its own values flow.
       cpuUtilizationPercentage: 10
       memoryUtilizationPercentage: 80

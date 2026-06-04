@@ -236,24 +236,51 @@ Create an AI API in WSO2 API Manager, proxy an LLM provider through AI Gateway, 
 | Details | [11-ai-gateway-chat/README.md](labs/11-ai-gateway-chat/README.md) |
 | Cleanup | Delete the AI API from APIM Publisher; stop the local web server |
 
-### 9.12 Lab: WSO2 MI Dynamic CApp Deployment and Autoscaling
+### 9.12 Lab: WSO2 MI Basic Helm Deployment
 
-Deploy a WSO2 CApp/CAR into WSO2 Micro Integrator using the official MI Helm chart, mount a shared CApp volume for all MI pods, enable metrics-server, test HPA under load, and expose the MI API through the Lab 07 API Manager gateway.
+Deploy one WSO2 Micro Integrator pod with the official Helm chart, mount a demo
+Synapse API XML through a Kubernetes ConfigMap, and verify `/citizen` API calls.
 
 | Task | Command |
 |------|---------|
-| Prerequisites | Docker Desktop, minikube, kubectl, Helm; complete Lab 07 for the APIM exposure section |
-| Goal | Run a real CApp-backed MI integration behind APIM |
-| Packaging decision | Use a `.car` CApp loaded from a shared `carbonapps` volume |
-| Metrics | `minikube addons enable metrics-server` |
-| Shared CApp volume | `kubectl apply -f labs/12-wso2-mi-scaling/k8s/mi-carbonapps-shared-volume.yaml` |
+| Prerequisites | Docker Desktop, minikube, kubectl, Helm |
+| Goal | Prove the simplest working MI deployment path |
+| Artifact mode | Direct Synapse API XML mounted from ConfigMap |
 | Get chart | Download the official WSO2 `helm-mi` `4.6.x` chart |
-| Command location | Commands use `$REPO` and `$CHART` paths, so they work without switching folders |
-| Deploy | `helm upgrade --install citizen-info-mi $CHART --namespace minikube-demo --create-namespace -f "$CHART/values_local.yaml" -f "$REPO/labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml"` |
-| Autoscale | Enable HPA in Helm, run `kubectl apply -f labs/12-wso2-mi-scaling/k8s/mi-load-generator.yaml`, and watch `kubectl get hpa -n minikube-demo --watch` |
-| Expose | Create an APIM REST API with backend `https://cloud-citizen-info-mi.minikube-demo.svc.cluster.local:8253/citizen` |
+| Deploy | `helm upgrade --install citizen-info-mi $CHART --namespace minikube-demo --create-namespace -f "$CHART/values_local.yaml" -f "$VALUES"` |
+| Patch | `kubectl patch deployment cloud-citizen-info-mi -n minikube-demo --type strategic --patch-file labs/12-wso2-mi-scaling/k8s/mi-citizen-api-configmap-mount-patch.yaml` |
 | Details | [12-wso2-mi-scaling/README.md](labs/12-wso2-mi-scaling/README.md) |
 | Cleanup | `helm uninstall citizen-info-mi -n minikube-demo` |
+
+### 9.13 Lab: WSO2 MI CApp/CAR Deployment
+
+Replace the direct Synapse XML mount with a WSO2 CApp/CAR exported from WSO2
+tooling and loaded through the MI `carbonapps` hot-deployment directory.
+
+| Task | Command |
+|------|---------|
+| Prerequisites | Complete Lab 12 and export a valid `.car` from WSO2 tooling |
+| Goal | Practice the real CApp packaging and hot-deployment path |
+| Artifact mode | `.car` copied into a shared `carbonapps` PVC |
+| Shared volume | `kubectl apply -f labs/13-wso2-mi-capp-deployment/k8s/mi-carbonapps-shared-volume.yaml` |
+| Patch | Run `labs/13-wso2-mi-capp-deployment/scripts/patch-mi-carbonapps-volume.ps1` or `.sh` |
+| Details | [13-wso2-mi-capp-deployment/README.md](labs/13-wso2-mi-capp-deployment/README.md) |
+| Cleanup | `helm uninstall citizen-info-mi -n minikube-demo` and delete the shared volume manifest |
+
+### 9.14 Lab: WSO2 MI HPA Scaling
+
+Enable metrics-server, turn on HPA for the MI Helm release, generate load, and
+watch MI scale from one pod to multiple pods.
+
+| Task | Command |
+|------|---------|
+| Prerequisites | Complete Lab 12 or Lab 13 and confirm `/citizen/health` returns `HTTP 200` |
+| Goal | Observe MI scale-out under load |
+| Metrics | `minikube addons enable metrics-server` |
+| Load | `kubectl apply -f labs/14-wso2-mi-hpa-scaling/k8s/mi-load-generator.yaml` |
+| Watch | `kubectl get hpa cloud-citizen-info-mi -n minikube-demo --watch` |
+| Details | [14-wso2-mi-hpa-scaling/README.md](labs/14-wso2-mi-hpa-scaling/README.md) |
+| Cleanup | `kubectl delete job mi-load-generator -n minikube-demo --ignore-not-found` |
 
 ---
 
@@ -355,7 +382,9 @@ Need a shortcut? See:
 │   ├── 09-apim-api-creation/
 │   ├── 10-mcp-agent/
 │   ├── 11-ai-gateway-chat/
-│   └── 12-wso2-mi-scaling/
+│   ├── 12-wso2-mi-scaling/
+│   ├── 13-wso2-mi-capp-deployment/
+│   └── 14-wso2-mi-hpa-scaling/
 └── scripts/                     ← Automation and references
     ├── windows/
     ├── macos/
@@ -416,7 +445,9 @@ chmod +x scripts/macos/*.sh
 | 17 | `labs/10-mcp-agent/README.md` |
 | 18 | `labs/11-ai-gateway-chat/README.md` |
 | 19 | `labs/12-wso2-mi-scaling/README.md` |
-| 20 | `docs/09-cleanup.md` |
+| 20 | `labs/13-wso2-mi-capp-deployment/README.md` |
+| 21 | `labs/14-wso2-mi-hpa-scaling/README.md` |
+| 22 | `docs/09-cleanup.md` |
 
 ---
 

@@ -85,16 +85,18 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-03 | Add Lab 11 AI Gateway chat app with Groq-first provider guidance | README.md, labs/11-ai-gateway-chat | Drafted |
 | 2026-06-04 | Add Lab 12 WSO2 MI Helm deployment, scaling, and APIM exposure guide | README.md, labs/12-wso2-mi-scaling | Drafted |
 | 2026-06-04 | Rework Lab 12 into a problem-solving flow with artifact packaging and dynamic loading guidance | README.md, labs/12-wso2-mi-scaling/README.md | Drafted |
-| 2026-06-04 | Convert Lab 12 main path to official Helm plus dynamic CApp PVC loading and metrics-server-backed HPA load test | README.md, labs/12-wso2-mi-scaling | Drafted |
+| 2026-06-04 | Initially drafted Lab 12 as combined MI Helm, CApp PVC, and HPA flow before splitting into Labs 12-14 | README.md, labs/12-wso2-mi-scaling | Superseded |
 | 2026-06-04 | Add Lab 12 chart-folder checks for `values_local.yaml` Helm install error | README.md, labs/12-wso2-mi-scaling/README.md | Drafted |
 | 2026-06-04 | Simplify Lab 12 to run from repository root with `CHART` and `VALUES` variables instead of switching folders | README.md, labs/12-wso2-mi-scaling/README.md | Drafted |
 | 2026-06-04 | Update Lab 12 commands to use absolute `REPO`, `CHART`, and `VALUES` paths so they work from any current folder | README.md, labs/12-wso2-mi-scaling/README.md | Drafted |
 | 2026-06-04 | Replace unsupported Lab 12 `kubectl set volume --add` with cross-platform patch scripts | labs/12-wso2-mi-scaling/README.md, labs/12-wso2-mi-scaling/scripts | Drafted |
 | 2026-06-04 | Remove laptop-specific parent folder from Lab 12 `REPO` examples and use `Downloads/K8S_Training` default | labs/12-wso2-mi-scaling/README.md | Drafted |
-| 2026-06-04 | Clarify that Lab 12 expected MI JSON responses come from the demo CApp payload factory and that pod names vary | labs/12-wso2-mi-scaling/README.md | Drafted |
-| 2026-06-04 | Add the Lab 12 demo `CitizenInfoCompositeExporter_1.0.0.car` to the expected `capps` folder | labs/12-wso2-mi-scaling/capps | Drafted |
+| 2026-06-04 | Clarify that the working Lab 12 MI JSON responses come from direct Synapse XML and that pod names vary | labs/12-wso2-mi-scaling/README.md | Done |
+| 2026-06-04 | Move the attempted demo `CitizenInfoCompositeExporter_1.0.0.car` into the Lab 13 CApp drop folder | labs/13-wso2-mi-capp-deployment/capps | Drafted |
 | 2026-06-04 | Fix Lab 12 Windows paths to avoid hardcoded repo folders and `kubectl cp` drive-letter parsing errors | labs/12-wso2-mi-scaling/README.md | Drafted |
 | 2026-06-04 | Add direct Synapse API ConfigMap mount fallback for Lab 12 after CApp dependency resolution failed in MI | labs/12-wso2-mi-scaling/README.md, labs/12-wso2-mi-scaling/k8s | Verified on Windows |
+| 2026-06-04 | Split MI training into Lab 12 basic Helm/direct Synapse, Lab 13 CApp/CAR, and Lab 14 HPA scaling | README.md, labs/12-wso2-mi-scaling, labs/13-wso2-mi-capp-deployment, labs/14-wso2-mi-hpa-scaling | Drafted |
+| 2026-06-04 | Move CAR, carbonapps PVC, CAR patch scripts, and load generator out of Lab 12 into Labs 13 and 14 | README.md, labs/12-wso2-mi-scaling, labs/13-wso2-mi-capp-deployment, labs/14-wso2-mi-hpa-scaling | Done |
 
 ---
 
@@ -109,7 +111,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 5 | Run ingress lab | Not started | `labs/03-ingress` |
 | 6 | Test macOS instructions | Not started | Need real Mac output |
 | 7 | Add screenshots | Not started | Optional |
-| 8 | Add WSO2-specific local lab | Drafted | Lab 12 adds WSO2 MI Helm deployment, scaling, and APIM exposure |
+| 8 | Add WSO2-specific local labs | Drafted | Labs 12-14 cover MI basic deployment, CApp deployment, and HPA scaling |
 
 ---
 

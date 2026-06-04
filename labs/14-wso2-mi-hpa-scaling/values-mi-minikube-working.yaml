@@ -3,8 +3,8 @@
 # Chart source:
 #   https://github.com/wso2/helm-mi
 #
-# Lab 12 uses the official MI runtime image and mounts the demo
-# Synapse API XML through a ConfigMap patch.
+# Lab 14 uses the official MI runtime image and enables HPA on an
+# already-working MI API from Lab 12 or Lab 13.
 
 containerRegistry: ""
 
@@ -80,6 +80,6 @@ wso2:
       enabled: false
       minReplicas: 1
       maxReplicas: 3
-      # Kept disabled in this basic lab.
+      # Lab 14 uses this low demo target so HPA scale-out is visible locally.
       cpuUtilizationPercentage: 10
       memoryUtilizationPercentage: 80
