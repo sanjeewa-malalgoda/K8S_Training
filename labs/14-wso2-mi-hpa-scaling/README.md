@@ -75,7 +75,7 @@ helm upgrade citizen-info-mi $CHART `
   --set wso2.deployment.hpa.enabled=true `
   --set wso2.deployment.hpa.minReplicas=1 `
   --set wso2.deployment.hpa.maxReplicas=3 `
-  --set wso2.deployment.hpa.cpuUtilizationPercentage=10 `
+  --set wso2.deployment.hpa.cpuUtilizationPercentage=50 `
   --set wso2.deployment.resources.requests.cpu=100m `
   --set wso2.deployment.resources.limits.cpu=1000m
 ```
@@ -100,7 +100,7 @@ helm upgrade citizen-info-mi "$CHART" \
   --set wso2.deployment.hpa.enabled=true \
   --set wso2.deployment.hpa.minReplicas=1 \
   --set wso2.deployment.hpa.maxReplicas=3 \
-  --set wso2.deployment.hpa.cpuUtilizationPercentage=10 \
+  --set wso2.deployment.hpa.cpuUtilizationPercentage=50 \
   --set wso2.deployment.resources.requests.cpu=100m \
   --set wso2.deployment.resources.limits.cpu=1000m
 ```
@@ -176,8 +176,12 @@ Expected output:
 
 ```text
 NAME                    REFERENCE                          TARGETS       MINPODS   MAXPODS   REPLICAS
-cloud-citizen-info-mi   Deployment/cloud-citizen-info-mi   .../10%       1         3         1
+cloud-citizen-info-mi   Deployment/cloud-citizen-info-mi   .../50%       1         3         1
 ```
+
+This lab uses a `50%` CPU target by default.
+Earlier drafts used `10%`, but MI can idle above `10%` after startup or load.
+When idle CPU stays above the target, HPA correctly refuses to scale down.
 
 If `TARGETS` shows `<unknown>`, wait one or two minutes and run:
 
@@ -215,8 +219,8 @@ Expected behavior after one or more HPA sync periods:
 
 ```text
 NAME                    REFERENCE                          TARGETS    MINPODS   MAXPODS   REPLICAS
-cloud-citizen-info-mi   Deployment/cloud-citizen-info-mi   35%/10%    1         3         2
-cloud-citizen-info-mi   Deployment/cloud-citizen-info-mi   42%/10%    1         3         3
+cloud-citizen-info-mi   Deployment/cloud-citizen-info-mi   70%/50%    1         3         2
+cloud-citizen-info-mi   Deployment/cloud-citizen-info-mi   85%/50%    1         3         3
 ```
 
 Stop watching with `Ctrl+C` after you observe scale-out.
@@ -250,6 +254,8 @@ job.batch "mi-load-generator" deleted
 ```
 
 HPA scale-down can take several minutes.
+With the default `50%` CPU target, replicas should normally return toward `1`
+after CPU drops below target for the HPA scale-down window.
 
 ---
 
@@ -297,5 +303,7 @@ After the Helm upgrade, reapply the Lab 12 or Lab 13 artifact mount patch.
 |---|---|---|---|
 | `TARGETS <unknown>` in HPA | metrics-server is missing, not ready, or metrics have not refreshed yet | Re-run section 2 and wait one or two minutes | `kubectl top pods -n minikube-demo` shows CPU and memory |
 | HPA does not scale | Load is too small, CPU request is too high, or metrics have not refreshed | Re-run the load generator and wait 1-3 minutes | `kubectl describe hpa cloud-citizen-info-mi -n minikube-demo` shows scale events |
+| HPA does not scale down after 15-25 minutes | CPU target is still exceeded, or an old `10%` target is still active | Use the `50%` CPU target in section 3, delete the load job, and wait for scale-down | `kubectl get hpa` shows CPU below `50%` and replicas return toward `1` |
+| Helm upgrade fails with `.spec.replicas` conflict | HPA currently owns deployment replica count through the scale subresource | Delete the HPA first, then scale the deployment or rerun Helm with HPA disabled | `kubectl get hpa -n minikube-demo` no longer shows `cloud-citizen-info-mi` |
 | API returns `HTTP 404` after Helm upgrade | Helm replaced the manual artifact mount patch | Re-run section 4 | `/citizen/health` returns `HTTP 200` |
 | New pods do not serve the API | The artifact mount patch was not applied after enabling HPA | Re-run section 4 and wait for rollout | All MI pods become `Running`, and service endpoint calls return `HTTP 200` |

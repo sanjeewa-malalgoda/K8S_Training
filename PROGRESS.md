@@ -100,6 +100,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-05 | Convert Lab 11 from OpenAI-compatible chat-completions flow to Anthropic Messages API flow tested with APIM Try Out shape | README.md, labs/11-ai-gateway-chat | Drafted |
 | 2026-06-05 | Remove fragile Lab 11 browser app path; keep APIM Try Out and curl as the working Claude validation path | README.md, labs/11-ai-gateway-chat | Drafted |
 | 2026-06-05 | Simplify MCP lab so the required path stops at MCP Inspector and VS Code Copilot Agent Mode is optional | README.md, labs/10-mcp-agent/README.md | Drafted |
+| 2026-06-05 | Raise Lab 14 MI HPA CPU target from 10% to 50% so scale-down can return to one pod after load stops | labs/14-wso2-mi-hpa-scaling | Drafted |
 
 ---
 

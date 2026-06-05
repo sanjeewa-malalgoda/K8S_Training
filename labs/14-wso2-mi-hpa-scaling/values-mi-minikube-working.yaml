@@ -80,6 +80,7 @@ wso2:
       enabled: false
       minReplicas: 1
       maxReplicas: 3
-      # Lab 14 uses this low demo target so HPA scale-out is visible locally.
-      cpuUtilizationPercentage: 10
+      # MI can idle above very low CPU targets such as 10%, which prevents scale-down.
+      # 50% still allows visible scale-out under load and lets HPA return to 1 pod.
+      cpuUtilizationPercentage: 50
       memoryUtilizationPercentage: 80
