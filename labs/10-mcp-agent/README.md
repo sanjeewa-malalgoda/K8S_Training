@@ -1,4 +1,4 @@
-# Lab 10 - Convert APIs into MCP Tools and Use Them with VS Code Copilot
+# Lab 10 - Convert APIs into MCP Tools and Test with MCP Inspector
 
 This lab converts the REST API from Lab 09 into an MCP server in WSO2 API Manager.
 
@@ -6,8 +6,6 @@ Then you will:
 
 ```text
 1. Test the MCP tools with MCP Inspector
-2. Connect the MCP server to VS Code Copilot Agent Mode
-3. Ask natural-language questions that call the API as tools
 ```
 
 This lab uses the REST API first because request-response tools are easiest to understand.
@@ -15,6 +13,7 @@ This lab uses the REST API first because request-response tools are easiest to u
 Optional extension:
 
 ```text
+Connect the MCP server to VS Code Copilot Agent Mode after MCP Inspector works.
 Convert the Benefit Programs GraphQL API into another MCP server after the REST flow works.
 ```
 
@@ -35,7 +34,7 @@ Concept:
 REST API operation
   -> APIM MCP server
   -> MCP tool
-  -> AI agent can call the tool
+  -> MCP Inspector can call the tool
 ```
 
 Example:
@@ -43,7 +42,7 @@ Example:
 ```text
 GET /permits
   -> list permit applications
-  -> VS Code Copilot can call the tool when you ask a question
+  -> MCP Inspector can call the tool and show the API response
 ```
 
 ---
@@ -62,6 +61,11 @@ Install or prepare:
 
 ```text
 Node.js and npx for MCP Inspector
+```
+
+Optional only:
+
+```text
 VS Code
 GitHub Copilot access with Agent Mode
 ```
@@ -441,7 +445,35 @@ The tool returns permit data from the Lab 08 REST service.
 
 ---
 
-# 11. Configure VS Code Copilot MCP
+# 11. Lab Complete
+
+Stop here for the main lab.
+
+You have proven:
+
+```text
+REST API
+  -> APIM MCP server
+  -> MCP Inspector
+  -> tool call returns permit data
+```
+
+This is the clean success point for the workshop.
+
+The MCP server works when:
+
+```text
+MCP Inspector connects
+List Tools shows list_permits, get_permit_by_id, and create_permit
+Calling list_permits returns data from the Lab 08 REST service
+```
+
+The next sections are optional.
+Use them only if the learner already has VS Code, GitHub Copilot, and Agent Mode ready.
+
+---
+
+# 12. Optional: Configure VS Code Copilot MCP
 
 Open this repository in VS Code.
 
@@ -496,7 +528,7 @@ The token should not be hard-coded into the repository.
 
 ---
 
-# 12. Start the MCP server in VS Code
+# 13. Optional: Start the MCP server in VS Code
 
 In VS Code:
 
@@ -531,7 +563,7 @@ If VS Code shows tool approval prompts, allow the permit tools for this lab.
 
 ---
 
-# 13. Use Copilot Agent Mode
+# 14. Optional: Use Copilot Agent Mode
 
 Open Copilot Chat in VS Code.
 
@@ -601,7 +633,7 @@ The newly created permit appears in the list.
 
 ---
 
-# 14. Optional: Convert the GraphQL API
+# 15. Optional: Convert the GraphQL API
 
 After the REST MCP server works, repeat the same pattern for:
 

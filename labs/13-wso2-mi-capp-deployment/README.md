@@ -230,13 +230,26 @@ Check logs:
 ## Windows PowerShell
 
 ```powershell
-kubectl logs -n minikube-demo deployment/cloud-citizen-info-mi --tail=300 | Select-String "CApp|Carbon Application|Citizen|Deployed|ERROR|WARN|Exception|dependencies"
+kubectl logs -n minikube-demo deployment/cloud-citizen-info-mi --all-containers=true --tail=300
+```
+
+Optional filtered view:
+
+```powershell
+kubectl logs -n minikube-demo deployment/cloud-citizen-info-mi --all-containers=true --tail=1000 |
+  Select-String -Pattern "CApp|Carbon Application|Citizen|Deployed|ERROR|WARN|Exception|dependencies"
 ```
 
 ## macOS Terminal
 
 ```bash
-kubectl logs -n minikube-demo deployment/cloud-citizen-info-mi --tail=300 | grep -E "CApp|Carbon Application|Citizen|Deployed|ERROR|WARN|Exception|dependencies"
+kubectl logs -n minikube-demo deployment/cloud-citizen-info-mi --all-containers=true --tail=300
+```
+
+Optional filtered view:
+
+```bash
+kubectl logs -n minikube-demo deployment/cloud-citizen-info-mi --all-containers=true --tail=1000 | grep -E "CApp|Carbon Application|Citizen|Deployed|ERROR|WARN|Exception|dependencies"
 ```
 
 Expected healthy result:

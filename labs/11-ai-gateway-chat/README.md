@@ -1,43 +1,45 @@
-# Lab 11 - Build a Chat App Through WSO2 AI Gateway
+# Lab 11 - Call Claude Through WSO2 AI Gateway
 
-This lab shows how a browser chat app can call an LLM through WSO2 API Manager AI Gateway.
+This lab uses WSO2 API Manager AI Gateway to call Anthropic Claude.
 
-The app does not call Groq, OpenAI, Mistral, or any provider directly.
+There is no browser app in this lab.
 
-It calls:
+Why:
 
 ```text
-Browser chat app
+Local APIM uses self-signed HTTPS certificates.
+Browser apps also need CORS.
+Those two issues made the previous browser app path unreliable for training.
+```
+
+The clean training flow is:
+
+```text
+curl or Developer Portal Try Out
   -> WSO2 AI Gateway
-  -> LLM provider
+  -> Anthropic Claude
 ```
 
-Why this matters:
+The Anthropic provider key stays inside WSO2 API Manager.
+Learners only use an APIM API key or access token for the published API.
+
+Tested training shape:
 
 ```text
-The provider API key stays inside WSO2 API Manager.
-The browser app only uses an APIM access token.
-APIM can apply authentication, subscriptions, throttling, logging, and future AI policies.
+Tested on: 2026-06-05
+Provider: Anthropic / Claude
+Gateway URL: https://gw.wso2.com:8243/anthropicapis/1/v1/messages
+Provider header: anthropic-version: 2023-06-01
+Request method: POST
 ```
 
----
-
-## What you will build
-
-| Item | Purpose |
-|---|---|
-| AI API in APIM | Proxies requests to an LLM provider |
-| APIM subscription token | Allows the browser app to call the AI API |
-| Browser chat app | Gives users a real chat experience |
-
-Recommended provider for this lab:
+Important:
 
 ```text
-Groq
+This lab depends on the Anthropic API definition deployed in your local APIM.
+If the API context, version, resource path, security scheme, or model changes,
+copy the exact values from Developer Portal Try Out and update the curl command.
 ```
-
-Groq is usually easier for learners to access than paid enterprise LLM providers.
-If the trainer already has another provider key, you can use that instead.
 
 ---
 
@@ -49,11 +51,9 @@ Complete:
 Lab 07 - APIM is deployed and gateway port-forward is running
 ```
 
-You do not need Labs 08, 09, or 10 for this lab.
-
 Check APIM:
 
-```bash
+```powershell
 kubectl get pods -n wso2
 ```
 
@@ -63,10 +63,19 @@ Expected:
 apim-wso2am-all-in-one-am-deployment-1-xxxxx   1/1   Running
 ```
 
-Check Lab 07 port-forward is running:
+Start or confirm the Lab 07 APIM port-forward.
+
+Use a dedicated terminal and keep it open.
+
+```powershell
+kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443 8243:8243
+```
+
+Expected:
 
 ```text
-kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443 8243:8243
+Forwarding from 127.0.0.1:443 -> 9443
+Forwarding from 127.0.0.1:8243 -> 8243
 ```
 
 Check hosts file contains:
@@ -90,126 +99,64 @@ admin / admin
 
 ---
 
-# 2. Get a provider key
+# 2. Configure the Anthropic Provider
 
-Recommended path:
+Get an Anthropic API key from the trainer.
 
-```text
-Groq API key
-```
+Do not put this provider key in curl, JavaScript, or any browser app.
+The provider key belongs inside WSO2 API Manager.
 
-Groq uses an OpenAI-compatible chat-completions style API.
+In APIM, configure an Anthropic provider.
 
-Provider details:
+Use:
 
 | Setting | Value |
 |---|---|
-| Provider | Groq |
-| Base URL | `https://api.groq.com/openai/v1` |
-| Chat completions path | `/chat/completions` |
-| Example model | `llama-3.1-8b-instant` |
-
-Important:
-
-```text
-Do not paste the provider key into the browser chat app.
-The provider key belongs inside WSO2 API Manager.
-```
-
-If you cannot use Groq, use another AI provider supported by your APIM setup.
-The browser app still works as long as APIM exposes a chat-completions style AI API.
-
----
-
-# 3. Create or configure the AI provider in APIM
-
-In Publisher or Admin Portal, configure an AI provider.
-
-Use the simplest option available in your APIM UI:
-
-| Situation | Path |
-|---|---|
-| Groq is listed as a provider | Select Groq and add the API key |
-| Groq is not listed | Create a custom AI vendor/provider using the Groq base URL |
-| Trainer provides OpenAI/Mistral/Azure key | Use the built-in provider for that key |
-
-For Groq custom provider, use:
-
-```text
-https://api.groq.com/openai/v1
-```
-
-Add the provider API key in APIM.
+| Provider | `Anthropic` |
+| Base URL | `https://api.anthropic.com` |
+| Messages path | `/v1/messages` |
+| Required provider header | `anthropic-version: 2023-06-01` |
 
 Expected:
 
 ```text
-APIM has an AI provider configured and ready to use.
+APIM has an Anthropic provider configured with the provider API key.
 ```
 
 ---
 
-# 4. Create an AI API
+# 3. Create the Claude AI API
 
 In Publisher:
 
 1. Click **Create API**.
 2. Select **AI API**.
-3. Select the provider configured in the previous step.
+3. Select the Anthropic provider.
 4. Use these values:
 
 | Field | Value |
 |---|---|
-| Name | `Government AI Chat` |
-| Context | `/gov-ai-chat` |
-| Version | `1.0.0` |
-| Model | `llama-3.1-8b-instant` or another available model |
+| Name | `Anthropic APIs` |
+| Context | `/anthropicapis` |
+| Version | `1` |
+| Resource path | `/v1/messages` |
+| Model | Use the Claude model configured by the trainer |
 
-If APIM asks for an endpoint or resource path, use the provider chat-completions endpoint:
+For the current tested local training setup, the model value used by APIM was:
 
 ```text
-/chat/completions
+anthropic base mode
 ```
 
 Expected:
 
 ```text
-Government AI Chat API is created.
+Anthropic APIs is created.
 ```
 
 ---
 
-# 5. Enable CORS for the browser app
-
-The browser app runs from:
-
-```text
-http://localhost:5500
-```
-
-Because the app calls APIM from the browser, CORS may be required.
-
-In the AI API settings, enable CORS if available.
-
-Use:
-
-| CORS setting | Value |
-|---|---|
-| Allowed origins | `http://localhost:5500` |
-| Allowed methods | `POST, OPTIONS` |
-| Allowed headers | `Authorization, Content-Type` |
-
-For local training only, if APIM requires a wildcard:
-
-```text
-*
-```
-
-Do not use wildcard CORS for production systems.
-
----
-
-# 6. Deploy and publish the AI API
+# 4. Deploy and Publish the API
 
 In Publisher:
 
@@ -221,12 +168,12 @@ In Publisher:
 Expected:
 
 ```text
-Government AI Chat API is published.
+Anthropic APIs is published.
 ```
 
 ---
 
-# 7. Subscribe and generate an APIM token
+# 5. Subscribe and Generate Credentials
 
 Open Developer Portal:
 
@@ -243,7 +190,7 @@ admin / admin
 Find:
 
 ```text
-Government AI Chat
+Anthropic APIs
 ```
 
 Subscribe it to:
@@ -252,226 +199,152 @@ Subscribe it to:
 DefaultApplication
 ```
 
-Generate a production access token.
+Generate a production API key or access token, depending on the security scheme shown in Developer Portal.
+
+For the tested local training setup, Developer Portal Try Out used:
+
+```text
+ApiKey: <generated-api-key>
+```
 
 Copy:
 
 ```text
-APIM access token
+APIM API key
 ```
 
-Do not copy the provider key into the app.
+Do not copy the Anthropic provider key.
 
 ---
 
-# 8. Test the AI API with curl first
+# 6. Test in Developer Portal Try Out
 
-Use the APIM gateway URL.
+Open the `Anthropic APIs` page in Developer Portal.
 
-Expected local gateway URL:
+Go to:
 
 ```text
-https://gw.wso2.com:8243/gov-ai-chat/1.0.0/chat/completions
+Try Out
 ```
 
-If Developer Portal shows a different invoke URL, use the URL shown by Developer Portal.
+Use:
+
+| Field | Value |
+|---|---|
+| Operation | `POST /v1/messages` |
+| Header | `anthropic-version: 2023-06-01` |
+| Auth | APIM API key or token from Developer Portal |
+
+Use this request body:
+
+```json
+{
+  "model": "anthropic base mode",
+  "max_tokens": 128,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Explain how to apply for a building permit."
+    }
+  ],
+  "system": "You are a helpful government service assistant.",
+  "temperature": 0.4,
+  "stream": false
+}
+```
+
+Expected:
+
+```text
+Try Out returns a Claude response.
+```
+
+Do not continue until Try Out works.
+
+---
+
+# 7. Test with Curl
+
+Use curl after Developer Portal Try Out works.
+
+The local gateway URL tested for this lab is:
+
+```text
+https://gw.wso2.com:8243/anthropicapis/1/v1/messages
+```
+
+If Developer Portal shows a different invoke URL, use the Developer Portal URL.
 
 ## Windows PowerShell
 
 ```powershell
-$TOKEN = "paste-apim-access-token-here"
+$API_KEY = "paste-apim-api-key-here"
 
 $body = @{
-  model = "llama-3.1-8b-instant"
+  model = "anthropic base mode"
+  max_tokens = 128
   messages = @(
-    @{
-      role = "system"
-      content = "You are a helpful government service assistant."
-    },
     @{
       role = "user"
       content = "Explain how to apply for a building permit."
     }
   )
+  system = "You are a helpful government service assistant."
   temperature = 0.4
   stream = $false
 } | ConvertTo-Json -Depth 10
 
-curl.exe -k -X POST "https://gw.wso2.com:8243/gov-ai-chat/1.0.0/chat/completions" `
-  -H "Authorization: Bearer $TOKEN" `
+curl.exe -k -X POST "https://gw.wso2.com:8243/anthropicapis/1/v1/messages" `
+  -H "ApiKey: $API_KEY" `
+  -H "anthropic-version: 2023-06-01" `
   -H "Content-Type: application/json" `
-  -d $body
+  --data-raw $body
 ```
 
 ## macOS Terminal
 
 ```bash
-TOKEN="paste-apim-access-token-here"
+API_KEY="paste-apim-api-key-here"
 
-curl -k -X POST "https://gw.wso2.com:8243/gov-ai-chat/1.0.0/chat/completions" \
-  -H "Authorization: Bearer $TOKEN" \
+curl -k -X POST "https://gw.wso2.com:8243/anthropicapis/1/v1/messages" \
+  -H "ApiKey: $API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
   -H "Content-Type: application/json" \
-  -d '{
-    "model": "llama-3.1-8b-instant",
+  --data-raw '{
+    "model": "anthropic base mode",
+    "max_tokens": 128,
     "messages": [
-      {
-        "role": "system",
-        "content": "You are a helpful government service assistant."
-      },
       {
         "role": "user",
         "content": "Explain how to apply for a building permit."
       }
     ],
+    "system": "You are a helpful government service assistant.",
     "temperature": 0.4,
     "stream": false
   }'
 ```
 
-Expected:
+Expected response includes:
 
 ```json
 {
-  "choices": [
+  "content": [
     {
-      "message": {
-        "role": "assistant",
-        "content": "..."
-      }
+      "type": "text",
+      "text": "..."
     }
   ]
 }
 ```
 
-Do not continue until curl works.
-
 ---
 
-# 9. Start the browser chat app
+# 8. Try More Prompts
 
-From the repository root:
+Change only the user message.
 
-```bash
-cd labs/11-ai-gateway-chat/app
-```
-
-Start a local static web server.
-
-## Windows PowerShell
-
-```powershell
-py -m http.server 5500
-```
-
-If `py` is not available:
-
-```powershell
-python -m http.server 5500
-```
-
-## macOS Terminal
-
-```bash
-python3 -m http.server 5500
-```
-
-Expected:
-
-```text
-Serving HTTP on ... port 5500
-```
-
-Open:
-
-```text
-http://localhost:5500
-```
-
-Expected:
-
-```text
-Government AI Assistant chat page opens.
-```
-
----
-
-# 10. Use the chat app
-
-In the left sidebar, enter:
-
-| Field | Value |
-|---|---|
-| AI Gateway URL | `https://gw.wso2.com:8243/gov-ai-chat/1.0.0/chat/completions` |
-| APIM Access Token | Token from Developer Portal |
-| Model | `llama-3.1-8b-instant` or the model selected in APIM |
-| System Prompt | Keep the default or customize it |
-
-Click:
-
-```text
-Save settings
-```
-
-Try one of the prompt chips:
-
-```text
-Building permit steps
-```
-
-Or type:
-
-```text
-How do I apply for a building permit?
-```
-
-Expected:
-
-```text
-The assistant responds in the chat panel.
-```
-
-The status card should show:
-
-```text
-Connected
-```
-
----
-
-# 11. Understand what just happened
-
-The browser app sent this kind of request:
-
-```http
-POST https://gw.wso2.com:8243/gov-ai-chat/1.0.0/chat/completions
-Authorization: Bearer <APIM access token>
-Content-Type: application/json
-```
-
-The browser app did not send:
-
-```text
-Groq API key
-OpenAI API key
-Mistral API key
-```
-
-APIM handled the provider key and forwarded the request to the LLM provider.
-
-This is the core AI Gateway pattern:
-
-```text
-Application token
-  -> APIM
-  -> Provider key
-  -> LLM provider
-```
-
----
-
-# 12. Try interactive prompts
-
-Use the chat page to try:
+Try:
 
 ```text
 Explain the building permit process in five simple steps.
@@ -485,20 +358,40 @@ What questions should a citizen ask before submitting a market stall permit requ
 Draft a polite email asking for an update on permit PERMIT-1001.
 ```
 
-```text
-Summarize senior citizen support benefits for a first-time applicant.
-```
-
-Try changing the system prompt:
-
-```text
-You are a concise public service chatbot. Always answer in bullet points.
-```
-
 Expected:
 
 ```text
-The response style changes based on the system prompt.
+Claude responds through WSO2 AI Gateway.
+```
+
+---
+
+# 9. Understand What Happened
+
+The request went through APIM:
+
+```http
+POST https://gw.wso2.com:8243/anthropicapis/1/v1/messages
+ApiKey: <APIM API key>
+anthropic-version: 2023-06-01
+Content-Type: application/json
+```
+
+The request did not send:
+
+```text
+Anthropic provider API key
+```
+
+APIM handled the provider key and forwarded the request to Claude.
+
+Core pattern:
+
+```text
+APIM API key
+  -> WSO2 API Manager AI Gateway
+  -> Anthropic provider key stored in APIM
+  -> Claude
 ```
 
 ---
@@ -507,28 +400,21 @@ The response style changes based on the system prompt.
 
 | Error | Meaning | Fix | Validation |
 |---|---|---|---|
-| `401` or `403` | APIM token is missing, expired, or not subscribed | Generate a new token in Developer Portal | curl test works |
-| `404` | Wrong AI API context, version, or path | Copy the invoke URL from Developer Portal | Browser app URL matches DevPortal |
-| `CORS` error in browser console | APIM did not allow `http://localhost:5500` | Enable CORS for the AI API | Browser request succeeds |
-| Certificate warning | Local APIM uses a self-signed certificate | Open `https://gw.wso2.com:8243` in the browser and accept the certificate warning | Browser app can call gateway |
-| Provider quota or billing error | LLM provider rejected the upstream request | Check provider key, quota, model, and provider logs | curl returns an assistant response |
-| `py` or `python` not found | Python is not installed or not on PATH | Use VS Code Live Server or install Python | `http://localhost:5500` opens |
-| App says request failed | URL, token, CORS, or provider config is wrong | Test with curl first, then retry in browser | Status card shows `Connected` |
+| `401` or `403` | APIM API key or token is missing, expired, or not subscribed | Generate fresh credentials in Developer Portal | Try Out and curl work |
+| `404` | Wrong context, version, or resource path | Copy the exact invoke URL from Developer Portal | Curl hits `/v1/messages` successfully |
+| Provider error | Anthropic rejected the upstream request | Check provider key, quota, selected model, and APIM logs | Try Out returns Claude response |
+| TLS or certificate error in curl | Local APIM uses a self-signed certificate | Use `curl -k` for this local lab | Curl reaches APIM |
+| `anthropic-version` error | Header is missing or wrong | Send `anthropic-version: 2023-06-01` | Claude response returns |
+| Model error | The model value is not valid for the configured provider | Use the model shown by APIM/Try Out or trainer | Try Out succeeds |
 
 ---
 
 # Cleanup
 
-Stop the local web server:
-
-```text
-Ctrl + C
-```
-
 To remove the AI API:
 
 1. Open Publisher.
-2. Open `Government AI Chat`.
+2. Open `Anthropic APIs`.
 3. Change lifecycle state to **Retire** if required.
 4. Delete the API.
 
@@ -538,7 +424,6 @@ Do not delete Lab 07 APIM unless you are finished with all WSO2 labs.
 
 # References
 
-- WSO2 AI Gateway overview: https://apim-docs-stg.wso2.com/en/4.6.0/ai-gateway/ai-gateway-overview/
-- WSO2 create an AI API: https://apim.docs.wso2.com/en/4.6.0/api-design-manage/design/create-api/create-ai-api/create-an-ai-api/
-- WSO2 custom AI vendors: https://apim.docs.wso2.com/en/4.6.0/ai-gateway/ai-vendor-management/custom-ai-vendors/overview/
-- Groq OpenAI-compatible API: https://console.groq.com/docs/openai
+- WSO2 Anthropic provider: https://apim-docs-stg.wso2.com/en/4.6.0/ai-gateway/ai-vendor-management/anthropic/
+- WSO2 AI Gateway getting started: https://apim.docs.wso2.com/en/latest/ai-gateway/getting-started-with-ai-gateway/
+- Anthropic Messages API: https://platform.claude.com/docs/en/api/messages

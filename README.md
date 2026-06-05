@@ -210,16 +210,18 @@ Create REST, GraphQL, and WebSocket APIs in WSO2 API Manager using the services 
 | Details | [09-apim-api-creation/README.md](labs/09-apim-api-creation/README.md) |
 | Cleanup | Delete APIs from APIM Publisher; delete Lab 08 services if no longer needed |
 
-### 9.10 Lab: MCP Tools and VS Code Copilot Agent
+### 9.10 Lab: MCP Tools with MCP Inspector
 
-Convert the Lab 09 REST API into an MCP server in WSO2 API Manager, test it with MCP Inspector, and use it as tools in VS Code Copilot Agent Mode.
+Convert the Lab 09 REST API into an MCP server in WSO2 API Manager and test the generated tools with MCP Inspector.
+
+VS Code Copilot Agent Mode is optional after the Inspector test works.
 
 | Task | Command |
 |------|---------|
 | Prerequisites | Complete Labs 07, 08, and 09 |
 | Create MCP server | Use APIM Publisher at `https://am.wso2.com/publisher/` |
 | Test MCP server | `npx @modelcontextprotocol/inspector` |
-| Configure VS Code | Use `labs/10-mcp-agent/vscode-mcp-template.json` |
+| Optional agent path | Use `labs/10-mcp-agent/vscode-mcp-template.json` |
 | Details | [10-mcp-agent/README.md](labs/10-mcp-agent/README.md) |
 | Cleanup | Delete MCP servers from APIM Publisher; remove `.vscode/mcp.json` if created |
 
@@ -231,7 +233,7 @@ Create an AI API in WSO2 API Manager, proxy an LLM provider through AI Gateway, 
 |------|---------|
 | Prerequisites | Complete Lab 07 |
 | Create AI API | Use APIM Publisher at `https://am.wso2.com/publisher/` |
-| Test AI API | `curl -k -X POST https://gw.wso2.com:8243/gov-ai-chat/1.0.0/chat/completions` |
+| Test AI API | `curl -k -X POST https://gw.wso2.com:8243/anthropicapis/1/v1/messages` |
 | Run chat app | `python -m http.server 5500` from `labs/11-ai-gateway-chat/app` |
 | Details | [11-ai-gateway-chat/README.md](labs/11-ai-gateway-chat/README.md) |
 | Cleanup | Delete the AI API from APIM Publisher; stop the local web server |
