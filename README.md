@@ -225,18 +225,17 @@ VS Code Copilot Agent Mode is optional after the Inspector test works.
 | Details | [10-mcp-agent/README.md](labs/10-mcp-agent/README.md) |
 | Cleanup | Delete MCP servers from APIM Publisher; remove `.vscode/mcp.json` if created |
 
-### 9.11 Lab: AI Gateway Chat App
+### 9.11 Lab: Claude Through AI Gateway
 
-Create an AI API in WSO2 API Manager, proxy an LLM provider through AI Gateway, and use a modern browser chat app to call it.
+Create an Anthropic Claude AI API in WSO2 API Manager, then validate it with Developer Portal Try Out and curl.
 
 | Task | Command |
 |------|---------|
 | Prerequisites | Complete Lab 07 |
 | Create AI API | Use APIM Publisher at `https://am.wso2.com/publisher/` |
 | Test AI API | `curl -k -X POST https://gw.wso2.com:8243/anthropicapis/1/v1/messages` |
-| Run chat app | `python -m http.server 5500` from `labs/11-ai-gateway-chat/app` |
 | Details | [11-ai-gateway-chat/README.md](labs/11-ai-gateway-chat/README.md) |
-| Cleanup | Delete the AI API from APIM Publisher; stop the local web server |
+| Cleanup | Delete the AI API from APIM Publisher |
 
 ### 9.12 Lab: WSO2 MI Basic Helm Deployment
 

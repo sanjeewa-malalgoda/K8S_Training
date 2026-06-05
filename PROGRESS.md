@@ -97,12 +97,8 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-04 | Add direct Synapse API ConfigMap mount fallback for Lab 12 after CApp dependency resolution failed in MI | labs/12-wso2-mi-scaling/README.md, labs/12-wso2-mi-scaling/k8s | Verified on Windows |
 | 2026-06-04 | Split MI training into Lab 12 basic Helm/direct Synapse, Lab 13 CApp/CAR, and Lab 14 HPA scaling | README.md, labs/12-wso2-mi-scaling, labs/13-wso2-mi-capp-deployment, labs/14-wso2-mi-hpa-scaling | Drafted |
 | 2026-06-04 | Move CAR, carbonapps PVC, CAR patch scripts, and load generator out of Lab 12 into Labs 13 and 14 | README.md, labs/12-wso2-mi-scaling, labs/13-wso2-mi-capp-deployment, labs/14-wso2-mi-hpa-scaling | Done |
-| 2026-06-05 | Improve Lab 11 browser failure diagnostics and certificate/CORS validation guidance | labs/11-ai-gateway-chat | Drafted |
-| 2026-06-05 | Add concrete Lab 11 HTTP server output and CORS preflight validation commands | labs/11-ai-gateway-chat/README.md | Drafted |
-| 2026-06-05 | Rewrite Lab 11 startup flow with explicit APIM port-forward terminal and browser app server terminal steps | labs/11-ai-gateway-chat/README.md | Drafted |
-| 2026-06-05 | Add explicit Lab 11 Publisher CORS setup steps and official CORS reference | labs/11-ai-gateway-chat/README.md | Drafted |
-| 2026-06-05 | Prefill Lab 11 chat app with Anthropic training gateway URL, token, and model defaults | labs/11-ai-gateway-chat/app, labs/11-ai-gateway-chat/README.md | Drafted |
 | 2026-06-05 | Convert Lab 11 from OpenAI-compatible chat-completions flow to Anthropic Messages API flow tested with APIM Try Out shape | README.md, labs/11-ai-gateway-chat | Drafted |
+| 2026-06-05 | Remove fragile Lab 11 browser app path; keep APIM Try Out and curl as the working Claude validation path | README.md, labs/11-ai-gateway-chat | Drafted |
 | 2026-06-05 | Simplify MCP lab so the required path stops at MCP Inspector and VS Code Copilot Agent Mode is optional | README.md, labs/10-mcp-agent/README.md | Drafted |
 
 ---
@@ -130,7 +126,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-05-31 | `minikube` not recognized | PATH not loaded in current shell | Reopen terminal or add temporary PATH | Resolved |
 | 2026-05-31 | Docker driver not healthy | Docker Desktop engine not running | Start Docker Desktop | Resolved |
 | 2026-05-31 | Hyper-V requires Administrator | minikube considered Hyper-V without elevated shell | Use Docker driver | Avoided |
-| 2026-06-05 | Lab 11 browser app showed only `Request failed` | Browser `fetch` hides certificate, CORS, timeout, and APIM HTTP failures behind similar symptoms | Added targeted app diagnostics and a browser certificate/CORS checkpoint | Drafted |
+| 2026-06-05 | Lab 11 browser app showed only `Request failed` | Local APIM self-signed TLS plus browser CORS made the frontend path unreliable | Removed the browser app path and kept APIM Try Out/curl validation | Superseded |
 
 ---
 
