@@ -304,6 +304,58 @@ After the Helm upgrade, reapply the Lab 12 or Lab 13 artifact mount patch.
 | `TARGETS <unknown>` in HPA | metrics-server is missing, not ready, or metrics have not refreshed yet | Re-run section 2 and wait one or two minutes | `kubectl top pods -n minikube-demo` shows CPU and memory |
 | HPA does not scale | Load is too small, CPU request is too high, or metrics have not refreshed | Re-run the load generator and wait 1-3 minutes | `kubectl describe hpa cloud-citizen-info-mi -n minikube-demo` shows scale events |
 | HPA does not scale down after 15-25 minutes | CPU target is still exceeded, or an old `10%` target is still active | Use the `50%` CPU target in section 3, delete the load job, and wait for scale-down | `kubectl get hpa` shows CPU below `50%` and replicas return toward `1` |
+| HPA event shows `FailedGetScale` / `Unauthorized` | The HPA controller is stuck and cannot read the deployment scale subresource, even though your `kubectl` user may still have permission | Delete the HPA, scale the deployment to 1, then recreate HPA with the section 3 command | `kubectl describe hpa` no longer shows fresh `FailedGetScale` events |
 | Helm upgrade fails with `.spec.replicas` conflict | HPA currently owns deployment replica count through the scale subresource | Delete the HPA first, then scale the deployment or rerun Helm with HPA disabled | `kubectl get hpa -n minikube-demo` no longer shows `cloud-citizen-info-mi` |
 | API returns `HTTP 404` after Helm upgrade | Helm replaced the manual artifact mount patch | Re-run section 4 | `/citizen/health` returns `HTTP 200` |
 | New pods do not serve the API | The artifact mount patch was not applied after enabling HPA | Re-run section 4 and wait for rollout | All MI pods become `Running`, and service endpoint calls return `HTTP 200` |
+
+## Reset a Stuck HPA
+
+Use this reset if:
+
+```text
+kubectl describe hpa cloud-citizen-info-mi -n minikube-demo
+```
+
+shows:
+
+```text
+FailedGetScale    Unauthorized
+```
+
+First confirm your own `kubectl` access still works:
+
+```powershell
+kubectl auth can-i get deployments/scale -n minikube-demo
+kubectl auth can-i update deployments/scale -n minikube-demo
+kubectl auth can-i patch deployments/scale -n minikube-demo
+kubectl config current-context
+kubectl get nodes
+```
+
+Expected:
+
+```text
+yes
+yes
+yes
+minikube
+minikube   Ready
+```
+
+Then reset the local lab state:
+
+```powershell
+kubectl delete hpa cloud-citizen-info-mi -n minikube-demo
+kubectl scale deployment cloud-citizen-info-mi -n minikube-demo --replicas=1
+kubectl get pods -n minikube-demo -l deployment=cloud-citizen-info-mi
+```
+
+Expected:
+
+```text
+Only one cloud-citizen-info-mi pod remains Running.
+```
+
+To continue HPA testing, recreate HPA by rerunning section 3 with the `50%`
+CPU target, then reapply the artifact mount patch in section 4.

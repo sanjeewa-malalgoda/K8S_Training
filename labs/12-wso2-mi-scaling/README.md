@@ -30,7 +30,7 @@ This lab uses:
 |---|---|
 | Namespace | `minikube-demo` |
 | MI deployment | Official WSO2 MI Helm chart |
-| MI image | `wso2/wso2mi:4.6.0` |
+| MI image | `docker.io/wso2/wso2mi:4.6.0` |
 | API artifact | `artifacts/synapse-configs/default/api/citizen-info-api.xml` |
 | API mount | Kubernetes ConfigMap |
 | Replicas | 1 |
@@ -189,6 +189,52 @@ configmap/citizen-info-api-synapse created
 ---
 
 # 5. Deploy One MI Pod
+
+First confirm that this minikube cluster can pull the MI image. Your laptop may
+already have the image cached, but a participant's laptop might need to download
+it from Docker Hub for the first time.
+
+## Windows PowerShell
+
+```powershell
+minikube image pull docker.io/wso2/wso2mi:4.6.0
+```
+
+Expected output:
+
+```text
+The command completes without an image pull error.
+```
+
+## macOS Terminal
+
+```bash
+minikube image pull docker.io/wso2/wso2mi:4.6.0
+minikube image ls | grep -i wso2mi
+```
+
+Expected output:
+
+```text
+docker.io/wso2/wso2mi:4.6.0
+```
+
+On Apple Silicon Macs, such as M1, M2, M3, or M4, use this fallback if the
+image pull command exits but the image is not visible in minikube:
+
+```bash
+docker pull --platform linux/amd64 wso2/wso2mi:4.6.0
+minikube image load wso2/wso2mi:4.6.0
+minikube image ls | grep -i wso2mi
+```
+
+Expected output:
+
+```text
+docker.io/wso2/wso2mi:4.6.0
+```
+
+If this command fails, fix the image pull problem before running Helm.
 
 ## Windows PowerShell
 
@@ -409,6 +455,8 @@ configmap "citizen-info-api-synapse" deleted
 | Error | Meaning | Fix | Validation |
 |---|---|---|---|
 | `values_local.yaml` not found | The official WSO2 chart was not downloaded or `CHART` points to the wrong folder | Re-run section 3 from the repository root | `Test-Path "$CHART\values_local.yaml"` returns `True` |
+| `ImagePullBackOff` or `ErrImagePull` | minikube cannot download `docker.io/wso2/wso2mi:4.6.0`; the trainer machine may already have it cached, but the participant machine does not | Run `minikube image pull docker.io/wso2/wso2mi:4.6.0`. If it fails, check Docker Desktop internet access, proxy settings, Docker Hub rate limits, or Docker Hub login | `kubectl get pods -n minikube-demo` shows the MI pod moving from `ImagePullBackOff` to `Running` |
+| `ImagePullBackOff` on Apple Silicon macOS | Docker/minikube pulled or cached the wrong platform image, or the image pull did not load into minikube | Run `docker pull --platform linux/amd64 wso2/wso2mi:4.6.0`, then `minikube image load wso2/wso2mi:4.6.0` | `minikube image ls | grep -i wso2mi` shows `docker.io/wso2/wso2mi:4.6.0` |
 | `HTTP 404` for `/citizen/health` | MI is running, but the Synapse API was not deployed | Re-run section 6 and check logs | Logs show `Initializing API: CitizenInfoAPI` |
 | `citizen-info-api.xml` is not visible in the pod | The ConfigMap mount patch was not applied, or Helm replaced the deployment after patching | Re-run section 6 after every Helm upgrade | `kubectl exec ... ls -l .../api` shows `citizen-info-api.xml` |
 | Pod stays `Pending` | minikube does not have enough CPU or memory | Restart minikube with more resources or lower MI memory settings | Pod becomes `Running` |

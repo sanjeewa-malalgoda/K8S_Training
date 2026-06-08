@@ -6,7 +6,7 @@
 # Lab 13 uses the official MI runtime image and mounts a CApp/CAR
 # through a PVC attached to the MI carbonapps hot-deployment directory.
 
-containerRegistry: ""
+containerRegistry: "docker.io"
 
 wso2:
   ingress:

@@ -101,6 +101,9 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-05 | Remove fragile Lab 11 browser app path; keep APIM Try Out and curl as the working Claude validation path | README.md, labs/11-ai-gateway-chat | Drafted |
 | 2026-06-05 | Simplify MCP lab so the required path stops at MCP Inspector and VS Code Copilot Agent Mode is optional | README.md, labs/10-mcp-agent/README.md | Drafted |
 | 2026-06-05 | Raise Lab 14 MI HPA CPU target from 10% to 50% so scale-down can return to one pod after load stops | labs/14-wso2-mi-hpa-scaling | Drafted |
+| 2026-06-06 | Add Lab 14 stuck-HPA reset path for `FailedGetScale Unauthorized` controller events | labs/14-wso2-mi-hpa-scaling/README.md | Drafted |
+| 2026-06-08 | Make MI image registry explicit and add a Lab 12 image-pull checkpoint for participant `ImagePullBackOff` failures | labs/12-wso2-mi-scaling/README.md, labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml, labs/13-wso2-mi-capp-deployment/values-mi-minikube-working.yaml, labs/14-wso2-mi-hpa-scaling/values-mi-minikube-working.yaml | Drafted |
+| 2026-06-08 | Add Apple Silicon macOS image-load fallback for Lab 12 MI `linux/amd64` image pulls | labs/12-wso2-mi-scaling/README.md | Drafted |
 
 ---
 
@@ -128,6 +131,8 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-05-31 | Docker driver not healthy | Docker Desktop engine not running | Start Docker Desktop | Resolved |
 | 2026-05-31 | Hyper-V requires Administrator | minikube considered Hyper-V without elevated shell | Use Docker driver | Avoided |
 | 2026-06-05 | Lab 11 browser app showed only `Request failed` | Local APIM self-signed TLS plus browser CORS made the frontend path unreliable | Removed the browser app path and kept APIM Try Out/curl validation | Superseded |
+| 2026-06-08 | Lab 12 MI pod shows `ImagePullBackOff` on participant machines | Participant minikube cluster could not pull the MI image from Docker Hub, while trainer machine likely used a cached image | Set `containerRegistry` to `docker.io` and add `minikube image pull docker.io/wso2/wso2mi:4.6.0` before Helm install | Drafted |
+| 2026-06-08 | Lab 12 MI image pull exits on Apple Silicon macOS but image is not usable in minikube | Docker/minikube platform handling needed the AMD64 MI image loaded explicitly | Run `docker pull --platform linux/amd64 wso2/wso2mi:4.6.0`, then `minikube image load wso2/wso2mi:4.6.0` | Drafted |
 
 ---
 

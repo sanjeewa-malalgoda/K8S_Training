@@ -6,7 +6,7 @@
 # Lab 12 uses the official MI runtime image and mounts the demo
 # Synapse API XML through a ConfigMap patch.
 
-containerRegistry: ""
+containerRegistry: "docker.io"
 
 wso2:
   ingress:

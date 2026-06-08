@@ -6,7 +6,7 @@
 # Lab 14 uses the official MI runtime image and enables HPA on an
 # already-working MI API from Lab 12 or Lab 13.
 
-containerRegistry: ""
+containerRegistry: "docker.io"
 
 wso2:
   ingress:
