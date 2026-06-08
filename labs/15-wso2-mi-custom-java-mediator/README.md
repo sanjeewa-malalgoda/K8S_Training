@@ -37,7 +37,7 @@ This lab uses:
 | Maven project | `mediator/citizen-audit-mediator` |
 | Java class | `com.example.mi.mediator.CitizenAuditMediator` |
 | Built JAR | `citizen-audit-mediator-1.0.0.jar` |
-| MI JAR path | `/home/wso2carbon/wso2mi-4.6.0/repository/components/lib` |
+| MI JAR path | `/home/wso2carbon/wso2mi-4.6.0/lib` |
 | API endpoint | `GET /citizen/audit/{id}` |
 
 ---
@@ -310,12 +310,16 @@ configmap/citizen-info-api-synapse configured
 
 ---
 
-# 6. Mount the JAR and Restart MI Pods
+# 6. Mount the API XML and JAR, Then Restart MI Pods
 
-The patch mounts the custom mediator JAR into:
+Lab 15 uses the direct Synapse API XML mount from Lab 12, even if your current
+MI pod also has the Lab 13 `carbonapps` PVC. Apply both patches before the
+restart.
+
+The JAR patch mounts the custom mediator JAR into:
 
 ```text
-/home/wso2carbon/wso2mi-4.6.0/repository/components/lib
+/home/wso2carbon/wso2mi-4.6.0/lib
 ```
 
 ## Windows PowerShell
@@ -328,6 +332,11 @@ kubectl patch deployment cloud-citizen-info-mi `
   --type strategic `
   --patch-file "$REPO\labs\15-wso2-mi-custom-java-mediator\k8s\mi-custom-mediator-jar-mount-patch.yaml"
 
+kubectl patch deployment cloud-citizen-info-mi `
+  -n minikube-demo `
+  --type strategic `
+  --patch-file "$REPO\labs\12-wso2-mi-scaling\k8s\mi-citizen-api-configmap-mount-patch.yaml"
+
 kubectl rollout restart deployment/cloud-citizen-info-mi -n minikube-demo
 kubectl rollout status deployment/cloud-citizen-info-mi -n minikube-demo --timeout=5m
 ```
@@ -335,6 +344,7 @@ kubectl rollout status deployment/cloud-citizen-info-mi -n minikube-demo --timeo
 Expected output:
 
 ```text
+deployment.apps/cloud-citizen-info-mi patched
 deployment.apps/cloud-citizen-info-mi patched
 deployment.apps/cloud-citizen-info-mi restarted
 deployment "cloud-citizen-info-mi" successfully rolled out
@@ -350,6 +360,11 @@ kubectl patch deployment cloud-citizen-info-mi \
   --type strategic \
   --patch-file "$REPO/labs/15-wso2-mi-custom-java-mediator/k8s/mi-custom-mediator-jar-mount-patch.yaml"
 
+kubectl patch deployment cloud-citizen-info-mi \
+  -n minikube-demo \
+  --type strategic \
+  --patch-file "$REPO/labs/12-wso2-mi-scaling/k8s/mi-citizen-api-configmap-mount-patch.yaml"
+
 kubectl rollout restart deployment/cloud-citizen-info-mi -n minikube-demo
 kubectl rollout status deployment/cloud-citizen-info-mi -n minikube-demo --timeout=5m
 ```
@@ -357,6 +372,7 @@ kubectl rollout status deployment/cloud-citizen-info-mi -n minikube-demo --timeo
 Expected output:
 
 ```text
+deployment.apps/cloud-citizen-info-mi patched
 deployment.apps/cloud-citizen-info-mi patched
 deployment.apps/cloud-citizen-info-mi restarted
 deployment "cloud-citizen-info-mi" successfully rolled out
@@ -369,13 +385,15 @@ deployment "cloud-citizen-info-mi" successfully rolled out
 Check that the JAR is visible inside the MI pod:
 
 ```powershell
-kubectl exec -n minikube-demo deployment/cloud-citizen-info-mi -- ls -l /home/wso2carbon/wso2mi-4.6.0/repository/components/lib/citizen-audit-mediator-1.0.0.jar
+kubectl exec -n minikube-demo deployment/cloud-citizen-info-mi -- ls -l /home/wso2carbon/wso2mi-4.6.0/lib/citizen-audit-mediator-1.0.0.jar
+kubectl exec -n minikube-demo deployment/cloud-citizen-info-mi -- grep -n "audit" /home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/synapse-configs/default/api/citizen-info-api.xml
 ```
 
 Expected output includes:
 
 ```text
 citizen-audit-mediator-1.0.0.jar
+uri-template="/audit/{id}"
 ```
 
 Check startup logs:
@@ -452,8 +470,9 @@ CitizenAuditMediator enriched request for CIT-1001
 
 # 9. Cleanup
 
-Warning: this removes the custom mediator from the Lab 14 MI deployment and
-restores the original Lab 12 API XML.
+Warning: this restores the original Lab 12 API XML. The custom mediator JAR
+ConfigMap is left in place because the deployment still references it after the
+manual patch. It is harmless when the API no longer calls the mediator.
 
 ## Windows PowerShell
 
@@ -467,7 +486,6 @@ kubectl create configmap citizen-info-api-synapse `
   --dry-run=client `
   -o yaml | kubectl apply -f -
 
-kubectl delete configmap citizen-audit-mediator-jar -n minikube-demo --ignore-not-found
 kubectl rollout restart deployment/cloud-citizen-info-mi -n minikube-demo
 kubectl rollout status deployment/cloud-citizen-info-mi -n minikube-demo --timeout=5m
 ```
@@ -484,7 +502,6 @@ kubectl create configmap citizen-info-api-synapse \
   --dry-run=client \
   -o yaml | kubectl apply -f -
 
-kubectl delete configmap citizen-audit-mediator-jar -n minikube-demo --ignore-not-found
 kubectl rollout restart deployment/cloud-citizen-info-mi -n minikube-demo
 kubectl rollout status deployment/cloud-citizen-info-mi -n minikube-demo --timeout=5m
 ```
@@ -493,7 +510,6 @@ Expected output includes:
 
 ```text
 configmap/citizen-info-api-synapse configured
-configmap "citizen-audit-mediator-jar" deleted
 deployment.apps/cloud-citizen-info-mi restarted
 deployment "cloud-citizen-info-mi" successfully rolled out
 ```
@@ -520,8 +536,8 @@ HTTP 404
 | `invalid target release: 21` | Maven is using an older JDK | Set `JAVA_HOME` to JDK 21 and reopen the terminal | `java -version` and `mvn -version` show JDK 21 |
 | Maven keeps downloading many WSO2 runtime JARs | The old POM used the full MI runtime dependency instead of the smaller Synapse compile dependency | Stop Maven with `Ctrl+C`, pull the latest lab files, and rerun section 3 with `-ntp` | Build reaches `BUILD SUCCESS` after a short dependency download |
 | Maven cannot download dependencies | The laptop cannot reach Maven Central or WSO2 Maven repository | Check internet, proxy settings, and access to `https://maven.wso2.org` | `mvn -f ... clean package` shows `BUILD SUCCESS` |
-| `ClassNotFoundException: com.example.mi.mediator.CitizenAuditMediator` | The JAR was not mounted or MI did not restart after the mount | Re-run sections 4 and 6 | `kubectl exec ... ls -l .../citizen-audit-mediator-1.0.0.jar` shows the JAR |
-| `/citizen/audit/CIT-1001` returns `HTTP 404` | The updated API XML was not loaded | Re-run sections 5 and 6 | Logs show `Initializing API: CitizenInfoAPI` and the audit endpoint returns `HTTP 200` |
+| `ClassNotFoundException: com.example.mi.mediator.CitizenAuditMediator` | The JAR was mounted to the wrong path, or MI did not restart after the mount | Re-run sections 4 and 6 with the latest lab patch | `kubectl exec ... ls -l /home/wso2carbon/wso2mi-4.6.0/lib/citizen-audit-mediator-1.0.0.jar` shows the JAR |
+| `/citizen/audit/CIT-1001` returns `HTTP 404` | The updated API XML was not loaded, often because the Lab 12 API ConfigMap mount patch was not applied after Lab 13 or Lab 14 | Re-run sections 5 and 6 | `grep -n "audit" .../citizen-info-api.xml` shows the audit resource and the endpoint returns `HTTP 200` |
 | Existing `/citizen/health` stops working | The API ConfigMap was replaced with a bad XML file | Restore the Lab 12 API XML using section 9, then reapply sections 5 and 6 carefully | `/citizen/health` returns `HTTP 200` |
 
 ---
