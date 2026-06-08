@@ -417,7 +417,7 @@ The `CitizenAuditMediator` log appears after the first `/citizen/audit` call.
 ## Health check first
 
 ```powershell
-kubectl run mi-health-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -k -sS -w "`nHTTP %{http_code}`n" https://cloud-citizen-info-mi:8253/citizen/health
+kubectl run mi-health-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -v -k -sS -w "`nHTTP %{http_code}`n" https://cloud-citizen-info-mi:8253/citizen/health
 ```
 
 Expected response:
@@ -434,7 +434,7 @@ HTTP 200
 ## Call the custom mediator endpoint
 
 ```powershell
-kubectl run mi-audit-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -k -sS -w "`nHTTP %{http_code}`n" https://cloud-citizen-info-mi:8253/citizen/audit/CIT-1001
+kubectl run mi-audit-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -v -k -sS -w "`nHTTP %{http_code}`n" https://cloud-citizen-info-mi:8253/citizen/audit/CIT-1001
 ```
 
 Expected response:
@@ -517,7 +517,7 @@ deployment "cloud-citizen-info-mi" successfully rolled out
 Validation:
 
 ```powershell
-kubectl run mi-audit-cleanup-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -k -sS -w "`nHTTP %{http_code}`n" https://cloud-citizen-info-mi:8253/citizen/audit/CIT-1001
+kubectl run mi-audit-cleanup-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -v -k -sS -w "`nHTTP %{http_code}`n" https://cloud-citizen-info-mi:8253/citizen/audit/CIT-1001
 ```
 
 Expected output:

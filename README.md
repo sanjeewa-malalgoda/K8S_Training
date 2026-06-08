@@ -294,9 +294,24 @@ MI runtime from Lab 14, update the MI API, and invoke the mediator through
 | Prerequisites | Complete Lab 14 and confirm `cloud-citizen-info-mi` exists; install JDK 21 and Maven |
 | Build | `mvn -f labs/15-wso2-mi-custom-java-mediator/mediator/citizen-audit-mediator/pom.xml clean package` |
 | Deploy JAR | Create `citizen-audit-mediator-jar` ConfigMap and patch the MI deployment |
-| Invoke | `kubectl run mi-audit-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -k -sS https://cloud-citizen-info-mi:8253/citizen/audit/CIT-1001` |
+| Invoke | `kubectl run mi-audit-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -v -k -sS https://cloud-citizen-info-mi:8253/citizen/audit/CIT-1001` |
 | Details | [15-wso2-mi-custom-java-mediator/README.md](labs/15-wso2-mi-custom-java-mediator/README.md) |
 | Cleanup | Restore the Lab 12 API ConfigMap and delete `citizen-audit-mediator-jar` |
+
+### 9.16 Lab: WSO2 IAM 7.0.0 Helm Deployment
+
+Deploy WSO2 Identity Server 7.0.0 with the official WSO2 Helm chart package,
+validate OIDC discovery, and review a basic IAM use case.
+
+| Task | Command |
+|------|---------|
+| Prerequisites | Docker Desktop, minikube, kubectl, Helm |
+| Get chart | `helm pull wso2/identity-server --version 7.0.0-2 --destination "$HOME/Downloads"` |
+| Deploy | `helm upgrade --install wso2iam $CHART --namespace wso2-iam -f "$VALUES"` |
+| Access | `kubectl port-forward -n wso2-iam pod/$POD 9443:9443` |
+| Validate | `curl -v -k https://localhost:9443/oauth2/token/.well-known/openid-configuration` |
+| Details | [16-wso2-iam-helm-basic/README.md](labs/16-wso2-iam-helm-basic/README.md) |
+| Cleanup | `helm uninstall wso2iam -n wso2-iam` and delete the namespace |
 
 ---
 
@@ -401,7 +416,8 @@ Need a shortcut? See:
 │   ├── 12-wso2-mi-scaling/
 │   ├── 13-wso2-mi-capp-deployment/
 │   ├── 14-wso2-mi-hpa-scaling/
-│   └── 15-wso2-mi-custom-java-mediator/
+│   ├── 15-wso2-mi-custom-java-mediator/
+│   └── 16-wso2-iam-helm-basic/
 └── scripts/                     ← Automation and references
     ├── windows/
     ├── macos/
@@ -465,7 +481,8 @@ chmod +x scripts/macos/*.sh
 | 20 | `labs/13-wso2-mi-capp-deployment/README.md` |
 | 21 | `labs/14-wso2-mi-hpa-scaling/README.md` |
 | 22 | `labs/15-wso2-mi-custom-java-mediator/README.md` |
-| 23 | `docs/09-cleanup.md` |
+| 23 | `labs/16-wso2-iam-helm-basic/README.md` |
+| 24 | `docs/09-cleanup.md` |
 
 ---
 
@@ -481,6 +498,8 @@ chmod +x scripts/macos/*.sh
 - WSO2 MI Helm chart docs: https://mi.docs.wso2.com/en/latest/install-and-setup/setup/deployment/configuring-helm-charts/
 - WSO2 MI Helm chart repository: https://github.com/wso2/helm-mi
 - WSO2 MI custom mediator docs: https://mi.docs.wso2.com/en/latest/develop/customizations/creating-custom-mediators/
+- WSO2 Identity Server Kubernetes Helm docs: https://is.docs.wso2.com/en/7.0.0/deploy/deploy-is-in-kubernetes/
+- WSO2 Identity Server Helm chart repository: https://github.com/wso2/kubernetes-is
 - MCP Inspector docs: https://modelcontextprotocol.io/docs/tools/inspector
 - VS Code MCP server docs: https://code.visualstudio.com/docs/agent-customization/mcp-servers
 - Codex CLI docs: https://developers.openai.com/codex/cli

@@ -1,0 +1,31 @@
+# values-is-minikube-working.yaml
+# Local minikube override for the official WSO2 Identity Server Helm chart.
+# Chart source:
+#   https://github.com/wso2/kubernetes-is
+
+deployment:
+  image:
+    registry: "registry.wso2.com"
+    repository: "wso2is/is"
+    tag: "7.0.0"
+
+  apparmor:
+    enabled: false
+
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "2Gi"
+    limits:
+      cpu: "2000m"
+      memory: "3Gi"
+
+  startupProbe:
+    initialDelaySeconds: 120
+    failureThreshold: 60
+
+  readinessProbe:
+    initialDelaySeconds: 120
+
+  ingress:
+    hostName: "wso2is.com"
