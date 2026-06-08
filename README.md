@@ -283,6 +283,21 @@ watch MI scale from one pod to multiple pods.
 | Details | [14-wso2-mi-hpa-scaling/README.md](labs/14-wso2-mi-hpa-scaling/README.md) |
 | Cleanup | `kubectl delete job mi-load-generator -n minikube-demo --ignore-not-found` |
 
+### 9.15 Lab: WSO2 MI Custom Java Mediator
+
+Develop a custom Java class mediator with Maven, mount the built JAR into the
+MI runtime from Lab 14, update the MI API, and invoke the mediator through
+`GET /citizen/audit/{id}`.
+
+| Task | Command |
+|------|---------|
+| Prerequisites | Complete Lab 14 and confirm `cloud-citizen-info-mi` exists; install JDK 21 and Maven |
+| Build | `mvn -f labs/15-wso2-mi-custom-java-mediator/mediator/citizen-audit-mediator/pom.xml clean package` |
+| Deploy JAR | Create `citizen-audit-mediator-jar` ConfigMap and patch the MI deployment |
+| Invoke | `kubectl run mi-audit-check -n minikube-demo --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -k -sS https://cloud-citizen-info-mi:8253/citizen/audit/CIT-1001` |
+| Details | [15-wso2-mi-custom-java-mediator/README.md](labs/15-wso2-mi-custom-java-mediator/README.md) |
+| Cleanup | Restore the Lab 12 API ConfigMap and delete `citizen-audit-mediator-jar` |
+
 ---
 
 ## Stage 3: Cleanup (Reset Your Environment)
@@ -385,7 +400,8 @@ Need a shortcut? See:
 │   ├── 11-ai-gateway-chat/
 │   ├── 12-wso2-mi-scaling/
 │   ├── 13-wso2-mi-capp-deployment/
-│   └── 14-wso2-mi-hpa-scaling/
+│   ├── 14-wso2-mi-hpa-scaling/
+│   └── 15-wso2-mi-custom-java-mediator/
 └── scripts/                     ← Automation and references
     ├── windows/
     ├── macos/
@@ -448,7 +464,8 @@ chmod +x scripts/macos/*.sh
 | 19 | `labs/12-wso2-mi-scaling/README.md` |
 | 20 | `labs/13-wso2-mi-capp-deployment/README.md` |
 | 21 | `labs/14-wso2-mi-hpa-scaling/README.md` |
-| 22 | `docs/09-cleanup.md` |
+| 22 | `labs/15-wso2-mi-custom-java-mediator/README.md` |
+| 23 | `docs/09-cleanup.md` |
 
 ---
 
@@ -463,6 +480,7 @@ chmod +x scripts/macos/*.sh
 - WSO2 AI Gateway docs: https://apim-docs-stg.wso2.com/en/4.6.0/ai-gateway/ai-gateway-overview/
 - WSO2 MI Helm chart docs: https://mi.docs.wso2.com/en/latest/install-and-setup/setup/deployment/configuring-helm-charts/
 - WSO2 MI Helm chart repository: https://github.com/wso2/helm-mi
+- WSO2 MI custom mediator docs: https://mi.docs.wso2.com/en/latest/develop/customizations/creating-custom-mediators/
 - MCP Inspector docs: https://modelcontextprotocol.io/docs/tools/inspector
 - VS Code MCP server docs: https://code.visualstudio.com/docs/agent-customization/mcp-servers
 - Codex CLI docs: https://developers.openai.com/codex/cli

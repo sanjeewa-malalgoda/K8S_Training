@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api xmlns="http://ws.apache.org/ns/synapse" name="CitizenInfoAPI" context="/citizen">
+    <resource methods="GET" uri-template="/health">
+        <inSequence>
+            <payloadFactory media-type="json">
+                <format>{
+  "service": "citizen-info-mi",
+  "status": "UP",
+  "pod": "$1"
+}</format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('env', 'HOSTNAME')"/>
+                </args>
+            </payloadFactory>
+            <property name="messageType" value="application/json" scope="axis2" type="STRING"/>
+            <property name="HTTP_SC" value="200" scope="axis2" type="STRING"/>
+            <respond/>
+        </inSequence>
+        <faultSequence/>
+    </resource>
+    <resource methods="GET" uri-template="/profile/{id}">
+        <inSequence>
+            <payloadFactory media-type="json">
+                <format>{
+  "citizenId": "$1",
+  "fullName": "Karma Dorji",
+  "district": "Thimphu",
+  "verificationStatus": "VERIFIED",
+  "handledByPod": "$2"
+}</format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('uri.var.id')"/>
+                    <arg evaluator="xml" expression="get-property('env', 'HOSTNAME')"/>
+                </args>
+            </payloadFactory>
+            <property name="messageType" value="application/json" scope="axis2" type="STRING"/>
+            <property name="HTTP_SC" value="200" scope="axis2" type="STRING"/>
+            <respond/>
+        </inSequence>
+        <faultSequence/>
+    </resource>
+    <resource methods="GET" uri-template="/audit/{id}">
+        <inSequence>
+            <class name="com.example.mi.mediator.CitizenAuditMediator">
+                <property name="agencyCode" value="BT-CITIZEN-SERVICES"/>
+            </class>
+            <payloadFactory media-type="json">
+                <format>{
+  "citizenId": "$1",
+  "agency": "$2",
+  "auditDecision": "$3",
+  "riskScore": "$4",
+  "handledByPod": "$5",
+  "mediator": "com.example.mi.mediator.CitizenAuditMediator"
+}</format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('citizen.audit.id')"/>
+                    <arg evaluator="xml" expression="get-property('citizen.audit.agency')"/>
+                    <arg evaluator="xml" expression="get-property('citizen.audit.decision')"/>
+                    <arg evaluator="xml" expression="get-property('citizen.audit.riskScore')"/>
+                    <arg evaluator="xml" expression="get-property('citizen.audit.handledByPod')"/>
+                </args>
+            </payloadFactory>
+            <property name="messageType" value="application/json" scope="axis2" type="STRING"/>
+            <property name="HTTP_SC" value="200" scope="axis2" type="STRING"/>
+            <respond/>
+        </inSequence>
+        <faultSequence/>
+    </resource>
+    <resource methods="POST" uri-template="/verify">
+        <inSequence>
+            <payloadFactory media-type="json">
+                <format>{
+  "reference": "$1",
+  "verificationStatus": "ACCEPTED",
+  "nextStep": "Manual officer review is not required for this demo request.",
+  "handledByPod": "$2"
+}</format>
+                <args>
+                    <arg evaluator="json" expression="$.reference"/>
+                    <arg evaluator="xml" expression="get-property('env', 'HOSTNAME')"/>
+                </args>
+            </payloadFactory>
+            <property name="messageType" value="application/json" scope="axis2" type="STRING"/>
+            <property name="HTTP_SC" value="202" scope="axis2" type="STRING"/>
+            <respond/>
+        </inSequence>
+        <faultSequence/>
+    </resource>
+</api>

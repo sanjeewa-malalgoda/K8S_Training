@@ -38,3 +38,4 @@ EOF
 kubectl patch deployment "$DEPLOYMENT" -n "$NAMESPACE" --type strategic --patch-file "$PATCH_FILE"
 kubectl rollout status "deployment/$DEPLOYMENT" -n "$NAMESPACE" --timeout=10m
 kubectl exec -n "$NAMESPACE" "deployment/$DEPLOYMENT" -- ls -l "$MOUNT_PATH"
+  

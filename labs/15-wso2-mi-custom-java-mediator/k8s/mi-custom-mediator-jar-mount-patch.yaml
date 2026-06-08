@@ -1,0 +1,14 @@
+spec:
+  template:
+    spec:
+      containers:
+        - name: wso2mi
+          volumeMounts:
+            - name: citizen-audit-mediator-jar
+              mountPath: /home/wso2carbon/wso2mi-4.6.0/repository/components/lib/citizen-audit-mediator-1.0.0.jar
+              subPath: citizen-audit-mediator-1.0.0.jar
+              readOnly: true
+      volumes:
+        - name: citizen-audit-mediator-jar
+          configMap:
+            name: citizen-audit-mediator-jar

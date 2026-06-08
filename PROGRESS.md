@@ -103,6 +103,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-05 | Raise Lab 14 MI HPA CPU target from 10% to 50% so scale-down can return to one pod after load stops | labs/14-wso2-mi-hpa-scaling | Drafted |
 | 2026-06-06 | Add Lab 14 stuck-HPA reset path for `FailedGetScale Unauthorized` controller events | labs/14-wso2-mi-hpa-scaling/README.md | Drafted |
 | 2026-06-08 | Make MI image registry explicit and add a Lab 12 image-pull checkpoint for participant `ImagePullBackOff` failures | labs/12-wso2-mi-scaling/README.md, labs/12-wso2-mi-scaling/values-mi-minikube-working.yaml, labs/13-wso2-mi-capp-deployment/values-mi-minikube-working.yaml, labs/14-wso2-mi-hpa-scaling/values-mi-minikube-working.yaml | Drafted |
+| 2026-06-08 | Add Lab 15 custom Java mediator flow for WSO2 MI with Maven install steps, Maven build, ConfigMap JAR deployment, API invocation, cleanup, and troubleshooting | README.md, labs/15-wso2-mi-custom-java-mediator | Drafted |
 | 2026-06-08 | Add Apple Silicon macOS image-load fallback for Lab 12 MI `linux/amd64` image pulls | labs/12-wso2-mi-scaling/README.md | Drafted |
 
 ---
