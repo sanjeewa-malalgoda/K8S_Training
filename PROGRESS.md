@@ -134,6 +134,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-05 | Lab 11 browser app showed only `Request failed` | Local APIM self-signed TLS plus browser CORS made the frontend path unreliable | Removed the browser app path and kept APIM Try Out/curl validation | Superseded |
 | 2026-06-08 | Lab 12 MI pod shows `ImagePullBackOff` on participant machines | Participant minikube cluster could not pull the MI image from Docker Hub, while trainer machine likely used a cached image | Set `containerRegistry` to `docker.io` and add `minikube image pull docker.io/wso2/wso2mi:4.6.0` before Helm install | Drafted |
 | 2026-06-08 | Lab 12 MI image pull exits on Apple Silicon macOS but image is not usable in minikube | Docker/minikube platform handling needed the AMD64 MI image loaded explicitly | Run `docker pull --platform linux/amd64 wso2/wso2mi:4.6.0`, then `minikube image load wso2/wso2mi:4.6.0` | Drafted |
+| 2026-06-08 | Lab 15 custom mediator returned `HTTP 404` and then `ClassNotFoundException` | The Lab 15 API ConfigMap was not mounted after the Lab 13 CApp path, and the mediator JAR was mounted under `repository/components/lib` instead of MI runtime `lib` | Reapply the Lab 12 API mount patch, mount the JAR at `/home/wso2carbon/wso2mi-4.6.0/lib`, and restart MI | Verified locally |
 
 ---
 

@@ -444,7 +444,7 @@ Expected response:
   "citizenId": "CIT-1001",
   "agency": "BT-CITIZEN-SERVICES",
   "auditDecision": "REVIEW_REQUIRED",
-  "riskScore": "79",
+  "riskScore": "73",
   "handledByPod": "cloud-citizen-info-mi-xxxxxxxxxx-xxxxx",
   "mediator": "com.example.mi.mediator.CitizenAuditMediator"
 }
