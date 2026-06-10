@@ -41,9 +41,9 @@
     </resource>
     <resource methods="GET" uri-template="/audit/{id}">
         <inSequence>
-            <class name="com.example.mi.mediator.CitizenAuditMediator">
+            <!--class name="com.example.mi.mediator.CitizenAuditMediator">
                 <property name="agencyCode" value="BT-CITIZEN-SERVICES"/>
-            </class>
+            </class-->
             <payloadFactory media-type="json">
                 <format>{
   "citizenId": "$1",

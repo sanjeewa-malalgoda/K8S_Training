@@ -27,6 +27,7 @@ This lab uses:
 | Chart version | `7.0.0-2` |
 | Local chart package | `identity-server-7.0.0-2.tgz` |
 | Product image | `registry.wso2.com/wso2is/is:7.0.0` |
+| Kubernetes Service | `wso2iam-identity-server` |
 | Local access | `https://localhost:9443/console` |
 | Default username | `admin` |
 | Default password | `admin` |
@@ -107,7 +108,7 @@ $CHART = "$env:USERPROFILE\Downloads\identity-server-$CHART_VERSION.tgz"
 $VALUES = "$REPO\labs\16-wso2-iam-helm-basic\values-is-minikube-working.yaml"
 
 helm repo add wso2 https://helm.wso2.com
-helm repo update
+helm repo update wso2
 helm pull wso2/identity-server --version $CHART_VERSION --destination "$env:USERPROFILE\Downloads"
 
 Test-Path $CHART
@@ -136,7 +137,7 @@ CHART="$HOME/Downloads/identity-server-$CHART_VERSION.tgz"
 VALUES="$REPO/labs/16-wso2-iam-helm-basic/values-is-minikube-working.yaml"
 
 helm repo add wso2 https://helm.wso2.com
-helm repo update
+helm repo update wso2
 helm pull wso2/identity-server --version "$CHART_VERSION" --destination "$HOME/Downloads"
 
 test -f "$CHART" && echo "chart package found"
@@ -317,8 +318,7 @@ Keep this terminal running while you access WSO2 IAM.
 ## Windows PowerShell
 
 ```powershell
-$POD = kubectl get pods -n wso2-iam -o jsonpath="{.items[0].metadata.name}"
-kubectl port-forward -n wso2-iam pod/$POD 9443:9443
+kubectl port-forward -n wso2-iam svc/wso2iam-identity-server 9443:9443
 ```
 
 Expected output:
@@ -331,8 +331,7 @@ Forwarding from [::1]:9443 -> 9443
 ## macOS Terminal
 
 ```bash
-POD="$(kubectl get pods -n wso2-iam -o jsonpath='{.items[0].metadata.name}')"
-kubectl port-forward -n wso2-iam "pod/$POD" 9443:9443
+kubectl port-forward -n wso2-iam svc/wso2iam-identity-server 9443:9443
 ```
 
 Expected output:
@@ -351,7 +350,7 @@ Open a second terminal from the repository root.
 ## Windows PowerShell
 
 ```powershell
-kubectl run iam-oidc-discovery -n wso2-iam --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -v -k -sS https://wso2iam:9443/oauth2/token/.well-known/openid-configuration
+kubectl run iam-oidc-discovery -n wso2-iam --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -v -k -sS https://wso2iam-identity-server:9443/oauth2/token/.well-known/openid-configuration
 ```
 
 Expected output includes:
@@ -373,7 +372,7 @@ curl.exe -v -k https://localhost:9443/oauth2/token/.well-known/openid-configurat
 ## macOS Terminal
 
 ```bash
-kubectl run iam-oidc-discovery -n wso2-iam --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -v -k -sS https://wso2iam:9443/oauth2/token/.well-known/openid-configuration
+kubectl run iam-oidc-discovery -n wso2-iam --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- -v -k -sS https://wso2iam-identity-server:9443/oauth2/token/.well-known/openid-configuration
 ```
 
 Expected output includes:
@@ -482,9 +481,11 @@ namespace "wso2-iam" deleted
 | Error | Meaning | Fix | Validation |
 |---|---|---|---|
 | Helm cannot find `wso2/identity-server` | The WSO2 Helm repository was not added or updated | Re-run section 4 | `helm pull wso2/identity-server --version 7.0.0-2` downloads the chart package |
+| `helm repo update` fails on another repository such as Bitnami | Helm tried to update every configured repository, and an unrelated repository failed | Run `helm repo update wso2` instead of `helm repo update` | The WSO2 repository updates without depending on other repositories |
 | `identity-server-7.0.0-2.tgz` not found | The chart package was not downloaded to `Downloads` | Re-run section 4 and check the `CHART` variable | `Test-Path $CHART` returns `True` or `test -f "$CHART"` prints `chart package found` |
 | `ImagePullBackOff` | minikube cannot pull `registry.wso2.com/wso2is/is:7.0.0` | Run section 5 and check Docker Desktop network/proxy access | `kubectl get pods -n wso2-iam` no longer shows image pull errors |
 | Pod stays `Pending` | minikube does not have enough CPU or memory | Recreate minikube with 4 CPUs and 8 GiB memory | Pod starts running |
+| Image pull shows `unauthorized` | Docker cannot access the WSO2 image registry from this laptop | Log in to the registry if your workshop environment requires it, or confirm network access to `registry.wso2.com` | `docker pull registry.wso2.com/wso2is/is:7.0.0` succeeds |
 | Startup probe fails | WSO2 IAM startup is slower than the probe window on this laptop | Increase `deployment.startupProbe.initialDelaySeconds` and `deployment.startupProbe.failureThreshold` in the values file, then rerun Helm | `kubectl rollout status deployment -n wso2-iam --timeout=10m` succeeds |
 | Browser shows certificate warning | WSO2 IAM uses local/self-signed TLS in this lab | Accept the browser warning for the local lab only | Console opens at `https://localhost:9443/console` |
 | `curl` shows certificate validation error | Local TLS is not trusted by the curl container or laptop | Use `-k` for this lab command | OIDC discovery JSON is returned |
@@ -494,10 +495,10 @@ namespace "wso2-iam" deleted
 
 # Notes
 
-- This lab uses port-forwarding to avoid hosts-file and ingress-controller
-  differences between Windows and macOS.
-- The official WSO2 7.0.0 Kubernetes guide also supports ingress and gateway
-  access patterns. Those are intentionally skipped here to keep the first IAM
-  lab focused.
+- This lab uses port-forwarding to avoid hosts-file differences between Windows
+  and macOS.
+- The official chart may still render an Ingress resource, but this first IAM
+  lab does not depend on an ingress controller. Use the service port-forward
+  path in section 8.
 - The values file keeps AppArmor disabled because Docker Desktop/minikube
   setups often do not match Linux server AppArmor profiles.

@@ -66,15 +66,15 @@ wso2:
 
     resources:
       requests:
-        memory: "1Gi"
-        cpu: "100m"
+        memory: "1036Mi"
+        cpu: "150m"
       limits:
-        memory: "1536Mi"
-        cpu: "1000m"
+        memory: "2036Mi"
+        cpu: "1500m"
       jvm:
         memory:
-          xms: "512m"
-          xmx: "1024m"
+          xms: "256m"
+          xmx: "1524m"
 
     hpa:
       enabled: false
@@ -82,5 +82,5 @@ wso2:
       maxReplicas: 3
       # MI can idle above very low CPU targets such as 10%, which prevents scale-down.
       # 50% still allows visible scale-out under load and lets HPA return to 1 pod.
-      cpuUtilizationPercentage: 50
-      memoryUtilizationPercentage: 80
+      cpuUtilizationPercentage: 70
+      memoryUtilizationPercentage: 90

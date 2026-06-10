@@ -308,7 +308,7 @@ validate OIDC discovery, and review a basic IAM use case.
 | Prerequisites | Docker Desktop, minikube, kubectl, Helm |
 | Get chart | `helm pull wso2/identity-server --version 7.0.0-2 --destination "$HOME/Downloads"` |
 | Deploy | `helm upgrade --install wso2iam $CHART --namespace wso2-iam -f "$VALUES"` |
-| Access | `kubectl port-forward -n wso2-iam pod/$POD 9443:9443` |
+| Access | `kubectl port-forward -n wso2-iam svc/wso2iam-identity-server 9443:9443` |
 | Validate | `curl -v -k https://localhost:9443/oauth2/token/.well-known/openid-configuration` |
 | Details | [16-wso2-iam-helm-basic/README.md](labs/16-wso2-iam-helm-basic/README.md) |
 | Cleanup | `helm uninstall wso2iam -n wso2-iam` and delete the namespace |

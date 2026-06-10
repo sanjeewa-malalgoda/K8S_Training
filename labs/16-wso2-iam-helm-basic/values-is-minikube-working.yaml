@@ -28,4 +28,4 @@ deployment:
     initialDelaySeconds: 120
 
   ingress:
-    hostName: "wso2is.com"
+    hostName: "localhost"
