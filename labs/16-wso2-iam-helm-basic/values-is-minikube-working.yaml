@@ -5,8 +5,8 @@
 
 deployment:
   image:
-    registry: "registry.wso2.com"
-    repository: "wso2is/is"
+    registry: "docker.io"
+    repository: "wso2/wso2is"
     tag: "7.0.0"
 
   apparmor:

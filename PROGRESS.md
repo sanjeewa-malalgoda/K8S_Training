@@ -106,6 +106,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-08 | Add Lab 15 custom Java mediator flow for WSO2 MI with Maven install steps, Maven build, ConfigMap JAR deployment, API invocation, cleanup, and troubleshooting | README.md, labs/15-wso2-mi-custom-java-mediator | Drafted |
 | 2026-06-08 | Add Apple Silicon macOS image-load fallback for Lab 12 MI `linux/amd64` image pulls | labs/12-wso2-mi-scaling/README.md | Drafted |
 | 2026-06-09 | Add Lab 16 WSO2 IAM 7.0.0 using official Helm chart package download, lint, install, OIDC validation, UI access, cleanup, and troubleshooting | README.md, labs/16-wso2-iam-helm-basic | Drafted |
+| 2026-06-10 | Switch Lab 16 IAM image from protected WSO2 registry path to public Docker Hub image and update Apple Silicon image-load commands | labs/16-wso2-iam-helm-basic | Drafted - not pull-tested locally |
 
 ---
 
@@ -135,6 +136,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-05 | Lab 11 browser app showed only `Request failed` | Local APIM self-signed TLS plus browser CORS made the frontend path unreliable | Removed the browser app path and kept APIM Try Out/curl validation | Superseded |
 | 2026-06-08 | Lab 12 MI pod shows `ImagePullBackOff` on participant machines | Participant minikube cluster could not pull the MI image from Docker Hub, while trainer machine likely used a cached image | Set `containerRegistry` to `docker.io` and add `minikube image pull docker.io/wso2/wso2mi:4.6.0` before Helm install | Drafted |
 | 2026-06-08 | Lab 12 MI image pull exits on Apple Silicon macOS but image is not usable in minikube | Docker/minikube platform handling needed the AMD64 MI image loaded explicitly | Run `docker pull --platform linux/amd64 wso2/wso2mi:4.6.0`, then `minikube image load wso2/wso2mi:4.6.0` | Drafted |
+| 2026-06-10 | Lab 16 IAM image pull returned `401 Unauthorized` from `registry.wso2.com/wso2is/is:7.0.0` | Lab 16 used WSO2's protected registry path while APIM and MI labs used public Docker Hub images | Use `docker.io/wso2/wso2is:7.0.0` and update Apple Silicon fallback to pull/load that image | Drafted - not pull-tested locally |
 | 2026-06-08 | Lab 15 custom mediator returned `HTTP 404` and then `ClassNotFoundException` | The Lab 15 API ConfigMap was not mounted after the Lab 13 CApp path, and the mediator JAR was mounted under `repository/components/lib` instead of MI runtime `lib` | Reapply the Lab 12 API mount patch, mount the JAR at `/home/wso2carbon/wso2mi-4.6.0/lib`, and restart MI | Verified locally |
 
 ---
