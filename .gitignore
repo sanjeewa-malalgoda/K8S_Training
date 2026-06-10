@@ -9,6 +9,14 @@ Thumbs.db
 # Logs
 *.log
 
+# JavaScript dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+labs/**/capps/generated/
+
 # Temporary files
 tmp/
 temp/

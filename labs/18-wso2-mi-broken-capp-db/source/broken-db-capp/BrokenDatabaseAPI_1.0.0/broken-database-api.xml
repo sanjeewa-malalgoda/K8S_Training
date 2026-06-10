@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api xmlns="http://ws.apache.org/ns/synapse" name="BrokenDatabaseAPI" context="/citizen-db">
+    <resource methods="GET" uri-template="/profile/{id}">
+        <inSequence>
+            <dblookup>
+                <connection>
+                    <pool>
+                        <driver>org.h2.Driver</driver>
+                        <url>jdbc:h2:tcp://missing-citizen-db.minikube-demo.svc.cluster.local:9092/mem:citizen</url>
+                        <user>sa</user>
+                        <password>sa</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[select full_name from citizens where citizen_id = ?]]></sql>
+                    <parameter expression="get-property('uri.var.id')" type="VARCHAR"/>
+                    <result name="db.full_name" column="full_name"/>
+                </statement>
+            </dblookup>
+            <payloadFactory media-type="json">
+                <format>{
+  "citizenId": "$1",
+  "fullName": "$2",
+  "source": "database",
+  "handledByPod": "$3"
+}</format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('uri.var.id')"/>
+                    <arg evaluator="xml" expression="get-property('db.full_name')"/>
+                    <arg evaluator="xml" expression="get-property('env', 'HOSTNAME')"/>
+                </args>
+            </payloadFactory>
+            <property name="messageType" value="application/json" scope="axis2" type="STRING"/>
+            <property name="HTTP_SC" value="200" scope="axis2" type="STRING"/>
+            <respond/>
+        </inSequence>
+        <faultSequence>
+            <payloadFactory media-type="json">
+                <format>{
+  "error": "BROKEN_DB_CAPP",
+  "message": "The DB-dependent CApp could not acquire a database connection.",
+  "citizenId": "$1",
+  "handledByPod": "$2"
+}</format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('uri.var.id')"/>
+                    <arg evaluator="xml" expression="get-property('env', 'HOSTNAME')"/>
+                </args>
+            </payloadFactory>
+            <property name="messageType" value="application/json" scope="axis2" type="STRING"/>
+            <property name="HTTP_SC" value="503" scope="axis2" type="STRING"/>
+            <respond/>
+        </faultSequence>
+    </resource>
+</api>

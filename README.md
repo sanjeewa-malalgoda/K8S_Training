@@ -308,10 +308,42 @@ validate OIDC discovery, and review a basic IAM use case.
 | Prerequisites | Docker Desktop, minikube, kubectl, Helm |
 | Get chart | `helm pull wso2/identity-server --version 7.0.0-2 --destination "$HOME/Downloads"` |
 | Deploy | `helm upgrade --install wso2iam $CHART --namespace wso2-iam -f "$VALUES"` |
-| Access | `kubectl port-forward -n wso2-iam svc/wso2iam-identity-server 9443:9443` |
-| Validate | `curl -v -k https://localhost:9443/oauth2/token/.well-known/openid-configuration` |
+| Access | `kubectl port-forward -n wso2-iam svc/wso2iam-identity-server 443:9443` |
+| Validate | `curl -v -k https://localhost/oauth2/token/.well-known/openid-configuration` |
 | Details | [16-wso2-iam-helm-basic/README.md](labs/16-wso2-iam-helm-basic/README.md) |
 | Cleanup | `helm uninstall wso2iam -n wso2-iam` and delete the namespace |
+
+### 9.17 Lab: Local OIDC Sample App
+
+Run a local React OIDC sample app on your laptop and connect it to the WSO2 IAM
+deployment from Lab 16.
+
+| Task | Command |
+|------|---------|
+| Prerequisites | Complete Lab 16 and keep the IAM `443:9443` port-forward running |
+| Configure | Set the IAM client ID in `labs/17-sample-app/app/src/config.json` |
+| Install | `cd labs/17-sample-app/app && npm install` |
+| Run | `npm start` |
+| Access | Open `http://localhost:3000` |
+| Details | [17-sample-app/README.md](labs/17-sample-app/README.md) |
+| Cleanup | Stop the local dev server with `Ctrl+C` |
+
+### 9.18 Lab: Broken DB CApp Behavior in WSO2 MI
+
+Start from the working MI deployment in Lab 14, load a CApp that points to a
+missing database, and observe whether the whole MI runtime fails or only the
+DB-backed flow fails.
+
+| Task | Command |
+|------|---------|
+| Prerequisites | Complete Lab 14 and confirm `/citizen/health` returns `HTTP 200` |
+| Package CApp | `.\labs\18-wso2-mi-broken-capp-db\scripts\package-broken-db-capp.ps1` |
+| Create CApp volume | `kubectl apply -f labs/18-wso2-mi-broken-capp-db/k8s/mi-carbonapps-shared-volume.yaml` |
+| Load CApp | Copy the generated `.car` into `mi-capp-loader:/carbonapps` |
+| Patch MI | Run the Lab 18 carbonapps patch script |
+| Observe | Compare `/citizen-db/profile/CIT-1001` failure with `/citizen/health` success |
+| Details | [18-wso2-mi-broken-capp-db/README.md](labs/18-wso2-mi-broken-capp-db/README.md) |
+| Cleanup | Delete the Lab 18 shared CApp volume manifest |
 
 ---
 
@@ -417,7 +449,9 @@ Need a shortcut? See:
 │   ├── 13-wso2-mi-capp-deployment/
 │   ├── 14-wso2-mi-hpa-scaling/
 │   ├── 15-wso2-mi-custom-java-mediator/
-│   └── 16-wso2-iam-helm-basic/
+│   ├── 16-wso2-iam-helm-basic/
+│   ├── 17-sample-app/
+│   └── 18-wso2-mi-broken-capp-db/
 └── scripts/                     ← Automation and references
     ├── windows/
     ├── macos/
@@ -482,7 +516,9 @@ chmod +x scripts/macos/*.sh
 | 21 | `labs/14-wso2-mi-hpa-scaling/README.md` |
 | 22 | `labs/15-wso2-mi-custom-java-mediator/README.md` |
 | 23 | `labs/16-wso2-iam-helm-basic/README.md` |
-| 24 | `docs/09-cleanup.md` |
+| 24 | `labs/17-sample-app/README.md` |
+| 25 | `labs/18-wso2-mi-broken-capp-db/README.md` |
+| 26 | `docs/09-cleanup.md` |
 
 ---
 

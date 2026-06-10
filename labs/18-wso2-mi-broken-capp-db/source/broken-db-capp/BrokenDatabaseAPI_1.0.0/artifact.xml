@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<artifact name="BrokenDatabaseAPI" version="1.0.0" type="synapse/api" serverRole="EnterpriseServiceBus">
+  <file>broken-database-api.xml</file>
+</artifact>
