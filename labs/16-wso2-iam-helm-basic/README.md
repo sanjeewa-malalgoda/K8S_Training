@@ -28,7 +28,7 @@ This lab uses:
 | Local chart package | `identity-server-7.0.0-2.tgz` |
 | Product image | `docker.io/wso2/wso2is:7.0.0` |
 | Kubernetes Service | `wso2iam-identity-server` |
-| Local access | `https://localhost:9443/console` |
+| Local access | `https://localhost/console` |
 | Default username | `admin` |
 | Default password | `admin` |
 
@@ -165,12 +165,14 @@ This step fails early if Docker Desktop or the network cannot reach Docker Hub.
 
 ```powershell
 docker pull docker.io/wso2/wso2is:7.0.0
+minikube image load docker.io/wso2/wso2is:7.0.0
 ```
 
 Expected output includes:
 
 ```text
 Status: Downloaded newer image for docker.io/wso2/wso2is:7.0.0
+Loaded image: docker.io/wso2/wso2is:7.0.0
 ```
 
 If the image already exists, `Image is up to date` is also OK.
@@ -179,12 +181,14 @@ If the image already exists, `Image is up to date` is also OK.
 
 ```bash
 docker pull docker.io/wso2/wso2is:7.0.0
+minikube image load docker.io/wso2/wso2is:7.0.0
 ```
 
 Expected output includes:
 
 ```text
 Status: Downloaded newer image for docker.io/wso2/wso2is:7.0.0
+Loaded image: docker.io/wso2/wso2is:7.0.0
 ```
 
 On Apple Silicon Macs, such as M1, M2, M3, or M4, use this fallback if the pod
@@ -314,30 +318,37 @@ kubectl logs -n wso2-iam <pod-name> --tail=200
 
 Keep this terminal running while you access WSO2 IAM.
 
+The WSO2 Console login flow redirects back to `https://localhost/...`, which
+uses the default HTTPS port `443`. Forward local port `443` to the IAM service
+port `9443` so the Console callback URL matches.
+
 ## Windows PowerShell
 
 ```powershell
-kubectl port-forward -n wso2-iam svc/wso2iam-identity-server 9443:9443
+kubectl port-forward -n wso2-iam svc/wso2iam-identity-server 443:9443
 ```
 
 Expected output:
 
 ```text
-Forwarding from 127.0.0.1:9443 -> 9443
-Forwarding from [::1]:9443 -> 9443
+Forwarding from 127.0.0.1:443 -> 9443
+Forwarding from [::1]:443 -> 9443
 ```
+
+If Windows cannot bind to port `443`, close any program already using that port
+or run PowerShell as Administrator.
 
 ## macOS Terminal
 
 ```bash
-kubectl port-forward -n wso2-iam svc/wso2iam-identity-server 9443:9443
+sudo KUBECONFIG="$HOME/.kube/config" kubectl port-forward -n wso2-iam svc/wso2iam-identity-server 443:9443
 ```
 
 Expected output:
 
 ```text
-Forwarding from 127.0.0.1:9443 -> 9443
-Forwarding from [::1]:9443 -> 9443
+Forwarding from 127.0.0.1:443 -> 9443
+Forwarding from [::1]:443 -> 9443
 ```
 
 ---
@@ -365,7 +376,7 @@ If internal service DNS does not resolve, validate through the local port
 forward instead:
 
 ```powershell
-curl.exe -v -k https://localhost:9443/oauth2/token/.well-known/openid-configuration
+curl.exe -v -k https://localhost/oauth2/token/.well-known/openid-configuration
 ```
 
 ## macOS Terminal
@@ -387,7 +398,7 @@ If internal service DNS does not resolve, validate through the local port
 forward instead:
 
 ```bash
-curl -v -k https://localhost:9443/oauth2/token/.well-known/openid-configuration
+curl -v -k https://localhost/oauth2/token/.well-known/openid-configuration
 ```
 
 ---
@@ -397,7 +408,7 @@ curl -v -k https://localhost:9443/oauth2/token/.well-known/openid-configuration
 With the port-forward still running, open:
 
 ```text
-https://localhost:9443/console
+https://localhost/console
 ```
 
 Log in with:
@@ -416,7 +427,7 @@ The WSO2 Console opens.
 Open My Account:
 
 ```text
-https://localhost:9443/myaccount
+https://localhost/myaccount
 ```
 
 Expected:
@@ -483,10 +494,12 @@ namespace "wso2-iam" deleted
 | `helm repo update` fails on another repository such as Bitnami | Helm tried to update every configured repository, and an unrelated repository failed | Run `helm repo update wso2` instead of `helm repo update` | The WSO2 repository updates without depending on other repositories |
 | `identity-server-7.0.0-2.tgz` not found | The chart package was not downloaded to `Downloads` | Re-run section 4 and check the `CHART` variable | `Test-Path $CHART` returns `True` or `test -f "$CHART"` prints `chart package found` |
 | `ImagePullBackOff` | minikube cannot pull `docker.io/wso2/wso2is:7.0.0` | Run section 5 and check Docker Desktop network/proxy access | `kubectl get pods -n wso2-iam` no longer shows image pull errors |
+| Pod still shows `Pulling image` after `docker pull` | The image exists in Docker Desktop, but minikube has a separate image cache for the Kubernetes node | Run `minikube image load docker.io/wso2/wso2is:7.0.0` | `minikube image ls | grep -i wso2is` shows the IAM image |
 | Pod stays `Pending` | minikube does not have enough CPU or memory | Recreate minikube with 4 CPUs and 8 GiB memory | Pod starts running |
 | Image pull shows Docker Hub rate limit or authentication errors | Docker Hub is limiting anonymous pulls, or Docker Desktop is not signed in | Sign in to Docker Desktop or run `docker login docker.io`, then retry section 5 | `docker pull docker.io/wso2/wso2is:7.0.0` succeeds |
 | Startup probe fails | WSO2 IAM startup is slower than the probe window on this laptop | Increase `deployment.startupProbe.initialDelaySeconds` and `deployment.startupProbe.failureThreshold` in the values file, then rerun Helm | `kubectl rollout status deployment -n wso2-iam --timeout=10m` succeeds |
-| Browser shows certificate warning | WSO2 IAM uses local/self-signed TLS in this lab | Accept the browser warning for the local lab only | Console opens at `https://localhost:9443/console` |
+| Browser shows `invalid_callback` or `callback.not.match` after Console login | The browser used `https://localhost:9443/console`, but IAM redirects the Console callback through `https://localhost/...` on port `443` | Stop the old port-forward, run section 8 with `443:9443`, and open `https://localhost/console` | Console login completes without `oauth2_error.do` |
+| Browser shows certificate warning | WSO2 IAM uses local/self-signed TLS in this lab | Accept the browser warning for the local lab only | Console opens at `https://localhost/console` |
 | `curl` shows certificate validation error | Local TLS is not trusted by the curl container or laptop | Use `-k` for this lab command | OIDC discovery JSON is returned |
 | Console login fails | Wrong credentials or startup is not complete | Use `admin` / `admin` and wait for rollout/logs | Console home page opens |
 
