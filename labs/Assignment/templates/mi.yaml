@@ -1,0 +1,94 @@
+{{- if .Values.mi.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: assignment-mi
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/component: mi
+    {{- include "assignment.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.mi.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: mi
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: mi
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      initContainers:
+        - name: mysql-connector
+          image: {{ .Values.mi.mysqlConnector.image | quote }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              curl -fL "{{ .Values.mi.mysqlConnector.url }}" -o /drivers/mysql-connector-j.jar
+              ls -l /drivers/mysql-connector-j.jar
+          volumeMounts:
+            - name: mysql-driver
+              mountPath: /drivers
+      containers:
+        - name: mi
+          image: {{ .Values.mi.image | quote }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8290
+            - name: https
+              containerPort: 8253
+          resources:
+            {{- toYaml .Values.mi.resources | nindent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            failureThreshold: 24
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 180
+            periodSeconds: 20
+            failureThreshold: 6
+          volumeMounts:
+            - name: mi-dataservice
+              mountPath: /home/wso2carbon/wso2mi-4.6.0/repository/deployment/server/dataservices/PublicServicesDataService.dbs
+              subPath: PublicServicesDataService.dbs
+              readOnly: true
+            - name: mysql-driver
+              mountPath: /home/wso2carbon/wso2mi-4.6.0/lib/mysql-connector-j.jar
+              subPath: mysql-connector-j.jar
+              readOnly: true
+      volumes:
+        - name: mi-dataservice
+          secret:
+            secretName: assignment-mi-dataservice
+        - name: mysql-driver
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.mi.serviceName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/component: mi
+    {{- include "assignment.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/component: mi
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: 8290
+      targetPort: http
+    - name: https
+      port: 8253
+      targetPort: https
+{{- end }}

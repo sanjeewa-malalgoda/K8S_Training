@@ -345,6 +345,22 @@ DB-backed flow fails.
 | Details | [18-wso2-mi-broken-capp-db/README.md](labs/18-wso2-mi-broken-capp-db/README.md) |
 | Cleanup | Delete the Lab 18 shared CApp volume manifest |
 
+### 9.19 Assignment: Public Services Platform
+
+Deploy the capstone runtime with one Helm command, then create the API in APIM,
+create the SPA app in IS, and run the local web app from the host machine.
+
+| Task | Command |
+|------|---------|
+| Prerequisites | Complete the WSO2 platform labs or use their troubleshooting notes |
+| Deploy | `helm upgrade --install public-services ./labs/Assignment --namespace minikube-demo --create-namespace` |
+| Validate MI | Call `http://assignment-mi:8290/services/PublicServicesDataService/applications` from a curl pod |
+| APIM setup | Import `labs/Assignment/artifacts/apim/public-services-openapi.yaml` |
+| IS setup | Create a SPA app with redirect URL `http://localhost:3000` |
+| Local app | `cd labs/Assignment/client-web && npm start` |
+| Details | [Assignment/README.md](labs/Assignment/README.md) |
+| Cleanup | `helm uninstall public-services -n minikube-demo` and delete the assignment namespaces |
+
 ---
 
 ## Stage 3: Cleanup (Reset Your Environment)
@@ -518,7 +534,8 @@ chmod +x scripts/macos/*.sh
 | 23 | `labs/16-wso2-iam-helm-basic/README.md` |
 | 24 | `labs/17-sample-app/README.md` |
 | 25 | `labs/18-wso2-mi-broken-capp-db/README.md` |
-| 26 | `docs/09-cleanup.md` |
+| 26 | `labs/Assignment/README.md` |
+| 27 | `docs/09-cleanup.md` |
 
 ---
 

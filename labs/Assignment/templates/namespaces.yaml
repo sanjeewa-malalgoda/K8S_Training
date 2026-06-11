@@ -1,0 +1,30 @@
+{{- if not (lookup "v1" "Namespace" "" .Values.namespace) }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace }}
+  labels:
+    {{- include "assignment.labels" . | nindent 4 }}
+---
+{{- end }}
+{{- if .Values.apim.enabled }}
+{{- if not (lookup "v1" "Namespace" "" .Values.apim.namespace) }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.apim.namespace }}
+  labels:
+    {{- include "assignment.labels" . | nindent 4 }}
+---
+{{- end }}
+{{- end }}
+{{- if .Values.identityServer.enabled }}
+{{- if not (lookup "v1" "Namespace" "" .Values.identityServer.namespace) }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.identityServer.namespace }}
+  labels:
+    {{- include "assignment.labels" . | nindent 4 }}
+{{- end }}
+{{- end }}

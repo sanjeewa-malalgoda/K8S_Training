@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Public Services Portal</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="sidebar">
+        <div class="brand">PS</div>
+        <h1>Public Services Portal</h1>
+        <p>OIDC login through WSO2 Identity Server, then API invocation through WSO2 API Manager.</p>
+        <button id="signInButton">Sign in with IS</button>
+        <button id="signOutButton" class="secondary">Clear session</button>
+      </section>
+
+      <section class="workspace">
+        <div class="toolbar">
+          <div>
+            <span class="label">Session</span>
+            <strong id="sessionState">Not signed in</strong>
+          </div>
+          <button id="callApiButton">Call secured API</button>
+          <button id="callApiWithoutTokenButton" class="secondary">Call without token</button>
+        </div>
+
+        <div class="grid">
+          <article>
+            <span class="label">Access token</span>
+            <pre id="tokenOutput">No token yet.</pre>
+          </article>
+          <article>
+            <span class="label">API response</span>
+            <pre id="apiOutput">No API call yet.</pre>
+          </article>
+        </div>
+      </section>
+    </main>
+    <script src="./config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

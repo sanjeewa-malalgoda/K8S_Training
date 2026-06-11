@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This is the source data-service artifact. The Helm chart renders the runtime
+copy into a Kubernetes Secret so database credentials are not stored in a
+plain ConfigMap.
+-->
+<data name="PublicServicesDataService" transports="http https" serviceNamespace="http://gov.example/services">
+    <description>Government service applications data service for the capstone assignment.</description>
+    <config id="GovServicesDB">
+        <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
+        <property name="url">jdbc:mysql://assignment-mysql.minikube-demo.svc.cluster.local:3306/gov_services?useSSL=false&amp;allowPublicKeyRetrieval=true</property>
+        <property name="username">READ_FROM_HELM_SECRET_AT_DEPLOY_TIME</property>
+        <property name="password">READ_FROM_HELM_SECRET_AT_DEPLOY_TIME</property>
+    </config>
+
+    <query id="getApplicationsQuery" useConfig="GovServicesDB">
+        <sql><![CDATA[
+            SELECT sa.application_id, sa.citizen_id, sa.service_name, sa.status,
+                   sa.submitted_date, d.department_id, d.name AS department_name, d.code AS department_code
+            FROM service_application sa
+            LEFT JOIN department d ON sa.department_id = d.department_id
+            ORDER BY sa.application_id
+        ]]></sql>
+        <result element="applications" rowName="application">
+            <element name="applicationId" column="application_id" xsdType="integer"/>
+            <element name="citizenId" column="citizen_id" xsdType="string"/>
+            <element name="serviceName" column="service_name" xsdType="string"/>
+            <element name="status" column="status" xsdType="string"/>
+            <element name="submittedDate" column="submitted_date" xsdType="date"/>
+            <element name="departmentId" column="department_id" xsdType="integer"/>
+            <element name="departmentName" column="department_name" xsdType="string"/>
+            <element name="departmentCode" column="department_code" xsdType="string"/>
+        </result>
+    </query>
+
+    <query id="getApplicationByIdQuery" useConfig="GovServicesDB">
+        <sql><![CDATA[
+            SELECT sa.application_id, sa.citizen_id, sa.service_name, sa.status,
+                   sa.submitted_date, d.department_id, d.name AS department_name, d.code AS department_code
+            FROM service_application sa
+            LEFT JOIN department d ON sa.department_id = d.department_id
+            WHERE sa.application_id = :application_id
+        ]]></sql>
+        <param name="application_id" sqlType="INTEGER"/>
+        <result element="applications" rowName="application">
+            <element name="applicationId" column="application_id" xsdType="integer"/>
+            <element name="citizenId" column="citizen_id" xsdType="string"/>
+            <element name="serviceName" column="service_name" xsdType="string"/>
+            <element name="status" column="status" xsdType="string"/>
+            <element name="submittedDate" column="submitted_date" xsdType="date"/>
+            <element name="departmentId" column="department_id" xsdType="integer"/>
+            <element name="departmentName" column="department_name" xsdType="string"/>
+            <element name="departmentCode" column="department_code" xsdType="string"/>
+        </result>
+    </query>
+
+    <query id="getByDepartmentQuery" useConfig="GovServicesDB">
+        <sql><![CDATA[
+            SELECT sa.application_id, sa.citizen_id, sa.service_name, sa.status,
+                   sa.submitted_date, d.department_id, d.name AS department_name, d.code AS department_code
+            FROM service_application sa
+            INNER JOIN department d ON sa.department_id = d.department_id
+            WHERE d.department_id = :department_id
+            ORDER BY sa.application_id
+        ]]></sql>
+        <param name="department_id" sqlType="INTEGER"/>
+        <result element="applications" rowName="application">
+            <element name="applicationId" column="application_id" xsdType="integer"/>
+            <element name="citizenId" column="citizen_id" xsdType="string"/>
+            <element name="serviceName" column="service_name" xsdType="string"/>
+            <element name="status" column="status" xsdType="string"/>
+            <element name="submittedDate" column="submitted_date" xsdType="date"/>
+            <element name="departmentId" column="department_id" xsdType="integer"/>
+            <element name="departmentName" column="department_name" xsdType="string"/>
+            <element name="departmentCode" column="department_code" xsdType="string"/>
+        </result>
+    </query>
+
+    <query id="submitApplicationQuery" useConfig="GovServicesDB">
+        <sql><![CDATA[
+            INSERT INTO service_application
+                (citizen_id, service_name, status, submitted_date, department_id)
+            VALUES
+                (:citizen_id, :service_name, :status, :submitted_date, :department_id)
+        ]]></sql>
+        <param name="citizen_id" sqlType="STRING"/>
+        <param name="service_name" sqlType="STRING"/>
+        <param name="status" sqlType="STRING"/>
+        <param name="submitted_date" sqlType="DATE"/>
+        <param name="department_id" sqlType="INTEGER"/>
+    </query>
+
+    <resource method="GET" path="applications">
+        <call-query href="getApplicationsQuery"/>
+    </resource>
+    <resource method="GET" path="applications/{application_id}">
+        <call-query href="getApplicationByIdQuery">
+            <with-param name="application_id" query-param="application_id"/>
+        </call-query>
+    </resource>
+    <resource method="GET" path="applications/department/{department_id}">
+        <call-query href="getByDepartmentQuery">
+            <with-param name="department_id" query-param="department_id"/>
+        </call-query>
+    </resource>
+    <resource method="POST" path="applications">
+        <call-query href="submitApplicationQuery">
+            <with-param name="citizen_id" query-param="citizen_id"/>
+            <with-param name="service_name" query-param="service_name"/>
+            <with-param name="status" query-param="status"/>
+            <with-param name="submitted_date" query-param="submitted_date"/>
+            <with-param name="department_id" query-param="department_id"/>
+        </call-query>
+    </resource>
+</data>

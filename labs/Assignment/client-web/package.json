@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "name": "public-services-portal",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

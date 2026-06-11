@@ -287,7 +287,7 @@ should not be committed.
 
 | Error | Meaning | Fix | Validation |
 |---|---|---|---|
-| Browser shows `invalid_callback` | The IAM application callback URL does not match the app URL | Set redirect URL, origin, and logout return URL to `http://localhost:3000` | Login returns to the sample app |
+| Browser shows `invalid_callback` or `Your application's callback URL does not match with the registered redirect URLs` | The IAM application callback URL does not exactly match the app's `signInRedirectURL` | In the IAM Console, set Authorized redirect URL, Allowed origin, and Logout return URL to `http://localhost:3000`. Remove old values such as `http://localhost:3000/callback` | Login returns to the sample app |
 | Browser cannot reach IAM | The Lab 16 IAM port-forward is not running | Run `kubectl port-forward -n wso2-iam svc/wso2iam-identity-server 443:9443` | `https://localhost/console` opens |
 | `npm install` fails | Node.js, npm, or network access is not available | Check `node -v`, `npm -v`, and network/proxy settings | `npm install` completes |
 | App still uses an old client ID | Browser cache or the dev server is still using old config | Restart `npm start` and clear site data for `http://localhost:3000` | Login starts with the new IAM app |

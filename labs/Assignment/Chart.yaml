@@ -1,0 +1,6 @@
+apiVersion: v2
+name: public-services-assignment
+description: Capstone WSO2 public services platform for minikube.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

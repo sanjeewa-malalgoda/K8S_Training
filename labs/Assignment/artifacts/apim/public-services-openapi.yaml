@@ -1,0 +1,85 @@
+openapi: 3.0.3
+info:
+  title: PublicServicesAPI
+  version: v1
+  description: Managed public service applications API for the capstone assignment.
+servers:
+  - url: https://gw.wso2.com:8243/gov/services/v1
+paths:
+  /applications:
+    get:
+      summary: List service applications
+      operationId: getApplications
+      responses:
+        "200":
+          description: Service applications returned
+    post:
+      summary: Submit a service application
+      operationId: submitApplication
+      description: The MI data service expects the JSON body wrapped with the generated `_postapplications` operation name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplicationPostRequest"
+      responses:
+        "200":
+          description: Application submitted
+  /applications/{id}:
+    get:
+      summary: Get one service application
+      operationId: getApplicationById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Service application returned
+  /applications/department/{deptId}:
+    get:
+      summary: List applications by department
+      operationId: getByDepartment
+      parameters:
+        - name: deptId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Department applications returned
+components:
+  schemas:
+    ApplicationPostRequest:
+      type: object
+      required:
+        - _postapplications
+      properties:
+        _postapplications:
+          type: object
+          required:
+            - citizen_id
+            - service_name
+            - submitted_date
+            - department_id
+          properties:
+            citizen_id:
+              type: string
+              example: "11001234567"
+            service_name:
+              type: string
+              example: Citizenship Certificate
+            status:
+              type: string
+              example: SUBMITTED
+            submitted_date:
+              type: string
+              format: date
+              example: "2026-06-11"
+            department_id:
+              type: integer
+              example: 1

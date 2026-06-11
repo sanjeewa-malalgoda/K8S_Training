@@ -1,7 +1,10 @@
 {
-    "clientID": "PASTE_CLIENT_ID_HERE",
+    "clientID": "fUFvWGYc7m2uaec8EaNyB8KfYlIa",
     "baseUrl": "https://localhost",
-    "signInRedirectURL": "http://localhost:3000",
-    "signOutRedirectURL": "http://localhost:3000",
-    "scope": ["profile", "email"]
+    "signInRedirectURL": "https://localhost:3000",
+    "signOutRedirectURL": "https://localhost:3000",
+    "scope": [
+        "profile",
+        "email"
+    ]
 }

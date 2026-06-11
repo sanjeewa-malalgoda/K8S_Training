@@ -448,7 +448,7 @@ Use the Console UI for this overview.
 | 2 | Create a user named `citizen.user` | The user appears in the user list |
 | 3 | Go to Applications | You can create an application |
 | 4 | Create a Standard-Based Application named `Citizen Portal Local` | The application is created |
-| 5 | Add OIDC settings with callback URL `http://localhost:3000/callback` | A client ID and client secret are generated |
+| 5 | Add OIDC settings with callback URL `http://localhost:3000` | A client ID and client secret are generated |
 | 6 | Review the OIDC discovery output from section 9 | You can map app settings to IAM endpoints |
 
 This confirms the basic IAM pattern:
