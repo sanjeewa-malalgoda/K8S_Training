@@ -25,10 +25,12 @@ mi:
       memory: 1536Mi
 
 apim:
-  enabled: false
+  enabled: true
   namespace: wso2
   image: docker.io/wso2/wso2am:4.6.0
-  serviceName: apim-wso2am-all-in-one-am-service
+  serviceName: assignment-apim
+  managementHost: am.wso2.com
+  gatewayHost: gw.wso2.com
   resources:
     requests:
       cpu: "1"

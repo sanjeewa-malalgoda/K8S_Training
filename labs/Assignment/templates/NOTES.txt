@@ -15,8 +15,7 @@ APIM access:
 {{- if .Values.apim.enabled }}
   kubectl port-forward -n {{ .Values.apim.namespace }} svc/{{ .Values.apim.serviceName }} 443:9443 8243:8243
 {{- else }}
-  Use the working APIM deployment from Lab 07:
-  kubectl port-forward -n {{ .Values.apim.namespace }} svc/{{ .Values.apim.serviceName }} 443:9443 8243:8243
+  APIM is disabled in values.yaml.
 {{- end }}
 
 Identity Server access:

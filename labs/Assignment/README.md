@@ -1,12 +1,11 @@
 # Assignment - Public Services Platform
 
-This capstone folder deploys the assignment runtime and connects it to the
-working WSO2 API Manager from Lab 07:
+This capstone folder deploys the shared runtime for the assignment:
 
 ```text
 MySQL
   -> WSO2 Micro Integrator data service
-  -> Lab 07 WSO2 API Manager gateway
+  -> WSO2 API Manager gateway
   -> WSO2 Identity Server
   -> local Public Services Portal on your laptop
 ```
@@ -23,16 +22,15 @@ The web app does not run in Kubernetes. It runs on the host machine on
 | MySQL database | `minikube-demo` | `assignment-mysql` |
 | Schema seed job | `minikube-demo` | `assignment-mysql-seed` |
 | Micro Integrator | `minikube-demo` | `assignment-mi` |
-| API Manager | `wso2` | Lab 07 `apim-wso2am-all-in-one-am-service` |
+| API Manager | `wso2` | `assignment-apim` |
 | Identity Server | `wso2-iam` | `assignment-is` |
 
 The chart stores database credentials in Kubernetes `Secret` objects. The MI
 runtime copy of the data-service artifact is also mounted from a Secret because
 it contains database connection details.
 
-The assignment chart does not deploy its own APIM by default. Use the APIM
-deployment from Lab 07 because that lab includes the working `am.wso2.com` and
-`gw.wso2.com` hostname configuration needed for APIM login callbacks.
+The chart configures APIM with `am.wso2.com` and `gw.wso2.com` so Publisher
+login callbacks stay on the same local hostnames used by the browser.
 
 ---
 
@@ -48,7 +46,6 @@ minikube is running with the Docker driver
 kubectl works
 Helm works
 Node.js is installed for the local web app
-Lab 07 APIM is deployed and reachable
 ```
 
 Validate:
@@ -58,7 +55,6 @@ minikube status
 kubectl get nodes
 helm version
 node -v
-kubectl get svc -n wso2 apim-wso2am-all-in-one-am-service
 ```
 
 Expected output includes:
@@ -68,7 +64,6 @@ minikube
 Ready
 version.BuildInfo
 v...
-apim-wso2am-all-in-one-am-service
 ```
 
 Recommended minikube size:
@@ -116,8 +111,8 @@ Expected output includes:
 ```text
 assignment-mysql-...   1/1   Running
 assignment-mi-...      1/1   Running
+assignment-apim-...    1/1   Running
 assignment-is-...      1/1   Running
-apim-wso2am-...         1/1   Running
 ```
 
 WSO2 products can take several minutes to become ready on a laptop.
@@ -177,7 +172,7 @@ kubectl exec -n minikube-demo deployment/assignment-mysql -- mysql -uroot -proot
 Start the APIM port-forward:
 
 ```powershell
-kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443 8243:8243
+kubectl port-forward -n wso2 svc/assignment-apim 443:9443 8243:8243
 ```
 
 Keep this terminal open.
@@ -289,7 +284,7 @@ Stop the IS port-forward with `Ctrl+C`.
 Start APIM management access again:
 
 ```powershell
-kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 443:9443 8243:8243
+kubectl port-forward -n wso2 svc/assignment-apim 443:9443 8243:8243
 ```
 
 Open APIM Admin Portal:
@@ -356,7 +351,7 @@ kubectl port-forward -n wso2-iam svc/assignment-is 443:9443
 Terminal 2 for APIM gateway only:
 
 ```powershell
-kubectl port-forward -n wso2 svc/apim-wso2am-all-in-one-am-service 8243:8243
+kubectl port-forward -n wso2 svc/assignment-apim 8243:8243
 ```
 
 Open this URL once and accept the local certificate warning if the browser asks:
@@ -396,12 +391,12 @@ HTTP 401 or HTTP 403
 
 # 9. Cleanup
 
-Warning: this removes the assignment deployment and the MySQL PVC data. It does
-not remove the Lab 07 APIM deployment.
+Warning: this removes the assignment deployment and the MySQL PVC data.
 
 ```powershell
 helm uninstall public-services -n minikube-demo
 kubectl delete namespace minikube-demo
+kubectl delete namespace wso2
 kubectl delete namespace wso2-iam
 ```
 
@@ -410,6 +405,7 @@ Expected output includes:
 ```text
 release "public-services" uninstalled
 namespace "minikube-demo" deleted
+namespace "wso2" deleted
 namespace "wso2-iam" deleted
 ```
 
@@ -422,7 +418,7 @@ namespace "wso2-iam" deleted
 | MI init container cannot download MySQL connector | The laptop or minikube node cannot reach Maven Central | Download the connector manually and update `mi.mysqlConnector.url` to an internal URL, or preload it with a custom MI image | MI pod moves to `Running` |
 | APIM or IS stays `Pending` | minikube does not have enough CPU or memory | Restart minikube with 4 CPUs and 8 GiB memory | WSO2 pods become `Running` |
 | Browser cannot open APIM | Hosts entry or APIM port-forward is missing | Add `am.wso2.com` and `gw.wso2.com` hosts entries, then rerun the APIM port-forward | `https://am.wso2.com/publisher/` opens |
-| APIM login redirects to `https://localhost:9443/oauth2/authorize` | The browser is using the old assignment APIM container or an APIM deployment without the Lab 07 hostname configuration | Rerun `helm upgrade --install public-services .\labs\Assignment --namespace minikube-demo --create-namespace`, then port-forward `svc/apim-wso2am-all-in-one-am-service` from Lab 07 | Publisher login stays under `https://am.wso2.com/...` |
+| APIM login redirects to `https://localhost:9443/oauth2/authorize` | APIM started with old cached configuration or an old assignment release | Rerun `helm upgrade --install public-services .\labs\Assignment --namespace minikube-demo --create-namespace`, wait for `assignment-apim` to restart, then port-forward `svc/assignment-apim` | Publisher login stays under `https://am.wso2.com/...` |
 | IS login shows callback mismatch | The SPA redirect URL does not exactly match | Set Authorized redirect URL, Allowed origin, and Logout return URL to `http://localhost:3000` | Login returns to the local app |
 | API call returns `401` or `403` with a token | APIM is not associated with the IS key manager or token is expired | Recheck the APIM Key Manager and API security settings, then sign in again | Secured call returns application data |
 | API call without token returns data | The APIM resource security is set to None | Mark resources as OAuth2 secured and redeploy the API | Unauthenticated call returns `401` or `403` |

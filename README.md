@@ -347,20 +347,20 @@ DB-backed flow fails.
 
 ### 9.19 Assignment: Public Services Platform
 
-Deploy the capstone runtime with one Helm command, reuse the working APIM from
-Lab 07, create the SPA app in IS, and run the local web app from the host
-machine.
+Deploy the capstone runtime with one Helm command, create the API in the
+assignment APIM deployment, create the SPA app in IS, and run the local web app
+from the host machine.
 
 | Task | Command |
 |------|---------|
-| Prerequisites | Complete Lab 07 APIM and keep its `am.wso2.com`/`gw.wso2.com` local access path |
+| Prerequisites | Docker Desktop, minikube, kubectl, Helm, Node.js |
 | Deploy | `helm upgrade --install public-services ./labs/Assignment --namespace minikube-demo --create-namespace` |
 | Validate MI | Call `http://assignment-mi:8290/services/PublicServicesDataService/applications` from a curl pod |
-| APIM setup | Use Lab 07 APIM service `apim-wso2am-all-in-one-am-service` and import `labs/Assignment/artifacts/apim/public-services-openapi.yaml` |
+| APIM setup | Use assignment APIM service `assignment-apim` and import `labs/Assignment/artifacts/apim/public-services-openapi.yaml` |
 | IS setup | Create a SPA app with redirect URL `http://localhost:3000` |
 | Local app | `cd labs/Assignment/client-web && npm start` |
 | Details | [Assignment/README.md](labs/Assignment/README.md) |
-| Cleanup | `helm uninstall public-services -n minikube-demo` and delete the assignment namespaces except the Lab 07 `wso2` namespace |
+| Cleanup | `helm uninstall public-services -n minikube-demo` and delete the assignment namespaces |
 
 ---
 
