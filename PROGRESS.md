@@ -113,6 +113,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-11 | Add Lab 18 to test a broken DB-dependent CApp against the working Lab 14 MI baseline, including source-only CApp artifacts, local packaging scripts, carbonapps PVC manifest, patch scripts, observation steps, cleanup, and troubleshooting | README.md, .gitignore, labs/18-wso2-mi-broken-capp-db | Drafted - not MI-tested locally |
 | 2026-06-11 | Add Assignment capstone with one Helm chart for MySQL, MI, APIM, IS, APIM OpenAPI artifact, local host-run web app, setup guide, cleanup, and troubleshooting | README.md, labs/Assignment | Drafted - Helm rendered locally, not cluster-tested |
 | 2026-06-12 | Verify Assignment chart on running minikube: MySQL, MI, APIM, and IS pods reached `1/1 Running`; MySQL seed count was 4; MI GET and POST operations were tested; APIM Publisher and IS OIDC discovery responded | labs/Assignment | Verified on Windows minikube |
+| 2026-06-12 | Correct Assignment APIM flow to reuse the working Lab 07 APIM service instead of deploying the raw assignment APIM container that redirects login to `https://localhost:9443` | README.md, labs/Assignment, PROGRESS.md | Drafted - Helm template checked locally |
 
 ---
 
@@ -149,6 +150,7 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-11 | Lab 17 login showed `Your application's callback URL does not match with the registered redirect URLs` | Lab 16 still referenced `http://localhost:3000/callback`, but the Lab 17 React app sends `http://localhost:3000` as `signInRedirectURL` | Updated Lab 16 handoff text and Lab 17 troubleshooting to use the exact root redirect URL and remove stale `/callback` values | Drafted |
 | 2026-06-11 | Student claim that a DB connection failure in a CAR file always stops the whole MI server needed validation | DB failures can happen at deployment time, request time, or startup code time, and the blast radius differs | Add Lab 18 to observe the behavior with a safe broken DB CApp and compare the failing `/citizen-db` flow against healthy `/citizen/health` | Drafted - not MI-tested locally |
 | 2026-06-08 | Lab 15 custom mediator returned `HTTP 404` and then `ClassNotFoundException` | The Lab 15 API ConfigMap was not mounted after the Lab 13 CApp path, and the mediator JAR was mounted under `repository/components/lib` instead of MI runtime `lib` | Reapply the Lab 12 API mount patch, mount the JAR at `/home/wso2carbon/wso2mi-4.6.0/lib`, and restart MI | Verified locally |
+| 2026-06-12 | Assignment APIM Publisher login redirected to `https://localhost:9443/oauth2/authorize` | The assignment chart deployed a plain `wso2/wso2am` container as `assignment-apim`, so APIM used its default localhost callback settings instead of Lab 07's `am.wso2.com` configuration | Disable assignment APIM by default, point assignment docs and Helm notes to Lab 07 service `apim-wso2am-all-in-one-am-service`, and add troubleshooting for the redirect | Drafted - Helm template checked locally |
 
 ---
 

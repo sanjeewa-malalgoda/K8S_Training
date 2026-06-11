@@ -3,8 +3,8 @@ Public services assignment deployment has been submitted.
 Wait for pods:
 
   kubectl get pods -n {{ .Values.namespace }}
-  kubectl get pods -n {{ .Values.apim.namespace }}
   kubectl get pods -n {{ .Values.identityServer.namespace }}
+  kubectl get pods -n {{ .Values.apim.namespace }}
 
 Validate MI directly:
 
@@ -12,7 +12,12 @@ Validate MI directly:
 
 APIM access:
 
+{{- if .Values.apim.enabled }}
   kubectl port-forward -n {{ .Values.apim.namespace }} svc/{{ .Values.apim.serviceName }} 443:9443 8243:8243
+{{- else }}
+  Use the working APIM deployment from Lab 07:
+  kubectl port-forward -n {{ .Values.apim.namespace }} svc/{{ .Values.apim.serviceName }} 443:9443 8243:8243
+{{- end }}
 
 Identity Server access:
 
