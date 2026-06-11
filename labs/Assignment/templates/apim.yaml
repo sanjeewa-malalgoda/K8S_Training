@@ -83,7 +83,7 @@ data:
     enable_lightweight_apikey_generation = true
 
     [apim.oauth_config]
-    oauth2_jwks_url = "https://{{ .Values.apim.managementHost }}/oauth2/jwks"
+    oauth2_jwks_url = "{{ .Values.apim.oauth2JwksUrl }}"
 
     [apim.devportal]
     url = "https://{{ .Values.apim.managementHost }}/devportal"
@@ -141,6 +141,9 @@ spec:
         - name: apim
           image: {{ .Values.apim.image | quote }}
           imagePullPolicy: IfNotPresent
+          env:
+            - name: JAVA_OPTS
+              value: "-Djdk.internal.httpclient.disableHostnameVerification=true"
           command:
             - /bin/bash
             - -c

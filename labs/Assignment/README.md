@@ -31,6 +31,8 @@ it contains database connection details.
 
 The chart configures APIM with `am.wso2.com` and `gw.wso2.com` so Publisher
 login callbacks stay on the same local hostnames used by the browser.
+The APIM image digest and OAuth JWKS setting match the working Lab 07 local
+APIM path.
 
 ---
 
@@ -418,6 +420,7 @@ namespace "wso2-iam" deleted
 | MI init container cannot download MySQL connector | The laptop or minikube node cannot reach Maven Central | Download the connector manually and update `mi.mysqlConnector.url` to an internal URL, or preload it with a custom MI image | MI pod moves to `Running` |
 | APIM or IS stays `Pending` | minikube does not have enough CPU or memory | Restart minikube with 4 CPUs and 8 GiB memory | WSO2 pods become `Running` |
 | Browser cannot open APIM | Hosts entry or APIM port-forward is missing | Add `am.wso2.com` and `gw.wso2.com` hosts entries, then rerun the APIM port-forward | `https://am.wso2.com/publisher/` opens |
+| APIM login page shows `Error 500 : The page cannot be displayed` | APIM's Publisher login page is making an internal HTTPS self-call and the local self-signed certificate does not match `am.wso2.com` | Rerun the Helm upgrade so APIM starts with the lab JVM hostname-verification setting | Publisher login page opens instead of the 500 page |
 | APIM login redirects to `https://localhost:9443/oauth2/authorize` | APIM started with old cached configuration or an old assignment release | Rerun `helm upgrade --install public-services .\labs\Assignment --namespace minikube-demo --create-namespace`, wait for `assignment-apim` to restart, then port-forward `svc/assignment-apim` | Publisher login stays under `https://am.wso2.com/...` |
 | IS login shows callback mismatch | The SPA redirect URL does not exactly match | Set Authorized redirect URL, Allowed origin, and Logout return URL to `http://localhost:3000` | Login returns to the local app |
 | API call returns `401` or `403` with a token | APIM is not associated with the IS key manager or token is expired | Recheck the APIM Key Manager and API security settings, then sign in again | Secured call returns application data |

@@ -27,10 +27,11 @@ mi:
 apim:
   enabled: true
   namespace: wso2
-  image: docker.io/wso2/wso2am:4.6.0
+  image: docker.io/wso2/wso2am@sha256:cd69005240af25042e8cd6eccce8fbe9341732bc887b919395c7aaddb43f8d53
   serviceName: assignment-apim
   managementHost: am.wso2.com
   gatewayHost: gw.wso2.com
+  oauth2JwksUrl: https://localhost:9443/oauth2/jwks
   resources:
     requests:
       cpu: "1"
