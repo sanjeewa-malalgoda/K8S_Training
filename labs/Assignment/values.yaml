@@ -45,6 +45,9 @@ identityServer:
   namespace: wso2-iam
   image: docker.io/wso2/wso2is:7.0.0
   serviceName: assignment-is
+  hostname: localhost
+  basePath: https://localhost
+  httpsProxyPort: 443
   resources:
     requests:
       cpu: 500m

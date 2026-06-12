@@ -1,4 +1,58 @@
 {{- if .Values.identityServer.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: assignment-is-conf
+  namespace: {{ .Values.identityServer.namespace }}
+  labels:
+    app.kubernetes.io/component: identity-server
+    {{- include "assignment.labels" . | nindent 4 }}
+data:
+  deployment.toml: |
+    [server]
+    hostname = "{{ .Values.identityServer.hostname }}"
+    node_ip = "127.0.0.1"
+    base_path = "{{ .Values.identityServer.basePath }}"
+
+    [transport.https.properties]
+    proxyPort = {{ .Values.identityServer.httpsProxyPort }}
+
+    [super_admin]
+    username = "admin"
+    password = "admin"
+    create_admin_account = true
+
+    [user_store]
+    type = "database_unique_id"
+
+    [database.identity_db]
+    type = "h2"
+    url = "jdbc:h2:./repository/database/WSO2IDENTITY_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
+    username = "wso2carbon"
+    password = "wso2carbon"
+
+    [database.shared_db]
+    type = "h2"
+    url = "jdbc:h2:./repository/database/WSO2SHARED_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
+    username = "wso2carbon"
+    password = "wso2carbon"
+
+    [keystore.primary]
+    file_name = "wso2carbon.jks"
+    password = "wso2carbon"
+    type = "JKS"
+
+    [truststore]
+    file_name = "client-truststore.jks"
+    password = "wso2carbon"
+    type = "JKS"
+
+    [account_recovery.endpoint.auth]
+    hash = "66cd9688a2ae068244ea01e70f0e230f5623b7fa4cdecb65070a09ec06452262"
+
+    [identity.auth_framework.endpoint]
+    app_password = "dashboard"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -40,6 +94,15 @@ spec:
             initialDelaySeconds: 300
             periodSeconds: 20
             failureThreshold: 10
+          volumeMounts:
+            - name: is-conf
+              mountPath: /home/wso2carbon/wso2is-7.0.0/repository/conf/deployment.toml
+              subPath: deployment.toml
+              readOnly: true
+      volumes:
+        - name: is-conf
+          configMap:
+            name: assignment-is-conf
 ---
 apiVersion: v1
 kind: Service
@@ -58,4 +121,7 @@ spec:
     - name: https
       port: 9443
       targetPort: https
+    - name: http
+      port: 9763
+      targetPort: 9763
 {{- end }}

@@ -33,6 +33,8 @@ The chart configures APIM with `am.wso2.com` and `gw.wso2.com` so Publisher
 login callbacks stay on the same local hostnames used by the browser.
 The APIM image digest and OAuth JWKS setting match the working Lab 07 local
 APIM path.
+The chart configures IS with the same local Console access pattern used by Lab
+16: forward local `443` to service `9443`, then open `https://localhost/console`.
 
 ---
 
@@ -251,6 +253,9 @@ Open:
 https://localhost/console
 ```
 
+Do not open `https://localhost:9443/console`. The built-in Console callback is
+validated against the local `https://localhost/...` URL.
+
 Login:
 
 ```text
@@ -279,7 +284,7 @@ The SPA application is created and a client ID is available.
 
 ---
 
-# 7. Configure APIM to Trust IS Tokens
+# 7. Use APIM Tokens for the API
 
 Stop the IS port-forward with `Ctrl+C`.
 
@@ -295,26 +300,65 @@ Open APIM Admin Portal:
 https://am.wso2.com/admin/
 ```
 
-Create a Key Manager entry for WSO2 Identity Server.
+For the main assignment flow, use APIM's built-in key manager. Do not add WSO2
+Identity Server as an APIM Key Manager.
 
-Use the in-cluster IS service URL so APIM can reach IS without using your
-laptop port-forward:
+This keeps the API security path simple:
 
-| Setting | Value |
-|---|---|
-| Display name | `AssignmentIS` |
-| Issuer | `https://localhost/oauth2/token` |
-| Token endpoint | `https://assignment-is.wso2-iam.svc.cluster.local:9443/oauth2/token` |
-| Introspection endpoint | `https://assignment-is.wso2-iam.svc.cluster.local:9443/oauth2/introspect` |
-| JWKS endpoint | `https://assignment-is.wso2-iam.svc.cluster.local:9443/oauth2/jwks` |
-| Revoke endpoint | `https://assignment-is.wso2-iam.svc.cluster.local:9443/oauth2/revoke` |
+```text
+APIM issues the token -> APIM validates the token -> APIM invokes the backend API
+```
 
-Then associate `PublicServicesAPI` with this key manager in Publisher.
+Open APIM Developer Portal:
+
+```text
+https://am.wso2.com/devportal/
+```
+
+Create an application:
+
+```text
+Applications -> Add New Application
+Name: PublicServicesApp
+Per Token Quota: Unlimited
+Create
+```
+
+Subscribe the application to `PublicServicesAPI`.
+
+Generate production keys for the application, then copy:
+
+```text
+Consumer Key
+Consumer Secret
+```
+
+Get an APIM-issued access token:
+
+```powershell
+curl.exe -k -u "PASTE_CONSUMER_KEY:PASTE_CONSUMER_SECRET" -d "grant_type=client_credentials" https://gw.wso2.com:8243/token
+```
+
+The response contains:
+
+```json
+{
+  "access_token": "...",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+```
+
+Call the secured API with the APIM token:
+
+```powershell
+curl.exe -k -H "Authorization: Bearer PASTE_ACCESS_TOKEN" https://gw.wso2.com:8243/gov/services/v1/applications
+```
 
 Expected result:
 
 ```text
-APIM accepts access tokens issued by the AssignmentIS key manager.
+APIM accepts the APIM-issued token and returns application data.
 ```
 
 ---
@@ -422,6 +466,8 @@ namespace "wso2-iam" deleted
 | Browser cannot open APIM | Hosts entry or APIM port-forward is missing | Add `am.wso2.com` and `gw.wso2.com` hosts entries, then rerun the APIM port-forward | `https://am.wso2.com/publisher/` opens |
 | APIM login page shows `Error 500 : The page cannot be displayed` | APIM's Publisher login page is making an internal HTTPS self-call and the local self-signed certificate does not match `am.wso2.com` | Rerun the Helm upgrade so APIM starts with the lab JVM hostname-verification setting | Publisher login page opens instead of the 500 page |
 | APIM login redirects to `https://localhost:9443/oauth2/authorize` | APIM started with old cached configuration or an old assignment release | Rerun `helm upgrade --install public-services .\labs\Assignment --namespace minikube-demo --create-namespace`, wait for `assignment-apim` to restart, then port-forward `svc/assignment-apim` | Publisher login stays under `https://am.wso2.com/...` |
-| IS login shows callback mismatch | The SPA redirect URL does not exactly match | Set Authorized redirect URL, Allowed origin, and Logout return URL to `http://localhost:3000` | Login returns to the local app |
-| API call returns `401` or `403` with a token | APIM is not associated with the IS key manager or token is expired | Recheck the APIM Key Manager and API security settings, then sign in again | Secured call returns application data |
+| Optional APIM-to-IS Key Manager well-known import shows `The server encountered an internal error` | APIM imports the well-known URL from the APIM server and does not trust the local IS self-signed HTTPS certificate | Skip IS as APIM Key Manager for this assignment and use APIM-issued tokens; if testing optional IS key-manager wiring, use the internal HTTP service URLs | Main assignment API call works with an APIM-issued token |
+| IS Console login shows `invalid_callback` or `callback.not.match` | The browser used `https://localhost:9443/console`, but the Console callback is registered for `https://localhost/...` on local port `443` | Stop the old port-forward, run `kubectl port-forward -n wso2-iam svc/assignment-is 443:9443`, and open `https://localhost/console` | Console login completes without `oauth2_error.do` |
+| IS SPA login shows callback mismatch | The SPA redirect URL does not exactly match | Set Authorized redirect URL, Allowed origin, and Logout return URL to `http://localhost:3000` | Login returns to the local app |
+| API call returns `401` or `403` with a token | Token is missing, expired, copied incorrectly, or was issued for an unsubscribed APIM application | Generate a new production token from the subscribed DevPortal application and retry the curl command | Secured call returns application data |
 | API call without token returns data | The APIM resource security is set to None | Mark resources as OAuth2 secured and redeploy the API | Unauthenticated call returns `401` or `403` |

@@ -1,5 +1,5 @@
 window.assignmentConfig = {
-  clientId: "PASTE_IS_SPA_CLIENT_ID_HERE",
+  clientId: "iZHLdKffX0bSl7ayKR_SJjLglWwa",
   issuerBaseUrl: "https://localhost",
   redirectUri: "http://localhost:3000",
   scope: "openid profile email",
