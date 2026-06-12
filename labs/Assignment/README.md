@@ -402,6 +402,11 @@ into `apimAccessToken`. The browser app can also hold APIM consumer key and
 secret for training, but do not put a consumer secret in browser JavaScript in a
 real application.
 
+If `https://gw.wso2.com:8243/token` returns `404`, keep using the Step 7
+`kubectl exec` token command. In this local assignment setup, the reliable token
+endpoint is APIM management inside the APIM pod, while the browser uses the
+gateway only for API invocation.
+
 Start two port-forwards:
 
 Terminal 1 for IS login:
@@ -462,7 +467,95 @@ HTTP 401 or HTTP 403
 
 ---
 
-# 9. Cleanup
+# 9. Keep APIM JWKS Reachable Without Restarting Pods
+
+Use this only if API invocation returns:
+
+```text
+HTTP 500
+900900 Unclassified Authentication Failure
+```
+
+Meaning:
+
+```text
+APIM Gateway is trying to read https://am.wso2.com/oauth2/jwks from inside the APIM pod.
+Inside that pod, am.wso2.com resolves to 127.0.0.1.
+APIM listens internally on 9443, not 443.
+```
+
+Check whether the temporary forwarder is already running:
+
+```powershell
+kubectl exec -n wso2 deployment/assignment-apim -- sh -c "ps -ef | grep apim-443-forward | grep -v grep || true"
+```
+
+If no process is shown, start the temporary in-pod forwarder. This does not
+restart APIM and does not delete data.
+
+```powershell
+$pod = kubectl get pod -n wso2 -l app.kubernetes.io/component=apim -o jsonpath='{.items[0].metadata.name}'
+
+@'
+import socket
+import threading
+
+LISTEN = ("127.0.0.1", 443)
+TARGET = ("127.0.0.1", 9443)
+
+def pump(src, dst):
+    try:
+        while True:
+            data = src.recv(65536)
+            if not data:
+                break
+            dst.sendall(data)
+    except Exception:
+        pass
+    finally:
+        for sock in (src, dst):
+            try:
+                sock.close()
+            except Exception:
+                pass
+
+def handle(client):
+    upstream = socket.create_connection(TARGET)
+    threading.Thread(target=pump, args=(client, upstream), daemon=True).start()
+    threading.Thread(target=pump, args=(upstream, client), daemon=True).start()
+
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+server.bind(LISTEN)
+server.listen(100)
+print("forwarding 127.0.0.1:443 -> 127.0.0.1:9443", flush=True)
+
+while True:
+    client, _addr = server.accept()
+    threading.Thread(target=handle, args=(client,), daemon=True).start()
+'@ | kubectl exec -i -n wso2 $pod -- tee /tmp/apim-443-forward.py
+
+kubectl exec -n wso2 $pod -- sh -c "setsid python3 /tmp/apim-443-forward.py >/tmp/apim-443-forward.log 2>&1 < /dev/null &"
+```
+
+Validate from inside the APIM pod:
+
+```powershell
+kubectl exec -n wso2 deployment/assignment-apim -- curl -k -sS -o /dev/null -w "%{http_code}`n" https://am.wso2.com/oauth2/jwks
+```
+
+Expected output:
+
+```text
+200
+```
+
+This forwarder is temporary. If the APIM pod is recreated, repeat this section
+or redeploy APIM later with a JWKS URL that is reachable from inside the pod.
+
+---
+
+# 10. Cleanup
 
 Warning: this removes the assignment deployment and the MySQL PVC data.
 
@@ -496,5 +589,11 @@ namespace "wso2-iam" deleted
 | Optional APIM-to-IS Key Manager well-known import shows `The server encountered an internal error` | APIM imports the well-known URL from the APIM server and does not trust the local IS self-signed HTTPS certificate | Skip IS as APIM Key Manager for this assignment and use APIM-issued tokens; if testing optional IS key-manager wiring, use the internal HTTP service URLs | Main assignment API call works with an APIM-issued token |
 | IS Console login shows `invalid_callback` or `callback.not.match` | The browser used `https://localhost:9443/console`, but the Console callback is registered for `https://localhost/...` on local port `443` | Stop the old port-forward, run `kubectl port-forward -n wso2-iam svc/assignment-is 443:9443`, and open `https://localhost/console` | Console login completes without `oauth2_error.do` |
 | IS SPA login shows callback mismatch | The SPA redirect URL does not exactly match | Set Authorized redirect URL, Allowed origin, and Logout return URL to `http://localhost:3000` | Login returns to the local app |
+| App login immediately logs in without showing the login form | The browser still has an active IS SSO cookie | The app sends `prompt=login` when `forceLoginPrompt: true`; use **Sign out** to clear the app session and trigger IS logout | Next sign-in shows the IS login screen |
+| App shows `APIM token ready; IS sign-in still required` | An APIM access token is configured, but there is no IS browser session yet | Click **Sign in with IS** first; the API call still uses the APIM token after login | Flow strip shows `IS Login: Signed in` and `APIM Token: Ready` |
+| Clicking **Call secured API** appears to do nothing | The app is waiting for login/token/gateway response, or the error is in diagnostics | Check **Current Operation** and open **Diagnostics -> Raw API Response** if needed | Button changes to `Calling...`, and Current Operation updates |
+| `curl` to `https://gw.wso2.com:8243/token` returns `404` | This APIM lab exposes the token endpoint on APIM management, not the gateway `/token` path | Generate the token from inside the APIM pod with `kubectl exec -n wso2 deployment/assignment-apim -- curl -k -sS -u "CK:CS" -d "grant_type=client_credentials" https://localhost:9443/oauth2/token` | Token JSON includes `access_token` |
 | API call returns `401` or `403` with a token | Token is missing, expired, copied incorrectly, or was issued for an unsubscribed APIM application | Generate a new production token from the subscribed DevPortal application and retry the curl command | Secured call returns application data |
+| API call returns `HTTP 401` with `Invalid JWT token` | The app sent an expired or wrong APIM JWT | Generate a fresh APIM token and paste it into `apimAccessToken`, or clear the cached token with **Sign out** | Raw API Response no longer shows `Invalid JWT token` |
+| API call returns `HTTP 500` with `900900 Unclassified Authentication Failure` | APIM Gateway cannot fetch the APIM JWKS URL for JWT validation, often because it tries `am.wso2.com:443` inside the APIM pod while APIM listens internally on `9443` | Use Section 9 to start the temporary APIM in-pod forwarder `127.0.0.1:443 -> 127.0.0.1:9443`, or redeploy APIM with a JWKS URL reachable from inside the pod | `kubectl exec -n wso2 deployment/assignment-apim -- curl -k -sS -o /dev/null -w "%{http_code}\n" https://am.wso2.com/oauth2/jwks` returns `200` |
 | API call without token returns data | The APIM resource security is set to None | Mark resources as OAuth2 secured and redeploy the API | Unauthenticated call returns `401` or `403` |

@@ -116,6 +116,8 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-12 | Tried reusing Lab 07 APIM to avoid the Assignment APIM localhost redirect | README.md, labs/Assignment, PROGRESS.md | Superseded |
 | 2026-06-12 | Added recovery note for `namespaces "wso2" not found` during the temporary Lab 07 dependency approach | README.md, labs/Assignment, PROGRESS.md | Superseded |
 | 2026-06-12 | Restore Assignment as a self-contained Helm chart that deploys its own APIM with `am.wso2.com` and `gw.wso2.com` configuration | README.md, labs/Assignment, PROGRESS.md | Verified on Windows minikube |
+| 2026-06-12 | Document the final Assignment browser app flow with IS login and APIM-issued API tokens | labs/Assignment/README.md, labs/Assignment/client-web | Verified |
+| 2026-06-12 | Add documented no-restart validation path for APIM JWKS `900900` failures | labs/Assignment/README.md, PROGRESS.md | Verified |
 
 ---
 
@@ -163,6 +165,8 @@ kube-system   storage-provisioner                1/1     Running   1 (99m ago)  
 | 2026-06-12 | Assignment APIM Key Manager form asked for extra WSO2 IS 7 connector fields | The README listed OAuth/JWKS fields but omitted the IS 7 connector's BasicAuth, API resource management, and roles endpoints | Document the required connector fields and validate the IS endpoints from the APIM namespace; no existing pods were restarted | Verified |
 | 2026-06-12 | Assignment APIM Key Manager well-known import showed `The server encountered an internal error` | APIM imported the well-known URL server-side and failed Java PKIX validation against the local IS self-signed HTTPS certificate | Expose IS HTTP port `9763` on the `assignment-is` Service and document internal HTTP URLs for APIM-to-IS calls; existing APIM and IS pods were not restarted | Verified |
 | 2026-06-12 | Assignment APIM-to-IS Key Manager path was too complex for the core lab | The assignment only needs a secured APIM API call, so wiring IS as an external APIM key manager adds certificate and connector complexity without being required | Make APIM-issued tokens the main path and treat IS-as-key-manager wiring as optional troubleshooting context | Verified |
+| 2026-06-12 | Assignment app API call returned `HTTP 500` with `900900 Unclassified Authentication Failure` | APIM Gateway tried to fetch `https://am.wso2.com/oauth2/jwks` from inside the APIM pod on local port `443`, but APIM listens internally on `9443` | Start a temporary in-pod TCP forwarder from `127.0.0.1:443` to `127.0.0.1:9443` without restarting pods, and document the validation command | Verified |
+| 2026-06-12 | Assignment app API button looked unresponsive during validation | The previous UI kept raw responses in diagnostics, so failures or waiting states were not obvious on the main screen | Add a Current Operation panel, disabled button state while invoking, and clear rendered table/raw response sections | Verified |
 
 ---
 
