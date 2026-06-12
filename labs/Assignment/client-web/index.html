@@ -9,33 +9,123 @@
   <body>
     <main class="shell">
       <section class="sidebar">
-        <div class="brand">PS</div>
-        <h1>Public Services Portal</h1>
-        <p>OIDC login through WSO2 Identity Server, API access through WSO2 API Manager tokens.</p>
-        <button id="signInButton">Sign in with IS</button>
-        <button id="signOutButton" class="secondary">Clear session</button>
+        <div class="brand-row">
+          <div class="brand">PS</div>
+          <div>
+            <h1>Public Services</h1>
+            <span>Operations Console</span>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="Primary">
+          <a class="active" href="#overview">Overview</a>
+          <a href="#applications">Applications</a>
+          <a href="#diagnostics">Diagnostics</a>
+        </nav>
+
+        <div class="session-card">
+          <span class="label">Signed-In User</span>
+          <strong id="userName">Not signed in</strong>
+          <small id="userSubject">No IS session</small>
+          <small id="tokenSource">No APIM token</small>
+        </div>
+
+        <div class="button-stack">
+          <button id="signInButton">Sign in with IS</button>
+          <button id="signOutButton" class="secondary">Sign out</button>
+        </div>
       </section>
 
-      <section class="workspace">
-        <div class="toolbar">
+      <section class="workspace" id="overview">
+        <header class="topbar">
           <div>
-            <span class="label">Session</span>
-            <strong id="sessionState">Not signed in</strong>
+            <span class="label">Workspace</span>
+            <h2>Service Applications</h2>
+            <strong id="sessionState" class="session-pill">Not signed in</strong>
           </div>
-          <button id="callApiButton">Call secured API</button>
-          <button id="callApiWithoutTokenButton" class="secondary">Call without token</button>
+          <div class="actions">
+            <button id="callApiButton">Call secured API</button>
+            <button id="callApiWithoutTokenButton" class="secondary">Call without token</button>
+          </div>
+        </header>
+
+        <div class="flow-strip" aria-label="Authentication and API flow">
+          <div class="flow-step">
+            <span>1</span>
+            <strong>IS Login</strong>
+            <small id="isFlowState">Waiting</small>
+          </div>
+          <div class="flow-step">
+            <span>2</span>
+            <strong>APIM Token</strong>
+            <small id="apimFlowState">Waiting</small>
+          </div>
+          <div class="flow-step">
+            <span>3</span>
+            <strong>Gateway</strong>
+            <small id="gatewayFlowState">Not called</small>
+          </div>
+          <div class="flow-step">
+            <span>4</span>
+            <strong>Backend</strong>
+            <small id="backendFlowState">No data</small>
+          </div>
         </div>
 
-        <div class="grid">
+        <article class="status-panel" id="operationPanel">
+          <span class="label">Current Operation</span>
+          <strong id="operationTitle">Ready</strong>
+          <p id="operationMessage">Sign in with IS, then call the secured API to load application records.</p>
+        </article>
+
+        <div class="metrics">
           <article>
-            <span class="label">Access token</span>
-            <pre id="tokenOutput">No token yet.</pre>
+            <span class="label">Total Applications</span>
+            <strong id="totalApplications">0</strong>
           </article>
           <article>
-            <span class="label">API response</span>
-            <pre id="apiOutput">No API call yet.</pre>
+            <span class="label">Approved</span>
+            <strong id="approvedApplications">0</strong>
+          </article>
+          <article>
+            <span class="label">In Review</span>
+            <strong id="reviewApplications">0</strong>
+          </article>
+          <article>
+            <span class="label">Submitted</span>
+            <strong id="submittedApplications">0</strong>
           </article>
         </div>
+
+        <article class="data-panel" id="applications">
+          <div class="panel-heading">
+            <div>
+              <span class="label">Applications</span>
+              <h3>Government Service Requests</h3>
+            </div>
+            <strong id="lastApiStatus">Not called</strong>
+          </div>
+          <div id="applicationsTable" class="empty-state">No application data loaded.</div>
+        </article>
+
+        <section class="diagnostics" id="diagnostics">
+          <details>
+            <summary>Session Details</summary>
+            <pre id="tokenOutput">No token yet.</pre>
+          </details>
+          <details>
+            <summary>Raw IS Login Response</summary>
+            <pre id="loginOutput">No login response yet.</pre>
+          </details>
+          <details>
+            <summary>Raw APIM Token Response</summary>
+            <pre id="apimTokenOutput">No APIM token response yet.</pre>
+          </details>
+          <details>
+            <summary>Raw API Response</summary>
+            <pre id="apiOutput">No API call yet.</pre>
+          </details>
+        </section>
       </section>
     </main>
     <script src="./config.js"></script>
