@@ -6,6 +6,7 @@
 
   const authUrl = `${config.issuerBaseUrl.replace(/\/$/, "")}/oauth2/authorize`;
   const tokenUrl = `${config.issuerBaseUrl.replace(/\/$/, "")}/oauth2/token`;
+  const apimTokenUrl = config.apimTokenUrl || "https://gw.wso2.com:8243/token";
 
   function base64UrlEncode(buffer) {
     return btoa(String.fromCharCode(...new Uint8Array(buffer)))
@@ -92,16 +93,86 @@
   }
 
   function renderSession() {
-    const token = sessionStorage.getItem("access_token");
-    sessionState.textContent = token ? "Signed in" : "Not signed in";
-    tokenOutput.textContent = token || "No token yet.";
+    const isToken = sessionStorage.getItem("access_token");
+    const apimToken = getConfiguredApimToken() || sessionStorage.getItem("apim_access_token");
+
+    if (isToken && apimToken) {
+      sessionState.textContent = "Signed in with IS; APIM token ready";
+      tokenOutput.textContent = apimToken;
+      return;
+    }
+
+    if (apimToken) {
+      sessionState.textContent = "APIM token ready; sign in with IS";
+      tokenOutput.textContent = apimToken;
+      return;
+    }
+
+    sessionState.textContent = isToken ? "Signed in with IS" : "No token";
+    tokenOutput.textContent = isToken || "No token yet.";
+  }
+
+  function hasValue(value) {
+    return Boolean(value && !value.includes("PASTE_"));
+  }
+
+  function getConfiguredApimToken() {
+    return hasValue(config.apimAccessToken) ? config.apimAccessToken : "";
+  }
+
+  async function getApimAccessToken() {
+    const configuredToken = getConfiguredApimToken();
+
+    if (configuredToken) {
+      return configuredToken;
+    }
+
+    const cachedToken = sessionStorage.getItem("apim_access_token");
+
+    if (cachedToken) {
+      return cachedToken;
+    }
+
+    if (!hasValue(config.apimConsumerKey) || !hasValue(config.apimConsumerSecret)) {
+      return "";
+    }
+
+    const credentials = btoa(`${config.apimConsumerKey}:${config.apimConsumerSecret}`);
+    const response = await fetch(apimTokenUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({ grant_type: "client_credentials" })
+    });
+
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(JSON.stringify(payload, null, 2));
+    }
+
+    sessionStorage.setItem("apim_access_token", payload.access_token);
+    return payload.access_token;
   }
 
   async function callApi(withToken) {
     const headers = {};
-    const token = sessionStorage.getItem("access_token");
 
-    if (withToken && token) {
+    if (withToken) {
+      if (!sessionStorage.getItem("access_token")) {
+        apiOutput.textContent = "Sign in with IS first. The API call will still use an APIM-issued token.";
+        return;
+      }
+
+      const token = await getApimAccessToken();
+
+      if (!token) {
+        apiOutput.textContent = "Add an APIM access token or APIM consumer key/secret in client-web/config.js.";
+        return;
+      }
+
       headers.Authorization = `Bearer ${token}`;
     }
 
@@ -121,8 +192,16 @@
     renderSession();
     apiOutput.textContent = "Session cleared.";
   });
-  document.getElementById("callApiButton").addEventListener("click", () => callApi(true));
-  document.getElementById("callApiWithoutTokenButton").addEventListener("click", () => callApi(false));
+  document.getElementById("callApiButton").addEventListener("click", () => {
+    callApi(true).catch((error) => {
+      apiOutput.textContent = error.stack || String(error);
+    });
+  });
+  document.getElementById("callApiWithoutTokenButton").addEventListener("click", () => {
+    callApi(false).catch((error) => {
+      apiOutput.textContent = error.stack || String(error);
+    });
+  });
 
   finishLogin().catch((error) => {
     apiOutput.textContent = error.stack || String(error);
