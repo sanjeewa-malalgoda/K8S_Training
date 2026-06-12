@@ -333,10 +333,16 @@ Consumer Key
 Consumer Secret
 ```
 
-Get an APIM-issued access token:
+Get an APIM-issued access token from inside the APIM pod.
+
+Use this command when IS is using local port `443` and APIM management is not
+port-forwarded to local `443`:
 
 ```powershell
-curl.exe -k -u "PASTE_CONSUMER_KEY:PASTE_CONSUMER_SECRET" -d "grant_type=client_credentials" https://gw.wso2.com:8243/token
+$consumerKey = "PASTE_CONSUMER_KEY"
+$consumerSecret = "PASTE_CONSUMER_SECRET"
+
+kubectl exec -n wso2 deployment/assignment-apim -- curl -k -sS -u "$consumerKey`:$consumerSecret" -d "grant_type=client_credentials" https://localhost:9443/oauth2/token
 ```
 
 The response contains:
@@ -374,7 +380,7 @@ Edit:
 labs/Assignment/client-web/config.js
 ```
 
-Set `clientId` to the IS SPA client ID:
+Set the IS SPA client ID and APIM token values:
 
 ```javascript
 window.assignmentConfig = {
@@ -382,9 +388,19 @@ window.assignmentConfig = {
   issuerBaseUrl: "https://localhost",
   redirectUri: "http://localhost:3000",
   scope: "openid profile email",
+  forceLoginPrompt: true,
+  apimTokenUrl: "https://gw.wso2.com:8243/token",
+  apimConsumerKey: "PASTE_APIM_CONSUMER_KEY_HERE",
+  apimConsumerSecret: "PASTE_APIM_CONSUMER_SECRET_HERE",
+  apimAccessToken: "PASTE_APIM_ACCESS_TOKEN_HERE",
   apiInvokeUrl: "https://gw.wso2.com:8243/gov/services/v1/applications"
 };
 ```
+
+For this local lab, the simplest path is to paste the access token from Step 7
+into `apimAccessToken`. The browser app can also hold APIM consumer key and
+secret for training, but do not put a consumer secret in browser JavaScript in a
+real application.
 
 Start two port-forwards:
 
@@ -422,8 +438,19 @@ http://localhost:3000
 Expected result:
 
 ```text
-The Public Services Portal opens, signs in through IS, and can call PublicServicesAPI through APIM.
+The Public Services operations console opens, signs in through IS, and can call PublicServicesAPI through APIM.
 ```
+
+The app shows:
+
+| Area | Purpose |
+|---|---|
+| Signed-In User | Shows the IS user, subject, and whether an APIM token is ready |
+| Flow strip | Shows `IS Login -> APIM Token -> Gateway -> Backend` status |
+| Current Operation | Shows visible feedback when a button is clicked |
+| Metrics | Counts total, approved, in-review, and submitted applications |
+| Applications table | Renders backend XML response as a readable table |
+| Diagnostics | Collapsible raw session, login, APIM token, and API responses |
 
 Use **Call without token** to prove the gateway rejects unauthenticated access.
 
